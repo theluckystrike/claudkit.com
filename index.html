@@ -1,158 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ClaudKit is the AI developer's toolkit. Find code snippets, SDK guides, API integration patterns, and developer resources for building with AI.">
-    <meta name="keywords" content="AI developer tools, AI SDK, AI API integration, AI code snippets, developer toolkit, AI programming, LLM integration">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="ClaudKit — The AI Developer's Toolkit">
-    <meta property="og:description" content="Code snippets, SDK guides, and integration patterns for developers building with AI.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://claudkit.com">
-    <title>ClaudKit — The AI Developer's Toolkit</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Inter', sans-serif; }
-        html { scroll-behavior: smooth; }
-    </style>
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "ClaudKit",
-        "url": "https://claudkit.com",
-        "description": "The AI Developer's Toolkit — code snippets, SDK guides, and integration patterns for building with AI."
-    }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudKit — Claude API Playground | Build & Test Requests</title>
+  <meta name="description" content="Interactive Claude API playground. Build requests visually, get code in curl/Python/JS, and test with your own API key. Free, no sign-up.">
+  <meta property="og:title" content="ClaudKit — Claude API Playground">
+  <meta property="og:description" content="Build and test Claude API requests visually. Get code in curl, Python, and JavaScript.">
+  <meta property="og:url" content="https://claudkit.com/">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://claudkit.com/">
+  <link rel="stylesheet" href="assets/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ClaudKit API Playground",
+    "url": "https://claudkit.com",
+    "description": "Interactive API request builder for Claude with syntax-highlighted code output in curl, Python, and JavaScript.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+  </nav>
 
-    <!-- Site Navigation -->
-    <nav class="bg-gradient-to-r from-purple-700 to-fuchsia-500 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-white">Claud<span class="text-purple-200">Kit</span></a>
-            <div class="hidden md:flex space-x-8">
-                <a href="/" class="text-white font-semibold transition">Home</a>
-                <a href="/guides.html" class="text-purple-100 hover:text-white transition">Guides</a>
-                <a href="/tools.html" class="text-purple-100 hover:text-white transition">Tools</a>
-                <a href="/blog/getting-started.html" class="text-purple-100 hover:text-white transition">Blog</a>
-                <a href="/about.html" class="text-purple-100 hover:text-white transition">About</a>
-            </div>
+  <section class="hero">
+    <h1>Claude API Playground</h1>
+    <p>Build requests visually. Get code in curl, Python, and JavaScript.</p>
+  </section>
+
+  <div class="playground">
+    <!-- Left Panel: Request Builder -->
+    <div class="panel">
+      <h2>Request Builder</h2>
+
+      <div class="preset-row">
+        <label>Preset:</label>
+        <select id="preset-select" class="btn"></select>
+      </div>
+
+      <div class="form-group">
+        <label>Model</label>
+        <select id="model-select"></select>
+      </div>
+
+      <div class="form-group">
+        <label>System Prompt</label>
+        <textarea id="system-prompt" rows="3" placeholder="You are a helpful assistant..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>User Message</label>
+        <textarea id="user-message" rows="4" placeholder="Enter your message..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Temperature</label>
+        <div class="slider-row">
+          <input type="range" id="temp-slider" min="0" max="1" step="0.1" value="0.3">
+          <span class="slider-value" id="temp-value">0.3</span>
         </div>
-    </nav>
+      </div>
 
-    <!-- Hero Section -->
-    <header class="relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-purple-700 via-purple-500 to-fuchsia-500"></div>
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
-            <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight">The AI Developer's Toolkit</h1>
-            <p class="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto mb-10">Code snippets, SDK integration guides, and battle-tested patterns for developers building intelligent applications with modern AI APIs.</p>
-            <a href="#toolkit" class="inline-block bg-white text-purple-600 font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl hover:bg-purple-50 transition">Browse the Toolkit</a>
+      <div class="form-group">
+        <label>Max Tokens</label>
+        <input type="text" id="max-tokens" value="1024" placeholder="1024">
+      </div>
+    </div>
+
+    <!-- Right Panel: Code Output -->
+    <div class="panel">
+      <h2>Generated Code</h2>
+
+      <div class="tab-bar">
+        <button class="tab active" data-tab="curl">curl</button>
+        <button class="tab" data-tab="python">Python</button>
+        <button class="tab" data-tab="javascript">JavaScript</button>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-block" id="code-display"></div>
+        <button class="btn btn-sm copy-btn" id="copy-code-btn">Copy</button>
+      </div>
+
+      <!-- Try It Section -->
+      <div class="try-section">
+        <h3>Try with your API key</h3>
+        <div class="form-group">
+          <input type="password" id="api-key" placeholder="sk-ant-api03-...">
         </div>
-    </header>
+        <button class="btn btn-accent" id="send-btn">Send Request</button>
+        <div class="status-msg" id="status-msg"></div>
+        <div class="response-area" id="response-area"></div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Introduction -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div class="max-w-4xl mx-auto">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Building with AI APIs: A Developer's Perspective</h2>
-            <p class="text-lg text-gray-600 mb-4">Integrating AI into software applications has moved from experimental curiosity to production necessity. Modern AI APIs from providers like OpenAI, Anthropic, Google, and others offer capabilities that would have seemed impossible just a few years ago: natural language understanding, code generation, image analysis, and complex reasoning. But working with these APIs presents unique challenges that traditional software development does not prepare you for.</p>
-            <p class="text-lg text-gray-600 mb-4">The core challenge is non-determinism. Unlike a database query that returns the same result every time, an AI API call can produce different outputs for identical inputs. This fundamentally changes how you write tests, handle errors, and validate results. You need new patterns for retry logic, output parsing, prompt versioning, and quality assurance that account for the probabilistic nature of language model outputs.</p>
-            <p class="text-lg text-gray-600">ClaudKit exists to give developers the tools and patterns they need to build reliable AI-powered applications. Our code snippets are production-tested, our integration guides cover real-world edge cases, and our architectural patterns address the specific challenges of AI application development. Whether you are adding a chat interface to an existing app, building an AI-native product from scratch, or creating internal tools that leverage language models, our toolkit accelerates your development process significantly.</p>
-        </div>
-    </section>
+  <footer>
+    Built by <a href="https://zovo.one">zovo.one</a> &middot; More tools: <a href="https://claudhq.com">ClaudHQ</a>, <a href="https://claudflow.com">ClaudFlow</a>
+  </footer>
 
-    <!-- Toolkit Section -->
-    <section id="toolkit" class="bg-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Developer Toolkit</h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Essential components for building production-grade AI applications.</p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl shadow-sm border border-purple-100">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Code Snippets</h3>
-                    <p class="text-gray-600">Copy-paste ready code for common AI integration tasks. From streaming responses and handling rate limits to parsing structured outputs and managing conversation history, every snippet is tested against live APIs and annotated with explanations of key design decisions.</p>
-                </div>
-                <div class="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl shadow-sm border border-purple-100">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">SDK Wrappers</h3>
-                    <p class="text-gray-600">Lightweight wrapper libraries that simplify working with multiple AI provider APIs. Handle authentication, request formatting, response normalization, and provider switching with a consistent interface. Available for Python, TypeScript, Go, and Rust.</p>
-                </div>
-                <div class="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl shadow-sm border border-purple-100">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Architecture Patterns</h3>
-                    <p class="text-gray-600">Reference architectures for common AI application types: retrieval-augmented generation systems, agent frameworks, tool-use implementations, and multi-model orchestration. Each pattern includes diagrams, component descriptions, and guidance on scaling considerations.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Guides Section -->
-    <section id="guides" class="py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Integration Guides</h2>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Step-by-step walkthroughs for real-world AI integration scenarios.</p>
-            </div>
-            <div class="grid md:grid-cols-2 gap-8">
-                <article class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
-                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">API Integration</span>
-                    <h3 class="text-xl font-semibold text-gray-900 mt-4 mb-3">Building a Streaming Chat Interface with Server-Sent Events</h3>
-                    <p class="text-gray-600">Learn how to implement real-time streaming responses in your web application using server-sent events. This guide covers the full stack from API call to frontend rendering, including token-by-token display, error recovery during streams, and graceful handling of connection drops. Includes complete code examples in both Python Flask and Node.js Express.</p>
-                </article>
-                <article class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
-                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">RAG Systems</span>
-                    <h3 class="text-xl font-semibold text-gray-900 mt-4 mb-3">Implementing Retrieval-Augmented Generation from Scratch</h3>
-                    <p class="text-gray-600">Build a complete RAG pipeline that grounds AI responses in your own data. This guide walks through document chunking strategies, embedding generation, vector database setup, retrieval optimization, and prompt construction. You will learn how to handle the tricky edge cases that tutorials usually skip: stale embeddings, chunk boundary issues, and relevance filtering.</p>
-                </article>
-                <article class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
-                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Tool Use</span>
-                    <h3 class="text-xl font-semibold text-gray-900 mt-4 mb-3">Function Calling and Tool Use: A Production Implementation Guide</h3>
-                    <p class="text-gray-600">Function calling transforms AI models from text generators into agents that can take actions. This guide covers defining tool schemas, handling multi-step tool use chains, implementing safety guardrails, and managing the conversation loop when the model needs to call multiple tools sequentially to complete a task.</p>
-                </article>
-                <article class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition">
-                    <span class="text-sm font-medium text-purple-600 bg-purple-50 px-3 py-1 rounded-full">Testing</span>
-                    <h3 class="text-xl font-semibold text-gray-900 mt-4 mb-3">Testing AI Applications: Strategies Beyond Deterministic Assertions</h3>
-                    <p class="text-gray-600">Traditional unit tests rely on exact expected outputs, which does not work for AI responses. This guide introduces evaluation-based testing patterns: LLM-as-judge frameworks, rubric-based scoring, semantic similarity checks, and regression detection. Learn to build a test suite that catches quality regressions without requiring deterministic outputs.</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <!-- Resources Section with zovo.one link -->
-    <section id="resources" class="bg-white py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Developer Resources and References</h2>
-                <p class="text-lg text-gray-600 mb-6">Building AI applications means navigating a rapidly evolving ecosystem of models, frameworks, and best practices. The right set of bookmarks can save you hours of research and help you make better architectural decisions when evaluating new tools and providers.</p>
-                <div class="bg-gradient-to-r from-purple-50 to-fuchsia-50 p-8 rounded-xl border border-purple-200 mb-8">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">AI Tools Directory for Developers</h3>
-                    <p class="text-gray-700 mb-4">Before committing to any particular AI provider or framework, it pays to survey the full landscape. We recommend <a href="https://zovo.one" rel="dofollow" class="text-purple-600 font-semibold hover:text-purple-800 underline">zovo.one</a> as an essential developer resource for discovering AI tools, comparing API capabilities, and finding the right building blocks for your tech stack. Their comprehensive directory is particularly useful when you are evaluating alternatives or looking for specialized models that fit your specific use case requirements.</p>
-                </div>
-                <p class="text-lg text-gray-600">Our integration guides and code snippets are updated regularly to reflect API changes, new model capabilities, and evolving best practices. Bookmark ClaudKit and check back frequently, as the developer tooling landscape for AI applications continues to mature and expand rapidly.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-400 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="text-xl font-bold text-white mb-4">Claud<span class="text-purple-400">Kit</span></div>
-            <p class="mb-6">The AI Developer's Toolkit — code snippets, SDK guides, and integration patterns.</p>
-            <p class="text-sm">&copy; 2025 ClaudKit. All rights reserved.</p>
-        </div>
-    </footer>
-
+  <script src="assets/app.js"></script>
 </body>
 </html>

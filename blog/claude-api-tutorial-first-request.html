@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude API Tutorial: Your First Request in 5 Minutes</title>
+  <meta name="description" content="Step-by-step guide to making your first Claude API call. Covers getting an API key, request format, Python and curl examples, and handling responses.">
+  <link rel="canonical" href="https://claudkit.com/blog/claude-api-tutorial-first-request.html">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-content">
+    <h1>Claude API Tutorial: Your First Request in 5 Minutes</h1>
+    <p style="color:var(--text-muted);margin-bottom:2rem;">April 1, 2026</p>
+
+    <p>This is a zero-to-working-code tutorial for the Claude API. By the end, you will have made a successful API call and received a response. No prior API experience required, though you should be comfortable running commands in a terminal.</p>
+
+    <h2>Step 1: Get an API Key</h2>
+
+    <p>Go to <a href="https://console.anthropic.com/">console.anthropic.com</a> and create an account. Once you are in the dashboard, navigate to API Keys and create a new key. Copy it immediately — you will not be able to see it again after closing the dialog.</p>
+
+    <p>Store the key as an environment variable so you do not accidentally commit it to version control:</p>
+
+    <pre><code>export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"</code></pre>
+
+    <p>Add this line to your <code>~/.bashrc</code> or <code>~/.zshrc</code> so it persists across terminal sessions.</p>
+
+    <h2>Step 2: Make Your First Request with curl</h2>
+
+    <p>The fastest way to test the API is with curl. Copy and paste this into your terminal:</p>
+
+    <pre><code>curl https://api.anthropic.com/v1/messages \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "max_tokens": 256,
+    "messages": [
+      {"role": "user", "content": "What is the capital of France?"}
+    ]
+  }'</code></pre>
+
+    <p>You should get a JSON response within a few seconds. The actual answer is in <code>response.content[0].text</code>. The response also includes usage information showing how many tokens were used for input and output.</p>
+
+    <h2>Step 3: Understanding the Request Format</h2>
+
+    <p>Let us break down each part of the request:</p>
+
+    <ul>
+      <li><strong>model</strong>: Which Claude model to use. <code>claude-sonnet-4-20250514</code> is the best balance of speed and quality for most tasks. Use <code>claude-opus-4-20250514</code> for the most complex reasoning tasks, or <code>claude-haiku-4-20250514</code> for fast, simple tasks.</li>
+      <li><strong>max_tokens</strong>: The maximum number of tokens Claude can generate in its response. One token is roughly 4 characters. Set this based on how long you expect the response to be. 256 tokens is about 200 words.</li>
+      <li><strong>messages</strong>: An array of message objects, each with a <code>role</code> ("user" or "assistant") and <code>content</code> (the text). For a simple request, you just need one user message.</li>
+      <li><strong>system</strong> (optional): A system prompt that sets Claude's behavior. Think of it as background instructions that apply to the entire conversation.</li>
+      <li><strong>temperature</strong> (optional): Controls randomness. 0.0 gives deterministic output, 1.0 gives more creative output. Default is 1.0. Use 0.0-0.3 for factual tasks, 0.7-1.0 for creative tasks.</li>
+    </ul>
+
+    <h2>Step 4: Use the Python SDK</h2>
+
+    <p>For real projects, use the official Python SDK. Install it:</p>
+
+    <pre><code>pip install anthropic</code></pre>
+
+    <p>Then write your first script:</p>
+
+    <pre><code>import anthropic
+
+client = anthropic.Anthropic()
+
+message = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system="You are a helpful coding assistant.",
+    messages=[
+        {"role": "user", "content": "Write a Python function that reverses a string."}
+    ]
+)
+
+print(message.content[0].text)</code></pre>
+
+    <p>The SDK automatically reads your <code>ANTHROPIC_API_KEY</code> environment variable. No need to pass it explicitly.</p>
+
+    <h2>Step 5: Add a System Prompt</h2>
+
+    <p>System prompts dramatically improve response quality for specific tasks. They tell Claude how to behave before the user says anything. Here is an example that turns Claude into a JSON-only responder:</p>
+
+    <pre><code>message = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=256,
+    temperature=0.0,
+    system="You are a data extraction assistant. Always respond with valid JSON only. No markdown, no explanation, just JSON.",
+    messages=[
+        {"role": "user", "content": "Extract the name, age, and city from: John Smith, 34, lives in Portland."}
+    ]
+)
+
+# Output: {"name": "John Smith", "age": 34, "city": "Portland"}</code></pre>
+
+    <p>The temperature is set to 0.0 for deterministic output, which is important when you need consistent JSON formatting.</p>
+
+    <h2>Step 6: Handle Multi-Turn Conversations</h2>
+
+    <p>To have a conversation, include previous messages in the messages array:</p>
+
+    <pre><code>messages = [
+    {"role": "user", "content": "What is the population of Tokyo?"},
+    {"role": "assistant", "content": "The population of Tokyo is approximately 14 million in the city proper and about 37 million in the greater metropolitan area."},
+    {"role": "user", "content": "How does that compare to New York?"}
+]
+
+message = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=512,
+    messages=messages
+)
+
+print(message.content[0].text)</code></pre>
+
+    <p>Claude will use the full conversation history as context. Messages must alternate between "user" and "assistant" roles, starting with "user".</p>
+
+    <h2>Common Gotchas</h2>
+
+    <p><strong>401 Unauthorized:</strong> Your API key is wrong or not set. Double-check the environment variable with <code>echo $ANTHROPIC_API_KEY</code>.</p>
+
+    <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string. The <a href="https://heytensor.com">HeyTensor</a> debugging tools can help trace API request issues.</p>
+
+    <p><strong>Rate limited (429):</strong> You are sending too many requests. Add exponential backoff with retries. The SDK handles this automatically if you use <code>client.messages.create</code>.</p>
+
+    <p><strong>Unexpected truncation:</strong> If the response cuts off mid-sentence, increase <code>max_tokens</code>. Check <code>message.stop_reason</code> in the response. If it says "max_tokens", the response was truncated.</p>
+
+    <h2>Next Steps</h2>
+
+    <p>You now have a working Claude API integration. To explore more options interactively, try the <a href="/">ClaudKit playground</a> where you can adjust all parameters visually and see the generated code update in real time.</p>
+
+    <p>For production applications, read the <a href="https://docs.anthropic.com/en/docs">official Anthropic documentation</a> which covers streaming responses, function calling, vision (image inputs), and best practices for prompt engineering.</p>
+  </div>
+
+  <footer>
+    Built by <a href="https://zovo.one">zovo.one</a> &middot; More tools: <a href="https://claudhq.com">ClaudHQ</a>, <a href="https://claudflow.com">ClaudFlow</a>
+  </footer>
+</body>
+</html>
