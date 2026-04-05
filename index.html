@@ -23,6 +23,62 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How to use the Claude API?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates code in curl, Python, and JavaScript."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the Anthropic API?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with x-api-key header."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does the Claude API cost?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Claude API pricing per 1M tokens: Haiku $0.25 input/$1.25 output, Sonnet $3.00/$15.00, Opus $15.00/$75.00. Use our built-in pricing estimator to calculate costs for your specific requests."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What models are available in the Claude API?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced), and Claude Opus (most capable). Each model supports the same API format with different speed/quality/cost tradeoffs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I get a Claude API key?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with 'sk-ant-api03-'. Store it securely and never expose it in client-side code."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is ClaudKit free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs. You only pay Anthropic for actual API usage when testing with your own key."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <nav>
@@ -92,6 +148,15 @@
         <button class="btn btn-sm copy-btn" id="copy-code-btn">Copy</button>
       </div>
 
+      <!-- Pricing Estimator -->
+      <div class="pricing-section">
+        <div id="pricing-estimate"></div>
+        <div class="daily-slider-row">
+          <label>Requests per day: <span id="daily-uses-display">10</span></label>
+          <input type="range" id="daily-uses-slider" min="1" max="1000" value="10" step="1">
+        </div>
+      </div>
+
       <!-- Try It Section -->
       <div class="try-section">
         <h3>Try with your API key</h3>
@@ -104,6 +169,34 @@
       </div>
     </div>
   </div>
+
+  <section class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How to use the Claude API?</div>
+      <div class="faq-a">Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates ready-to-use code in curl, Python, and JavaScript.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">What is the Anthropic API?</div>
+      <div class="faq-a">The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with the x-api-key header.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How much does the Claude API cost?</div>
+      <div class="faq-a">Claude API pricing per 1M tokens: Haiku costs $0.25 input / $1.25 output, Sonnet costs $3.00 / $15.00, and Opus costs $15.00 / $75.00. Use our built-in pricing estimator to calculate costs for your specific use case and see monthly projections.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">What models are available in the Claude API?</div>
+      <div class="faq-a">Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced performance), and Claude Opus (most capable). All share the same API format with different speed, quality, and cost tradeoffs.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">How do I get a Claude API key?</div>
+      <div class="faq-a">Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with "sk-ant-api03-". Store it securely and never expose it in client-side code.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is ClaudKit free to use?</div>
+      <div class="faq-a">Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs without signing up. You only pay Anthropic for actual API usage when you test with your own key.</div>
+    </div>
+  </section>
 
   <footer>
     Built by <a href="https://zovo.one">zovo.one</a> &middot; More tools: <a href="https://claudhq.com">ClaudHQ</a>, <a href="https://claudflow.com">ClaudFlow</a>

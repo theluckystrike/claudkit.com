@@ -159,6 +159,7 @@ function updateCodeDisplay() {
   if (block) {
     block.innerHTML = highlightCode(code, lang);
   }
+  updatePricingEstimate();
 }
 
 function copyCode() {
@@ -307,8 +308,78 @@ function initApp() {
   document.getElementById("copy-code-btn").addEventListener("click", copyCode);
   document.getElementById("send-btn").addEventListener("click", sendRequest);
 
+  /* Daily uses slider */
+  var dailySlider = document.getElementById("daily-uses-slider");
+  var dailyDisplay = document.getElementById("daily-uses-display");
+  if (dailySlider && dailyDisplay) {
+    dailySlider.addEventListener("input", function() {
+      dailyDisplay.textContent = this.value;
+      updatePricingEstimate();
+    });
+  }
+
   /* Initial render */
   loadPreset("summarize");
+}
+
+/* --- Pricing Estimator --- */
+
+var PRICING = {
+  "claude-haiku-4-20250514": { label: "Haiku", inputPer1M: 0.25, outputPer1M: 1.25 },
+  "claude-sonnet-4-20250514": { label: "Sonnet", inputPer1M: 3.00, outputPer1M: 15.00 },
+  "claude-opus-4-20250514": { label: "Opus", inputPer1M: 15.00, outputPer1M: 75.00 }
+};
+
+function estimateTokensFromText(text) {
+  var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+  return Math.ceil(words.length * 1.3);
+}
+
+function formatUSD(n) {
+  if (n < 0.0001) return "<$0.0001";
+  if (n < 0.01) return "$" + n.toFixed(4);
+  return "$" + n.toFixed(4);
+}
+
+function calcPricingRow(label, inputTokens, outputTokens, inputPer1M, outputPer1M) {
+  var cost = (inputTokens / 1e6) * inputPer1M + (outputTokens / 1e6) * outputPer1M;
+  return '<tr><td>' + label + '</td><td>' + inputTokens.toLocaleString() + '</td>' +
+    '<td>' + outputTokens.toLocaleString() + '</td><td class="cost-val">' + formatUSD(cost) + '</td></tr>';
+}
+
+function updatePricingEstimate() {
+  var container = document.getElementById("pricing-estimate");
+  if (!container) return;
+  var vals = getFormValues();
+  var sysTokens = estimateTokensFromText(vals.system);
+  var userTokens = estimateTokensFromText(vals.user);
+  var inputTokens = sysTokens + userTokens;
+  var outputTokens = vals.maxTokens;
+
+  var html = '<div class="pricing-header">Estimated Cost for This Request</div>';
+  html += '<table class="pricing-table"><thead><tr><th>Model</th><th>Input Tokens</th><th>Output Tokens</th><th>Cost</th></tr></thead><tbody>';
+
+  var keys = Object.keys(PRICING);
+  for (var i = 0; i < keys.length; i++) {
+    var p = PRICING[keys[i]];
+    html += calcPricingRow(p.label, inputTokens, outputTokens, p.inputPer1M, p.outputPer1M);
+  }
+  html += '</tbody></table>';
+
+  // Monthly estimator
+  var dailyUses = parseInt(document.getElementById("daily-uses-slider").value, 10) || 10;
+  html += '<div class="monthly-header">Monthly Cost (' + dailyUses + ' requests/day)</div>';
+  html += '<table class="pricing-table"><thead><tr><th>Model</th><th>Daily</th><th>Monthly (30 days)</th></tr></thead><tbody>';
+  for (var j = 0; j < keys.length; j++) {
+    var pm = PRICING[keys[j]];
+    var perReq = (inputTokens / 1e6) * pm.inputPer1M + (outputTokens / 1e6) * pm.outputPer1M;
+    var daily = perReq * dailyUses;
+    var monthly = daily * 30;
+    html += '<tr><td>' + pm.label + '</td><td>' + formatUSD(daily) + '</td><td class="cost-val">' + formatUSD(monthly) + '</td></tr>';
+  }
+  html += '</tbody></table>';
+
+  container.innerHTML = html;
 }
 
 if (document.readyState === "loading") {
