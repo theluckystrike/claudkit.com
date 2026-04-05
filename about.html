@@ -22,25 +22,8 @@
 
     <p>ClaudKit is a free API playground for building and testing requests to Anthropic's Claude API. It provides a visual form interface for constructing API calls and generates the equivalent code in curl, Python, and JavaScript with syntax highlighting. You can also test requests directly from your browser by providing your own API key.</p>
 
-    <h2>Why This Exists</h2>
-
-    <p>When you are learning a new API, the biggest friction point is going from "I read the docs" to "I have working code." You need to figure out the correct endpoint, headers, authentication format, request body structure, and response format. For the Claude API specifically, you also need to understand the messages format, the system prompt parameter, token limits, and temperature settings.</p>
-
-    <p>ClaudKit eliminates that friction. Fill in the form fields, and it generates production-ready code you can copy directly into your project. Change the model, adjust the temperature, modify the system prompt, and the code updates in real time. No more manually editing JSON strings or debugging malformed curl commands.</p>
-
-    <h2>How It Works</h2>
-
-    <p>The left panel contains the request builder: model selector, system prompt, user message, temperature slider, and max tokens. As you modify any field, the right panel instantly regenerates code in your chosen format. Tab between curl, Python (using the official <code>anthropic</code> SDK), and JavaScript (using the <code>@anthropic-ai/sdk</code> package).</p>
-
-    <p>Five preset examples are included: Summarize Text, Translate, Code Review, Creative Writing, and Data Extraction. Each preset fills in optimized system prompts, user messages, and temperature settings for common use cases. They are designed to work well out of the box and serve as starting points for customization.</p>
-
-    <p>The "Try with your API key" section lets you paste your Anthropic API key and send the request directly. The response appears in a formatted JSON viewer below. Your API key is never stored or transmitted anywhere except directly to the Anthropic API. All processing happens in your browser.</p>
-
-    <h2>Part of the Open Tools Network</h2>
-
-    <p>ClaudKit is part of the <a href="https://zovo.one">zovo.one</a> open tools network. It works alongside <a href="https://claudhq.com">ClaudHQ</a>, a searchable library of prompt templates you can use in the system prompt and user message fields, and <a href="https://claudflow.com">ClaudFlow</a>, a visual workflow builder for chaining multiple API calls into automated pipelines.</p>
-
-    <p>All tools run entirely in your browser with no backend servers, no user accounts, and no data collection. Your API keys, prompts, and responses never leave your machine.</p>
+    <h2>About This Project</h2>
+    <p>ClaudKit is an independent developer tool for building and testing Claude API requests. Everything runs locally in your browser — your API keys never leave your machine.</p>
 
     <h2>For Developers</h2>
 
@@ -48,7 +31,7 @@
   </div>
 
   <footer>
-    Built by <a href="https://zovo.one">zovo.one</a> &middot; More tools: <a href="https://claudhq.com">ClaudHQ</a>, <a href="https://claudflow.com">ClaudFlow</a>
+    <p>&copy; 2025 ClaudKit</p>
   </footer>
 </body>
 </html>

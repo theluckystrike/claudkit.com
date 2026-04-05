@@ -130,7 +130,7 @@ print(message.content[0].text)</code></pre>
 
     <p><strong>401 Unauthorized:</strong> Your API key is wrong or not set. Double-check the environment variable with <code>echo $ANTHROPIC_API_KEY</code>.</p>
 
-    <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string. The <a href="https://heytensor.com">HeyTensor</a> debugging tools can help trace API request issues.</p>
+    <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string. The <a href="https://heytensor.com" rel="nofollow">HeyTensor</a> debugging tools can help trace API request issues.</p>
 
     <p><strong>Rate limited (429):</strong> You are sending too many requests. Add exponential backoff with retries. The SDK handles this automatically if you use <code>client.messages.create</code>.</p>
 
@@ -138,13 +138,13 @@ print(message.content[0].text)</code></pre>
 
     <h2>Next Steps</h2>
 
-    <p>You now have a working Claude API integration. To explore more options interactively, try the <a href="/">ClaudKit playground</a> where you can adjust all parameters visually and see the generated code update in real time.</p>
+    <p>You now have a working Claude API integration. To explore more options interactively, try the <a href="/">ClaudKit playground</a> where you can adjust all parameters visually and see the generated code update in real time. For more details, see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status" target="_blank" rel="noopener">HTTP status codes reference</a>. For more details, see <a href="https://swagger.io/docs/specification/authentication/" target="_blank" rel="noopener">API authentication patterns</a>.</p>
 
     <p>For production applications, read the <a href="https://docs.anthropic.com/en/docs">official Anthropic documentation</a> which covers streaming responses, function calling, vision (image inputs), and best practices for prompt engineering.</p>
   </div>
 
   <footer>
-    Built by <a href="https://zovo.one">zovo.one</a> &middot; More tools: <a href="https://claudhq.com">ClaudHQ</a>, <a href="https://claudflow.com">ClaudFlow</a>
+    <p>&copy; 2025 ClaudKit</p>
   </footer>
 </body>
 </html>

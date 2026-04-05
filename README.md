@@ -20,9 +20,7 @@ Select your target model and configure the request parameters using the visual c
 
 - Vanilla JavaScript (no frameworks, no dependencies)
 - Client-side only — your data never leaves your browser
-- Part of the [Zovo Tools](https://zovo.one) open network
 
-## Related Tools
 
 - [Claude Prompt Library](https://claudhq.com) — find tested prompts to use in your API calls
 - [AI Workflow Builder](https://claudflow.com) — chain multiple API calls into automated workflows
