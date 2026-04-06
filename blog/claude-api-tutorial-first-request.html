@@ -5,9 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Claude API Tutorial: Your First Request in 5 Minutes</title>
   <meta name="description" content="Step-by-step guide to making your first Claude API call. Covers getting an API key, request format, Python and curl examples, and handling responses.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Claude API Tutorial: Your First Request in 5 Minutes">
+  <meta property="og:description" content="Step-by-step guide to making your first Claude API call. Covers authentication, request format, and response handling.">
+  <meta property="og:url" content="https://claudkit.com/blog/claude-api-tutorial-first-request.html">
+  <meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+  <meta property="og:site_name" content="Zovo Tools">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Claude API Tutorial: Your First Request in 5 Minutes">
+  <meta name="twitter:description" content="Step-by-step guide to making your first Claude API call. Covers authentication, request format, and response handling.">
+  <meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
   <link rel="canonical" href="https://claudkit.com/blog/claude-api-tutorial-first-request.html">
-    <link rel="alternate" type="application/atom+xml" title="ClaudKit — Claude API Playground Blog Feed" href="/blog/feed.xml">
+  <link rel="alternate" hreflang="en" href="https://claudkit.com/blog/claude-api-tutorial-first-request.html">
+  <link rel="alternate" hreflang="x-default" href="https://claudkit.com/blog/claude-api-tutorial-first-request.html">
+  <link rel="alternate" type="application/atom+xml" title="ClaudKit — Claude API Playground Blog Feed" href="/blog/feed.xml">
   <link rel="stylesheet" href="/assets/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Claude API Tutorial: Your First Request in 5 Minutes",
+    "description": "Step-by-step guide to making your first Claude API call. Covers getting an API key, request format, Python and curl examples, and handling responses.",
+    "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+    "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+    "datePublished": "2026-04-01",
+    "dateModified": "2026-04-06"
+  }
+  </script>
 </head>
 <body>
   <nav>
@@ -24,7 +48,8 @@
 
   <div class="page-content">
     <h1>Claude API Tutorial: Your First Request in 5 Minutes</h1>
-    <p style="color:var(--text-muted);margin-bottom:2rem;">April 1, 2026</p>
+    <p style="color:var(--text-muted);margin-bottom:0.5rem;">April 1, 2026</p>
+    <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:2rem;">By <a href="/about.html" style="color:var(--accent);">Michael Lip</a></p>
 
     <p>This is a zero-to-working-code tutorial for the Claude API. By the end, you will have made a successful API call and received a response. No prior API experience required, though you should be comfortable running commands in a terminal.</p>
 
@@ -36,7 +61,7 @@
 
     <pre><code>export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"</code></pre>
 
-    <p>Add this line to your <code>~/.bashrc</code> or <code>~/.zshrc</code> so it persists across terminal sessions.</p>
+    <p>Add this line to your <code>~/.bashrc</code> or <code>~/.zshrc</code> so it persists across terminal sessions. For more robust API key management across multiple projects, <a href="https://lockml.com">LockML</a> provides encryption tools designed specifically for machine learning credentials.</p>
 
     <h2>Step 2: Make Your First Request with curl</h2>
 
@@ -135,7 +160,7 @@ print(message.content[0].text)</code></pre>
 
     <p><strong>401 Unauthorized:</strong> Your API key is wrong or not set. Double-check the environment variable with <code>echo $ANTHROPIC_API_KEY</code>.</p>
 
-    <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string. The <a href="https://heytensor.com" rel="nofollow">HeyTensor</a> debugging tools can help trace API request issues.</p>
+    <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string.</p>
 
     <p><strong>Rate limited (429):</strong> You are sending too many requests. Add exponential backoff with retries. The SDK handles this automatically if you use <code>client.messages.create</code>.</p>
 
@@ -143,10 +168,10 @@ print(message.content[0].text)</code></pre>
 
     <h2>Next Steps</h2>
 
-    <p>You now have a working Claude API integration. To explore more options interactively, try the <a href="/">ClaudKit playground</a> where you can adjust all parameters visually and see the generated code update in real time. For more details, see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status" target="_blank" rel="noopener">HTTP status codes reference</a>. For more details, see <a href="https://swagger.io/docs/specification/authentication/" target="_blank" rel="noopener">API authentication patterns</a>.</p>
+    <p>You now have a working Claude API integration. To explore more options interactively, try the <a href="/">ClaudKit playground</a> where you can adjust all parameters visually and see the generated code update in real time. If you want ready-made prompt templates to use in your API calls, the <a href="https://claudhq.com">ClaudHQ prompt library</a> has 30+ tested templates optimized for Claude. For more details, see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status" target="_blank" rel="noopener">HTTP status codes reference</a>. For more details, see <a href="https://swagger.io/docs/specification/authentication/" target="_blank" rel="noopener">API authentication patterns</a>.</p>
 
     <p>For production applications, read the <a href="https://docs.anthropic.com/en/docs">official Anthropic documentation</a> which covers streaming responses, function calling, vision (image inputs), and best practices for prompt engineering.</p>
-  
+
     <aside class="references">
       <h3>References</h3>
       <ol>

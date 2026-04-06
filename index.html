@@ -5,12 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClaudKit — Claude API Playground | Build & Test Requests</title>
   <meta name="description" content="Interactive Claude API playground. Build requests visually, get code in curl/Python/JS, and test with your own API key. Free, no sign-up.">
-  <meta property="og:title" content="ClaudKit — Claude API Playground">
-  <meta property="og:description" content="Build and test Claude API requests visually. Get code in curl, Python, and JavaScript.">
-  <meta property="og:url" content="https://claudkit.com/">
   <meta property="og:type" content="website">
+  <meta property="og:title" content="ClaudKit — Claude API Playground | Build & Test Requests">
+  <meta property="og:description" content="Interactive Claude API playground. Build requests visually, get code in curl/Python/JS, and test with your own API key.">
+  <meta property="og:url" content="https://claudkit.com/">
+  <meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+  <meta property="og:site_name" content="Zovo Tools">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ClaudKit — Claude API Playground | Build & Test Requests">
+  <meta name="twitter:description" content="Interactive Claude API playground. Build requests visually, get code in curl/Python/JS, and test with your own API key.">
+  <meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
   <link rel="canonical" href="https://claudkit.com/">
-    <link rel="alternate" type="application/atom+xml" title="ClaudKit — Claude API Playground Blog Feed" href="/blog/feed.xml">
+  <link rel="alternate" hreflang="en" href="https://claudkit.com/">
+  <link rel="alternate" hreflang="x-default" href="https://claudkit.com/">
+  <link rel="alternate" type="application/atom+xml" title="ClaudKit — Claude API Playground Blog Feed" href="/blog/feed.xml">
   <link rel="stylesheet" href="assets/style.css">
   <script type="application/ld+json">
   {
@@ -21,7 +29,20 @@
     "description": "Interactive API request builder for Claude with syntax-highlighted code output in curl, Python, and JavaScript.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Web",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+    "datePublished": "2026-04-05",
+    "dateModified": "2026-04-06",
+    "featureList": [
+      "Visual API request builder for Claude",
+      "Syntax-highlighted code output in curl, Python, and JavaScript",
+      "Built-in API pricing estimator with monthly projections",
+      "Live API testing with your own key",
+      "Preset request templates for common use cases",
+      "Model selection: Haiku, Sonnet, Opus",
+      "Temperature and max_tokens controls",
+      "No sign-up required, 100% browser-based"
+    ]
   }
   </script>
   <script type="application/ld+json">
@@ -76,6 +97,22 @@
           "@type": "Answer",
           "text": "Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs. You only pay Anthropic for actual API usage when testing with your own key."
         }
+      },
+      {
+        "@type": "Question",
+        "name": "Does ClaudKit store my API key?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Your API key is only held in browser memory during your session and is sent directly to the Anthropic API endpoint. It is never stored on any server, in cookies, or in localStorage. The source code is open on GitHub for verification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I use ClaudKit to test streaming responses?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "ClaudKit currently supports standard (non-streaming) API requests through the built-in tester. The generated code includes both streaming and non-streaming variants that you can copy and run in your own environment."
+        }
       }
     ]
   }
@@ -97,6 +134,7 @@
   <section class="hero">
     <h1>Claude API Playground</h1>
     <p>Build requests visually. Get code in curl, Python, and JavaScript.</p>
+    <p style="font-size:0.9rem;color:var(--text-muted);">Built by <a href="/about.html" style="color:var(--accent);">Michael Lip</a></p>
   </section>
 
   <div class="playground">
@@ -175,32 +213,72 @@
     </div>
   </div>
 
-  <section class="faq-section">
+  <div class="last-updated"><time datetime="2026-04-06">Last updated: April 6, 2026</time></div>
+
+  <section class="explainer" style="max-width:800px;margin:2rem auto;padding:0 1.5rem;line-height:1.7;">
+    <h2>How ClaudKit Works</h2>
+
+    <p>ClaudKit is an interactive API playground for Anthropic's Claude. It provides a visual form where you configure every parameter of an API request — model, system prompt, user message, temperature, and max tokens — and instantly see the equivalent code generated in three languages: curl, Python, and JavaScript. The generated code updates in real time as you adjust any parameter, so you can experiment with different configurations and immediately copy working code into your project.</p>
+
+    <p>The playground includes a built-in pricing estimator that calculates the cost of each request based on the model you select and the estimated token count of your input and output. A daily usage slider lets you project monthly costs at different request volumes, which is essential for budgeting before committing to a production integration. The estimator uses current Anthropic pricing for Haiku, Sonnet, and Opus models.</p>
+
+    <p>For developers who want to test their requests immediately, ClaudKit includes a live API tester. Enter your Anthropic API key, click Send, and see the actual response from Claude rendered in the browser. Your API key is held only in browser memory during your session and is sent directly to the Anthropic API endpoint — it is never stored, logged, or transmitted anywhere else. The complete source code is open on <a href="https://github.com/theluckystrike/claudkit.com">GitHub</a> for anyone to verify this claim.</p>
+
+    <h3>Features</h3>
+
+    <p>ClaudKit includes preset request templates for common use cases such as code generation, text summarization, data extraction, and creative writing, so you can start with a working example and customize from there. The code output panel features syntax highlighting for all three languages, making the generated code easy to read and understand. A one-click copy button puts the code on your clipboard ready to paste into your editor or terminal. The model selector includes all available Claude models with their pricing displayed inline. Temperature and max tokens controls include tooltips explaining what each parameter does and recommended ranges for different task types.</p>
+
+    <h3>Who Uses This</h3>
+
+    <p>ClaudKit is built for developers integrating Claude into their applications, from solo developers building their first AI feature to engineering teams evaluating the Claude API for production use. Backend developers use it to prototype API calls before writing integration code. Frontend developers use the JavaScript output to add Claude-powered features to web applications. DevOps engineers use the curl output for testing in CI/CD pipelines. Technical writers use it to generate accurate code examples for documentation. If you need prompt templates to use in your API calls, <a href="https://claudhq.com">ClaudHQ</a> provides a library of 30+ tested prompts optimized for Claude. For building multi-step workflows that chain multiple API calls together, <a href="https://claudflow.com">ClaudFlow</a> offers a visual workflow designer that complements the individual requests you build here.</p>
+
+    <h3>Privacy</h3>
+
+    <p>Everything runs locally in your browser. ClaudKit does not send any data to any server other than direct API calls to Anthropic when you explicitly click the Send button with your own API key. No cookies, no tracking, no analytics, no server-side processing. Your API key is never stored in localStorage, cookies, or anywhere persistent — it exists only in browser memory and is discarded when you close the tab. The application is a static HTML, CSS, and JavaScript site. The complete source code is open source on <a href="https://github.com/theluckystrike/claudkit.com">GitHub</a>.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 1.5rem;">
     <h2>Frequently Asked Questions</h2>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">How to use the Claude API?</div>
-      <div class="faq-a">Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates ready-to-use code in curl, Python, and JavaScript.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">What is the Anthropic API?</div>
-      <div class="faq-a">The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with the x-api-key header.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">How much does the Claude API cost?</div>
-      <div class="faq-a">Claude API pricing per 1M tokens: Haiku costs $0.25 input / $1.25 output, Sonnet costs $3.00 / $15.00, and Opus costs $15.00 / $75.00. Use our built-in pricing estimator to calculate costs for your specific use case and see monthly projections.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">What models are available in the Claude API?</div>
-      <div class="faq-a">Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced performance), and Claude Opus (most capable). All share the same API format with different speed, quality, and cost tradeoffs.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">How do I get a Claude API key?</div>
-      <div class="faq-a">Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with "sk-ant-api03-". Store it securely and never expose it in client-side code.</div>
-    </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">Is ClaudKit free to use?</div>
-      <div class="faq-a">Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs without signing up. You only pay Anthropic for actual API usage when you test with your own key.</div>
-    </div>
+
+    <details>
+      <summary>How to use the Claude API?</summary>
+      <p>Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates ready-to-use code in curl, Python, and JavaScript.</p>
+    </details>
+
+    <details>
+      <summary>What is the Anthropic API?</summary>
+      <p>The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with the x-api-key header.</p>
+    </details>
+
+    <details>
+      <summary>How much does the Claude API cost?</summary>
+      <p>Claude API pricing per 1M tokens: Haiku costs $0.25 input / $1.25 output, Sonnet costs $3.00 / $15.00, and Opus costs $15.00 / $75.00. Use our built-in pricing estimator to calculate costs for your specific use case and see monthly projections.</p>
+    </details>
+
+    <details>
+      <summary>What models are available in the Claude API?</summary>
+      <p>Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced performance), and Claude Opus (most capable). All share the same API format with different speed, quality, and cost tradeoffs.</p>
+    </details>
+
+    <details>
+      <summary>How do I get a Claude API key?</summary>
+      <p>Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with "sk-ant-api03-". Store it securely and never expose it in client-side code.</p>
+    </details>
+
+    <details>
+      <summary>Is ClaudKit free to use?</summary>
+      <p>Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs without signing up. You only pay Anthropic for actual API usage when you test with your own key.</p>
+    </details>
+
+    <details>
+      <summary>Does ClaudKit store my API key?</summary>
+      <p>No. Your API key is only held in browser memory during your session and is sent directly to the Anthropic API endpoint. It is never stored on any server, in cookies, or in localStorage. The source code is open on GitHub for verification.</p>
+    </details>
+
+    <details>
+      <summary>Can I use ClaudKit to test streaming responses?</summary>
+      <p>ClaudKit currently supports standard (non-streaming) API requests through the built-in tester. The generated code includes both streaming and non-streaming variants that you can copy and run in your own environment.</p>
+    </details>
   </section>
 
   <footer>
