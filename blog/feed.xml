@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>ClaudKit — Claude API Playground Blog</title>
+  <link href="https://claudkit.com/blog/" rel="alternate"/>
+  <link href="https://claudkit.com/blog/feed.xml" rel="self"/>
+  <id>https://claudkit.com/blog/</id>
+  <updated>2026-04-06T00:00:00Z</updated>
+  <author><name>ClaudKit — Claude API Playground</name></author>
+  <entry>
+    <title>Claude API Tutorial: Your First Request in 5 Minutes</title>
+    <link href="https://claudkit.com/blog/claude-api-tutorial-first-request.html" rel="alternate"/>
+    <id>https://claudkit.com/blog/claude-api-tutorial-first-request.html</id>
+    <updated>2026-04-06T00:00:00Z</updated>
+    <summary>Step-by-step guide to making your first Claude API call. Covers getting an API key, request format, Python and curl examples, and handling responses.</summary>
+  </entry>
+  <entry>
+    <title>Anthropic API vs OpenAI API: Developer Experience Compared</title>
+    <link href="https://claudkit.com/blog/anthropic-api-vs-openai-api.html" rel="alternate"/>
+    <id>https://claudkit.com/blog/anthropic-api-vs-openai-api.html</id>
+    <updated>2026-04-06T00:00:00Z</updated>
+    <summary>Practical developer comparison of the Anthropic Claude API and OpenAI API. Authentication, SDKs, request formats, error handling, streaming, and pricing.</summary>
+  </entry>
+</feed>
