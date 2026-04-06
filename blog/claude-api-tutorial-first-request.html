@@ -161,6 +161,8 @@ print(message.content[0].text)</code></pre>
 
     <p><strong>401 Unauthorized:</strong> Your API key is wrong or not set. Double-check the environment variable with <code>echo $ANTHROPIC_API_KEY</code>.</p>
 
+    <p>If you work with ML models through the API, <a href="https://heytensor.com/tools/">HeyTensor's ML/AI tools</a> offer tensor shape calculators and model debuggers.</p>
+
     <p><strong>400 Bad Request:</strong> Usually a malformed request body. The most common mistake is forgetting that <code>messages</code> is an array of objects, not a string.</p>
 
     <p><strong>Rate limited (429):</strong> You are sending too many requests. Add exponential backoff with retries. The SDK handles this automatically if you use <code>client.messages.create</code>.</p>
