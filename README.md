@@ -1,50 +1,60 @@
-# ClaudKit -- Claude API Playground & Request Builder
+# ClaudKit
 
-**[-> Use ClaudKit (live tool)](https://claudkit.com/)**
+> Free Claude API playground and visual request builder with instant code generation in curl, Python, and JavaScript.
 
-ClaudKit is a free interactive API playground for Anthropic's Claude. Build requests visually by configuring model, system prompt, temperature, and max tokens, then get instant code generation in curl, Python, and JavaScript. Includes a built-in pricing estimator and live API tester with your own key.
+**[Use ClaudKit live](https://claudkit.com/)**
+
+ClaudKit is a free interactive API playground for Anthropic's Claude. Build requests visually by configuring model, system prompt, temperature, and max tokens, then get instant code generation in curl, Python, and JavaScript. Includes a built-in pricing estimator and live API tester using your own key — nothing is ever stored on our servers.
 
 ## Features
 
 - Visual API request builder for all Claude models (Haiku, Sonnet, Opus)
-- Syntax-highlighted code output in curl, Python, and JavaScript
-- Built-in API pricing estimator with monthly cost projections
-- Live API testing with your own Anthropic key (key never stored)
+- Syntax-highlighted code generation in curl, Python, and JavaScript
+- Built-in pricing estimator with monthly cost projections
+- Live API testing with your own Anthropic API key (never stored)
 - Preset request templates for common use cases
 - Temperature and max_tokens controls with inline guidance
-- 100% client-side -- your data never leaves your browser
-- Open source -- inspect the code yourself
+- System prompt editor with token counter
+- Response inspector with full JSON display
+- 100% client-side — no data leaves your browser
+- MIT licensed
+- No signup, no tracking
 
 ## Tech Stack
 
-- Vanilla JavaScript (no frameworks, no build step)
-- Static HTML hosted on GitHub Pages
-- Cloudflare DNS + SSL
-- Zero dependencies, zero tracking, zero cookies
+- Pure HTML, CSS, and vanilla JavaScript
+- No build step
+- No external dependencies (except Google Fonts on some pages)
+- Hosted on GitHub Pages with Cloudflare CDN
 
 ## Part of Zovo Tools
 
-ClaudKit is part of [Zovo Tools](https://zovo.one/tools) -- a collection of free developer tools.
+ClaudKit is part of [Zovo Tools](https://zovo.one/tools) — free developer tools by a solo developer. No tracking, no signup, no nonsense.
 
 **Other tools in the network:**
-- [EpochPilot](https://epochpilot.com) -- Epoch & timestamp converter, timezone tools & cron parser
-- [HeyTensor](https://heytensor.com) -- PyTorch tensor shape calculator & error debugger
-- [LochBot](https://lochbot.com) -- Prompt injection vulnerability checker for chatbots
-- [KappaKit](https://kappakit.com) -- Developer toolkit (Base64, JWT, hash, UUID, regex & more)
-- [ABWex](https://abwex.com) -- A/B test statistical significance calculator
-- [Gen8X](https://gen8x.com) -- Color palette generator with CSS, Tailwind & SCSS export
-- [KickLLM](https://kickllm.com) -- LLM API cost calculator & provider comparison
-- [LockML](https://lockml.com) -- Open source ML model comparison table
-- [ClaudFlow](https://claudflow.com) -- AI workflow builder & visual prompt chain editor
-- [ClaudHQ](https://claudhq.com) -- Claude prompt library with 30+ ready-to-use templates
-- [ML3X](https://ml3x.com) -- Matrix calculator with step-by-step solutions
-- [ML0X](https://ml0x.com) -- Machine learning cheat sheet generator
-- [Krzen](https://krzen.com) -- Image compressor, resizer & format converter
-- [Kappafy](https://kappafy.com) -- JSON explorer & mock API generator
-- [InvokeBot](https://invokebot.com) -- Webhook request builder & HTTP client
-- [GPT0X](https://gpt0x.com) -- AI model database & comparison tool
-- [Enhio](https://enhio.com) -- Text enhancement tool & readability analyzer
+
+- [HeyTensor](https://heytensor.com) — PyTorch tensor shape calculator
+- [EpochPilot](https://epochpilot.com) — Timestamp, timezone, and cron tools
+- [KappaKit](https://kappakit.com) — Developer toolkit (Base64, JWT, hash, regex)
+- [LochBot](https://lochbot.com) — Prompt injection vulnerability checker
+- [ABWex](https://abwex.com) — A/B test significance calculator
+- [KickLLM](https://kickllm.com) — LLM cost calculator
+- [Gen8X](https://gen8x.com) — Color palette generator with WCAG checks
+- [GPT0X](https://gpt0x.com) — AI model database
+- [ML3X](https://ml3x.com) — Matrix calculator
+- [ML0X](https://ml0x.com) — Machine learning cheat sheet generator
+- [Enhio](https://enhio.com) — Text enhancement utilities
+- [Krzen](https://krzen.com) — Image compression
+- [Kappafy](https://kappafy.com) — JSON formatter and explorer
+- [LockML](https://lockml.com) — Open source ML model comparison
+- [InvokeBot](https://invokebot.com) — Webhook testing
+- [ClaudHQ](https://claudhq.com) — Claude prompt library
+- [ClaudFlow](https://claudflow.com) — AI workflow builder
 
 ## License
 
-MIT
+MIT licensed.
+
+## Contact
+
+Built and maintained by [Michael Lip](https://zovo.one). For questions or feedback: support@zovo.one
