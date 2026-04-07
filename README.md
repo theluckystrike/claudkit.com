@@ -1,34 +1,36 @@
-# Claude API Playground — Test AI API Requests with Visual Request Builder
+# ClaudKit -- Claude API Playground & Request Builder
 
-**[Try the Playground →](https://claudkit.com)** | [About](https://claudkit.com/about.html) | [Blog](https://claudkit.com/blog/)
+**[-> Use ClaudKit (live tool)](https://claudkit.com/)**
 
-Claude API Playground is a visual request builder for testing AI API calls. Build requests interactively, configure parameters with sliders and dropdowns, and instantly generate production-ready code in cURL, Python, and JavaScript. Features syntax highlighting, response preview, and a clean interface that makes API exploration fast and intuitive.
+ClaudKit is a free interactive API playground for Anthropic's Claude. Build requests visually by configuring model, system prompt, temperature, and max tokens, then get instant code generation in curl, Python, and JavaScript. Includes a built-in pricing estimator and live API tester with your own key.
 
 ## Features
 
-- **Visual API request builder** — configure model, temperature, max tokens, and system prompts
-- **Code generation in cURL, Python, and JavaScript** — copy production-ready snippets instantly
-- **Syntax highlighting** — readable request and response formatting
-- **Parameter exploration** — test different settings and see how they affect output
-- **Request history** — review and replay previous API calls
+- Visual API request builder for all Claude models (Haiku, Sonnet, Opus)
+- Syntax-highlighted code output in curl, Python, and JavaScript
+- Built-in API pricing estimator with monthly cost projections
+- Live API testing with your own Anthropic key (key never stored)
+- Preset request templates for common use cases
+- Temperature and max_tokens controls with inline guidance
+- 100% client-side -- your data never leaves your browser
+- Open source -- inspect the code yourself
 
-## How It Works
+## Tech Stack
 
-Select your target model and configure the request parameters using the visual controls. Set your system prompt, user message, temperature, and token limits. The playground generates the corresponding API request in real time. Switch between cURL, Python, and JavaScript tabs to get code you can paste directly into your project. All configuration happens in your browser — your API keys are never stored or transmitted.
+- Vanilla JavaScript (no frameworks, no build step)
+- Static HTML hosted on GitHub Pages
+- Cloudflare DNS + SSL
+- Zero dependencies, zero tracking, zero cookies
 
-## Built With
+## Part of Zovo Tools
 
-- Vanilla JavaScript (no frameworks, no dependencies)
-- Client-side only — your data never leaves your browser
+ClaudKit is part of [Zovo Tools](https://zovo.one/tools) -- a collection of free developer tools.
 
-
-- [Claude Prompt Library](https://claudhq.com) — find tested prompts to use in your API calls
-- [AI Workflow Builder](https://claudflow.com) — chain multiple API calls into automated workflows
-- [JSON Explorer](https://kappafy.com) — parse and explore API response payloads
-
-## Contributing
-
-Found a bug or have a feature request? [Open an issue](https://github.com/theluckystrike/claudkit.com/issues).
+**Other tools in the network:**
+- [EpochPilot](https://epochpilot.com) -- 30+ timestamp and timezone tools
+- [HeyTensor](https://heytensor.com) -- PyTorch tensor shape calculator
+- [LochBot](https://lochbot.com) -- Prompt injection vulnerability checker
+- [KappaKit](https://kappakit.com) -- Developer toolkit (Base64, JWT, hash, UUID)
 
 ## License
 
