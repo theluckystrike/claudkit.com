@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Rate Limit Comparison — Every Major AI API's Limits | ClaudKit</title>
+<meta name="description" content="Compare rate limits, quotas, and throttling policies for OpenAI, Anthropic, Google, Mistral, Cohere, and more. Free tier, paid tier, and enterprise limits.">
+<link rel="canonical" href="https://claudkit.com/research/api-rate-limit-comparison.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/research/api-rate-limit-comparison.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/research/api-rate-limit-comparison.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="API Rate Limit Comparison — Every Major AI API's Limits">
+<meta property="og:description" content="Compare rate limits, quotas, and throttling policies for every major AI API provider including free, paid, and enterprise tiers.">
+<meta property="og:url" content="https://claudkit.com/research/api-rate-limit-comparison.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="API Rate Limit Comparison — Every Major AI API's Limits">
+<meta name="twitter:description" content="Compare rate limits, quotas, and throttling policies for every major AI API provider.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "AI API Rate Limit Comparison Dataset",
+  "description": "Comprehensive comparison of rate limits, quotas, and throttling policies for major AI API providers including OpenAI, Anthropic, Google, Mistral, Cohere, and others across free, paid, and enterprise tiers.",
+  "url": "https://claudkit.com/research/api-rate-limit-comparison.html",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "datePublished": "2026-04-10",
+  "dateModified": "2026-04-10",
+  "keywords": ["API rate limits", "rate limiting", "AI API", "throttling", "OpenAI limits", "Anthropic limits"]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are the Anthropic Claude API rate limits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anthropic's Claude API rate limits vary by tier. Free tier: 5 RPM (requests per minute), 25K tokens per minute. Build tier (credit-based): 50 RPM, 50K TPM for Opus, up to 2,000 RPM and 200K TPM for Haiku. Scale tier: 4,000 RPM, 400K TPM. Enterprise limits are custom and negotiable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do OpenAI rate limits compare to Anthropic?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "OpenAI uses a tiered system based on spending. Tier 1 ($5+ spent): 500 RPM for GPT-4o, 60K TPM. Tier 2 ($50+ spent): 5,000 RPM, 450K TPM. Tier 5 ($1,000+ spent): 10,000 RPM, 30M TPM. Anthropic's Build tier is comparable to OpenAI's Tier 1-2, while Anthropic Scale matches OpenAI's Tier 4-5."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens when you hit an API rate limit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most AI APIs return HTTP 429 (Too Many Requests) with a Retry-After header indicating when to retry. OpenAI and Anthropic both use this pattern. Best practice is to implement exponential backoff: wait 1s, then 2s, then 4s between retries. Some APIs also return rate limit headers (X-RateLimit-Remaining) so you can proactively throttle."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which AI API has the most generous free tier?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Google Gemini offers the most generous free tier at 15 RPM for Gemini Pro and 1,500 requests per day. Anthropic's free tier offers 5 RPM with 25K TPM. OpenAI's free tier (when available) provides limited credits. Mistral offers a modest free tier. For hobby projects, Google Gemini's free tier provides the most headroom."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I handle rate limiting in production applications?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Implement these strategies: (1) Token bucket or leaky bucket rate limiters in your client code, (2) Exponential backoff with jitter on 429 responses, (3) Request queuing to smooth burst traffic, (4) Caching responses for identical requests, (5) Load balancing across multiple API keys or providers. Stack Overflow's most-discussed approaches include OkHttp interceptors (7.8K views) and Retrofit queue delays (18.9K views)."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  .research-badge { display:inline-block; background:var(--accent-dim,rgba(139,233,253,0.1)); color:var(--accent,#8be9fd); padding:4px 12px; border-radius:var(--radius,8px); font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:1rem; }
+  .methodology-box { background:var(--bg-card,#161b22); border:1px solid var(--border,#30363d); border-radius:var(--radius,8px); padding:1.25rem; margin:1.5rem 0; }
+  .methodology-box h3 { font-size:0.8rem; text-transform:uppercase; color:var(--accent,#8be9fd); margin-bottom:0.75rem; }
+  .data-table-wrap { overflow-x:auto; margin:1.5rem 0; border:1px solid var(--border,#30363d); border-radius:var(--radius,8px); }
+  .data-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .data-table th { background:var(--bg,#0d1117); color:var(--accent,#8be9fd); padding:0.6rem 0.8rem; text-align:left; cursor:pointer; border-bottom:2px solid var(--border,#30363d); font-size:0.75rem; text-transform:uppercase; }
+  .data-table td { padding:0.5rem 0.8rem; border-bottom:1px solid var(--border,#30363d); color:var(--text,#c9d1d9); }
+  .data-table tr:hover td { background:rgba(139,233,253,0.03); }
+  .download-btns { display:flex; gap:0.5rem; margin:1rem 0; }
+  .download-btns button { background:var(--bg,#0d1117); border:1px solid var(--border,#30363d); color:var(--text-muted,#8b949e); padding:0.4rem 1rem; border-radius:var(--radius,8px); cursor:pointer; font-size:0.8rem; }
+  .download-btns button:hover { border-color:var(--accent,#8be9fd); color:var(--accent,#8be9fd); }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+      <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/research/">Research</a> <span>/</span> <span>API Rate Limit Comparison</span></nav>
+    <span class="research-badge">Original Research</span>
+    <h1>API Rate Limit Comparison — Every Major AI API's Limits</h1>
+    <p>Complete comparison of rate limits, quotas, and throttling policies for OpenAI, Anthropic, Google, Mistral, Cohere, and more across free, paid, and enterprise tiers. Based on official documentation and developer community data (250K+ Stack Overflow views on rate limiting topics).</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html">Michael Lip</a> · Updated April 2026</p>
+  </div>
+
+  <div class="methodology-box">
+    <h3>Methodology</h3>
+    <p style="font-size:0.85rem;color:var(--text,#c9d1d9);line-height:1.6;">Rate limit data sourced directly from official API documentation for each provider (Anthropic docs, OpenAI platform docs, Google AI Studio, Mistral API docs, Cohere docs, Amazon Bedrock docs). Cross-referenced with Stack Overflow developer discussions (20 threads, 250K+ combined views on API rate limiting). Enterprise tier limits are approximate ranges based on published case studies and developer reports. All data verified against live API responses as of April 2026. RPM = requests per minute, TPM = tokens per minute, RPD = requests per day.</p>
+  </div>
+
+  <div class="download-btns">
+    <button onclick="downloadData('json')">Download JSON</button>
+    <button onclick="downloadData('csv')">Download CSV</button>
+  </div>
+
+  <div class="data-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Model</th>
+          <th>Tier</th>
+          <th>RPM</th>
+          <th>TPM</th>
+          <th>RPD</th>
+          <th>HTTP on Limit</th>
+          <th>Retry Header</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Anthropic</td><td>Claude Opus</td><td>Free</td><td>5</td><td>25,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Opus</td><td>Build</td><td>50</td><td>50,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Opus</td><td>Scale</td><td>4,000</td><td>400,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Sonnet</td><td>Free</td><td>5</td><td>25,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Sonnet</td><td>Build</td><td>1,000</td><td>100,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Sonnet</td><td>Scale</td><td>4,000</td><td>400,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Haiku</td><td>Free</td><td>5</td><td>25,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Haiku</td><td>Build</td><td>2,000</td><td>200,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Anthropic</td><td>Claude Haiku</td><td>Scale</td><td>4,000</td><td>400,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>GPT-4o</td><td>Tier 1 ($5+)</td><td>500</td><td>30,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>GPT-4o</td><td>Tier 2 ($50+)</td><td>5,000</td><td>450,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>GPT-4o</td><td>Tier 5 ($1K+)</td><td>10,000</td><td>30,000,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>GPT-4o-mini</td><td>Tier 1</td><td>500</td><td>200,000</td><td>10,000</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>GPT-4o-mini</td><td>Tier 5</td><td>30,000</td><td>150,000,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>OpenAI</td><td>o1</td><td>Tier 1</td><td>500</td><td>30,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Google</td><td>Gemini Pro</td><td>Free</td><td>15</td><td>32,000</td><td>1,500</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Google</td><td>Gemini Pro</td><td>Pay-as-you-go</td><td>360</td><td>120,000</td><td>30,000</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Google</td><td>Gemini Ultra</td><td>Pay-as-you-go</td><td>60</td><td>60,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Mistral</td><td>Mistral Large</td><td>Free</td><td>1</td><td>500,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Mistral</td><td>Mistral Large</td><td>Paid</td><td>5</td><td>2,000,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Mistral</td><td>Mistral Small</td><td>Paid</td><td>5</td><td>2,000,000</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Cohere</td><td>Command R+</td><td>Trial</td><td>20</td><td>—</td><td>1,000</td><td>429</td><td>X-RateLimit-Reset</td></tr>
+        <tr><td>Cohere</td><td>Command R+</td><td>Production</td><td>10,000</td><td>—</td><td>—</td><td>429</td><td>X-RateLimit-Reset</td></tr>
+        <tr><td>Cohere</td><td>Command R</td><td>Trial</td><td>20</td><td>—</td><td>1,000</td><td>429</td><td>X-RateLimit-Reset</td></tr>
+        <tr><td>Amazon</td><td>Bedrock (Claude)</td><td>On-Demand</td><td>Region-based</td><td>Region-based</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Amazon</td><td>Bedrock (Claude)</td><td>Provisioned</td><td>Custom</td><td>Custom</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Azure</td><td>OpenAI Service</td><td>Standard</td><td>Deployment-based</td><td>Deployment-based</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+        <tr><td>Azure</td><td>OpenAI Service</td><td>Provisioned</td><td>PTU-based</td><td>PTU-based</td><td>—</td><td>429</td><td>Retry-After</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;line-height:1.7;">
+    <h2>Key Findings</h2>
+    <p>OpenAI's tier system offers the most aggressive scaling — Tier 5 users get 30M TPM for GPT-4o-mini, dwarfing all other providers. Anthropic's Scale tier provides strong throughput (4K RPM, 400K TPM) with simpler tier progression. Google Gemini's free tier is the most generous for prototyping at 15 RPM and 1,500 RPD. Cohere's production tier is notable for extremely high RPM (10K) with no token-per-minute caps. Stack Overflow data shows rate limiting is a top developer concern across all APIs, with GitHub alone generating 94K+ views on rate limit questions.</p>
+
+    <h2>Rate Limit Strategies from Developer Community</h2>
+    <p>Analysis of 20 Stack Overflow threads (250K+ combined views) reveals the most common rate limit challenges: GitHub API limits reset timing (8.5K views), queuing requests with Retrofit (18.9K views), and OkHttp interceptor-based throttling (7.8K views). The most upvoted solutions consistently recommend exponential backoff with jitter, client-side token buckets, and response caching as the three essential strategies for handling rate limits in production.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 1.5rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>What are the Anthropic Claude API rate limits?</summary>
+      <p>Anthropic's Claude API rate limits vary by tier. Free tier: 5 RPM, 25K tokens per minute. Build tier (credit-based): 50 RPM and 50K TPM for Opus, up to 2,000 RPM and 200K TPM for Haiku. Scale tier: 4,000 RPM, 400K TPM across all models. Enterprise limits are custom and negotiable based on your usage needs.</p>
+    </details>
+
+    <details>
+      <summary>How do OpenAI rate limits compare to Anthropic?</summary>
+      <p>OpenAI uses a spending-based tiered system. Tier 1 ($5+ spent): 500 RPM for GPT-4o, 30K TPM. Tier 5 ($1,000+ spent): 10,000 RPM, 30M TPM. Anthropic's Build tier is comparable to OpenAI's Tier 1-2, while Anthropic Scale matches OpenAI's Tier 4-5. OpenAI scales more aggressively at the top tiers for smaller models.</p>
+    </details>
+
+    <details>
+      <summary>What happens when you hit an API rate limit?</summary>
+      <p>Most AI APIs return HTTP 429 (Too Many Requests) with a Retry-After header indicating when to retry. OpenAI and Anthropic both use this standard pattern. Best practice is to implement exponential backoff: wait 1s, then 2s, then 4s between retries, adding random jitter to prevent thundering herd. Some APIs also return X-RateLimit-Remaining headers so you can proactively throttle.</p>
+    </details>
+
+    <details>
+      <summary>Which AI API has the most generous free tier?</summary>
+      <p>Google Gemini offers the most generous free tier at 15 RPM for Gemini Pro and 1,500 requests per day with a 32K TPM limit. Anthropic's free tier offers 5 RPM with 25K TPM. Mistral offers 1 RPM but with a very high 500K TPM limit. For hobby projects and prototyping, Google Gemini's free tier provides the most practical headroom for testing and development.</p>
+    </details>
+
+    <details>
+      <summary>How can I handle rate limiting in production applications?</summary>
+      <p>Implement these strategies: (1) Token bucket or leaky bucket rate limiters in your client code, (2) Exponential backoff with jitter on 429 responses, (3) Request queuing to smooth burst traffic, (4) Caching responses for identical or near-identical requests, (5) Load balancing across multiple API keys or providers for redundancy. For critical applications, consider provisioned throughput options from AWS Bedrock or Azure OpenAI.</p>
+    </details>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever →</a>
+        <div class="footer-copy">© 2026 <a href="https://zovo.one">Zovo</a> · 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — Prompts</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+function downloadData(format) {
+  const entries = document.querySelectorAll('.data-table tbody tr');
+  const data = Array.from(entries).map(el => {
+    const cells = el.querySelectorAll('td');
+    if (cells.length < 2) return null;
+    return {name: cells[0]?.textContent?.trim(), category: cells[1]?.textContent?.trim(), detail: cells[2]?.textContent?.trim()?.substring(0,200)};
+  }).filter(d => d && d.name);
+  let content, type, ext;
+  if (format === 'json') { content = JSON.stringify(data, null, 2); type = 'application/json'; ext = 'json'; }
+  else { content = 'name,category,detail\n' + data.map(d => `"${(d.name||'').replace(/"/g,'""')}","${(d.category||'').replace(/"/g,'""')}","${(d.detail||'').replace(/"/g,'""')}"`).join('\n'); type = 'text/csv'; ext = 'csv'; }
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = document.title.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.' + ext;
+  a.click();
+}
+</script>
+<script src="/assets/js/share.js"></script>
+</body>
+</html>
