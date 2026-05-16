@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude API Quickstart Guide — Python, JavaScript &amp; cURL Examples | ClaudKit</title>
+<meta name="description" content="Complete Claude API quickstart tutorial. Get your API key, make your first call, choose the right model, and build production apps with Python, JavaScript, and cURL examples.">
+<link rel="canonical" href="https://claudkit.com/guides/claude-api-quickstart.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/guides/claude-api-quickstart.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/guides/claude-api-quickstart.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude API Quickstart Guide — Python, JavaScript & cURL Examples">
+<meta property="og:description" content="Complete Claude API quickstart tutorial. Get your API key, make your first call, choose the right model, and build production apps.">
+<meta property="og:url" content="https://claudkit.com/guides/claude-api-quickstart.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude API Quickstart Guide — Python, JavaScript & cURL Examples">
+<meta name="twitter:description" content="Complete Claude API quickstart tutorial. Get your API key, make your first call, choose the right model, and build production apps.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Claude API Quickstart Guide — Python, JavaScript & cURL Examples",
+  "description": "Complete Claude API quickstart tutorial covering API key setup, first API call, model selection, streaming, tool use, vision, error handling, rate limits, and production best practices.",
+  "url": "https://claudkit.com/guides/claude-api-quickstart.html",
+  "datePublished": "2026-05-16",
+  "dateModified": "2026-05-16",
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "mainEntityOfPage": "https://claudkit.com/guides/claude-api-quickstart.html",
+  "keywords": ["claude api quickstart", "claude api tutorial", "how to use claude api", "anthropic api getting started", "claude api python example", "claude api javascript"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Use the Claude API — Quickstart Tutorial",
+  "description": "Step-by-step guide to making your first Claude API call in Python, JavaScript, or cURL.",
+  "totalTime": "PT15M",
+  "estimatedCost": {"@type": "MonetaryAmount", "currency": "USD", "value": "0.00"},
+  "tool": [
+    {"@type": "HowToTool", "name": "Anthropic API Key"},
+    {"@type": "HowToTool", "name": "Python 3.8+ or Node.js 18+ or cURL"}
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Create an Anthropic account",
+      "text": "Go to console.anthropic.com and sign up for a free account. Verify your email address."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Generate an API key",
+      "text": "Navigate to Settings > API Keys in the Anthropic Console. Click Create Key, give it a name, and copy the key immediately — it will not be shown again."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Set your API key as an environment variable",
+      "text": "Export the key: export ANTHROPIC_API_KEY='sk-ant-your-key-here'. Add it to your shell profile for persistence."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Install the SDK",
+      "text": "For Python: pip install anthropic. For JavaScript/TypeScript: npm install @anthropic-ai/sdk."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Make your first API call",
+      "text": "Create a Messages API request with model, max_tokens, and a messages array containing your prompt. Send the request and parse the response."
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much does the Claude API cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude API pricing varies by model. Claude Haiku 4.5 costs $0.80 per million input tokens and $4 per million output tokens. Claude Sonnet 4.6 costs $3 per million input tokens and $15 per million output tokens. Claude Opus 4.6 costs $15 per million input tokens and $75 per million output tokens. A typical 1,000-token request and 500-token response on Sonnet costs about $0.01."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between Claude Opus, Sonnet, and Haiku?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Opus 4.6 is the most capable model for complex reasoning, research, and analysis. Claude Sonnet 4.6 balances capability and speed for most production workloads. Claude Haiku 4.5 is the fastest and cheapest model for high-volume tasks like classification, extraction, and real-time chat. Choose Haiku for speed, Sonnet for balance, and Opus for maximum intelligence."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get a Claude API key?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sign up at console.anthropic.com, navigate to Settings > API Keys, click Create Key, name it, and copy the key. Store it securely as an environment variable (ANTHROPIC_API_KEY). The key starts with 'sk-ant-'. New accounts receive free credits to get started."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Claude API support streaming responses?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Add stream: true to your API request to receive Server-Sent Events (SSE). The Python SDK provides client.messages.stream() and the JavaScript SDK provides client.messages.stream(). Streaming reduces time-to-first-token and improves perceived latency for chat applications."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are Claude API rate limits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rate limits depend on your usage tier. Tier 1 (new accounts) allows 50 requests per minute and 40,000 tokens per minute. Higher tiers unlock more capacity. Rate limit headers (x-ratelimit-limit-requests, x-ratelimit-remaining-requests) are included in every response. If you hit limits, implement exponential backoff or request a tier upgrade in the Anthropic Console."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can the Claude API process images and PDFs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Claude supports vision (image understanding) by passing base64-encoded images or image URLs in the messages content array with type 'image'. Supported formats include JPEG, PNG, GIF, and WebP. Claude can also process PDF documents. This enables use cases like document analysis, chart reading, screenshot understanding, and visual QA."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://claudkit.com/guides/"},{"@type":"ListItem","position":3,"name":"Claude API Quickstart Guide"}]}</script>
+
+<style>
+  .guide-hero { text-align:center; padding:2.5rem 2rem 1.5rem; max-width:800px; margin:0 auto; }
+  .guide-hero h1 { font-size:2rem; margin-bottom:0.75rem; line-height:1.3; }
+  .guide-hero .subtitle { color:var(--text-muted); font-size:1.05rem; line-height:1.6; }
+  .guide-hero .meta { font-size:0.85rem; color:var(--text-muted); margin-top:0.75rem; }
+  .guide-hero .meta a { color:var(--accent); text-decoration:none; }
+  .guide-hero .meta a:hover { text-decoration:underline; }
+
+  .guide-content { max-width:800px; margin:0 auto; padding:0 2rem 2rem; }
+  .guide-content h2 { font-size:1.4rem; margin:2.5rem 0 1rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+  .guide-content h2:first-of-type { border-top:none; padding-top:0; }
+  .guide-content h3 { font-size:1.1rem; margin:1.75rem 0 0.75rem; }
+  .guide-content p { margin-bottom:1rem; line-height:1.7; }
+  .guide-content a { color:var(--accent); text-decoration:none; }
+  .guide-content a:hover { text-decoration:underline; }
+  .guide-content ul, .guide-content ol { margin:0 0 1rem 1.5rem; }
+  .guide-content li { margin-bottom:0.5rem; line-height:1.6; }
+  .guide-content code { background:var(--bg-card); padding:0.15rem 0.4rem; border-radius:3px; font-family:var(--font-display); font-size:0.85rem; }
+  .guide-content pre { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; overflow-x:auto; margin-bottom:1rem; }
+  .guide-content pre code { background:none; padding:0; font-size:0.82rem; line-height:1.7; }
+
+  .toc { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:2rem; }
+  .toc h3 { font-size:0.9rem; color:var(--accent); margin-bottom:0.75rem; font-family:var(--font-display); }
+  .toc ol { margin:0 0 0 1.25rem; }
+  .toc li { margin-bottom:0.35rem; font-size:0.9rem; }
+  .toc a { color:var(--text-muted); text-decoration:none; }
+  .toc a:hover { color:var(--accent); }
+
+  .step-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+  .step-num { display:inline-block; background:var(--accent); color:#000; width:24px; height:24px; text-align:center; border-radius:50%; font-size:0.8rem; font-weight:700; line-height:24px; margin-right:0.5rem; }
+
+  .model-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1.5rem 0; }
+  .model-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .model-card h4 { font-family:var(--font-display); font-size:0.95rem; color:var(--accent); margin-bottom:0.5rem; }
+  .model-card .price { font-family:var(--font-display); font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem; }
+  .model-card ul { margin:0 0 0 1rem; font-size:0.88rem; }
+  .model-card li { margin-bottom:0.3rem; }
+
+  .tip-box { background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.25); border-radius:var(--radius); padding:1rem 1.25rem; margin:1rem 0; font-size:0.9rem; }
+  .tip-box strong { color:var(--accent); }
+
+  .warn-box { background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); border-radius:var(--radius); padding:1rem 1.25rem; margin:1rem 0; font-size:0.9rem; }
+  .warn-box strong { color:#fbbf24; }
+
+  /* Builder tool */
+  .builder-container { margin:2rem 0; }
+  .builder-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .builder-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .builder-panel h3 { font-size:0.9rem; color:var(--accent); margin-bottom:1rem; font-family:var(--font-display); }
+  .builder-row { margin-bottom:0.85rem; }
+  .builder-row label { display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:0.3rem; }
+  .builder-row select, .builder-row input[type="number"], .builder-row textarea { width:100%; padding:0.5rem 0.65rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font-body); font-size:0.88rem; outline:none; }
+  .builder-row textarea { min-height:60px; resize:vertical; font-family:var(--font-display); font-size:0.82rem; }
+  .builder-row select:focus, .builder-row input:focus, .builder-row textarea:focus { border-color:var(--accent); }
+  .builder-row .range-row { display:flex; align-items:center; gap:0.6rem; }
+  .builder-row input[type="range"] { flex:1; accent-color:var(--accent); }
+  .builder-row .range-val { font-family:var(--font-display); font-size:0.82rem; min-width:32px; text-align:right; }
+
+  .lang-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:0; }
+  .lang-tab { padding:0.45rem 0.9rem; font-size:0.82rem; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; font-family:var(--font-body); transition:all 0.2s; }
+  .lang-tab:hover { color:var(--text); }
+  .lang-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+  .code-out-wrap { position:relative; }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius) var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.65; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:420px; overflow-y:auto; }
+  .copy-code-btn { position:absolute; top:0.5rem; right:0.5rem; padding:0.25rem 0.6rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-muted); cursor:pointer; font-size:0.75rem; font-family:var(--font-body); transition:all 0.2s; z-index:2; }
+  .copy-code-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  .estimate-bar { display:flex; gap:1.5rem; margin-top:0.75rem; padding:0.75rem 1rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); }
+  .estimate-item { font-size:0.82rem; }
+  .estimate-item .label { color:var(--text-muted); font-size:0.75rem; }
+  .estimate-item .val { font-family:var(--font-display); font-weight:700; color:var(--accent); }
+
+  @media (max-width:768px) {
+    .builder-grid { grid-template-columns:1fr; }
+    .model-grid { grid-template-columns:1fr; }
+    .guide-hero { padding:1.5rem 1rem 1rem; }
+    .guide-hero h1 { font-size:1.5rem; }
+    .guide-content { padding:0 1rem 1.5rem; }
+    .estimate-bar { flex-wrap:wrap; gap:0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo brand">claudkit</a>
+  <ul class="nav-links">
+    <li><a href="/">Playground</a></li>
+    <li><a href="/guides/">Guides</a></li>
+    <li><a href="/research/">Research</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+  </div>
+</nav>
+
+<main>
+<div class="guide-hero">
+  <nav aria-label="Breadcrumb" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+    <a href="/" style="color:var(--text-muted);text-decoration:none;">Home</a> <span>/</span>
+    <a href="/guides/" style="color:var(--text-muted);text-decoration:none;">Guides</a> <span>/</span>
+    <span>Claude API Quickstart</span>
+  </nav>
+  <h1>Claude API Quickstart Guide — Python, JavaScript &amp; cURL Examples</h1>
+  <p class="subtitle">Go from zero to your first API call in under 10 minutes. This guide covers everything you need to start building with the Anthropic Claude API: authentication, model selection, request formatting, streaming, tool use, vision, error handling, and production best practices.</p>
+  <p class="meta">By <a href="https://zovo.one">Michael Lip</a> &middot; May 16, 2026 &middot; 15 min read</p>
+</div>
+
+<div class="guide-content">
+
+<nav class="toc">
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#api-key">Getting Your API Key</a></li>
+    <li><a href="#first-call">Your First API Call</a></li>
+    <li><a href="#builder">Interactive API Request Builder</a></li>
+    <li><a href="#models">Model Selection Guide</a></li>
+    <li><a href="#advanced">Advanced Features</a></li>
+    <li><a href="#errors">Error Handling</a></li>
+    <li><a href="#rate-limits">Rate Limits &amp; Best Practices</a></li>
+    <li><a href="#production">Building Production Apps</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: GETTING YOUR API KEY -->
+<!-- ============================================================ -->
+<h2 id="api-key">1. Getting Your API Key</h2>
+
+<p>Before you can make any Claude API call, you need an API key from Anthropic. The key authenticates your requests and tracks your usage against your account's billing and rate limits. Here is the step-by-step process to get one.</p>
+
+<div class="step-box">
+  <p><span class="step-num">1</span> <strong>Create an Anthropic account.</strong> Go to <a href="https://console.anthropic.com" rel="noopener">console.anthropic.com</a> and sign up with your email address or Google account. Verify your email if prompted.</p>
+</div>
+
+<div class="step-box">
+  <p><span class="step-num">2</span> <strong>Navigate to API Keys.</strong> Once logged in, click <strong>Settings</strong> in the left sidebar, then select <strong>API Keys</strong>. This page lists all your active keys and lets you create new ones.</p>
+</div>
+
+<div class="step-box">
+  <p><span class="step-num">3</span> <strong>Create a new key.</strong> Click the <strong>Create Key</strong> button. Give your key a descriptive name (e.g., "quickstart-dev" or "production-backend"). Click <strong>Create</strong>.</p>
+</div>
+
+<div class="step-box">
+  <p><span class="step-num">4</span> <strong>Copy and store your key securely.</strong> The key will be displayed exactly once. Copy it immediately. It starts with <code>sk-ant-</code>. Store it in a password manager or secrets vault — never commit it to version control.</p>
+</div>
+
+<div class="step-box">
+  <p><span class="step-num">5</span> <strong>Set it as an environment variable.</strong> This keeps your key out of source code. Add this to your shell profile (<code>~/.bashrc</code>, <code>~/.zshrc</code>, or equivalent):</p>
+</div>
+
+<pre><code>export ANTHROPIC_API_KEY="sk-ant-api03-your-key-here"</code></pre>
+
+<p>Reload your shell with <code>source ~/.zshrc</code> (or <code>~/.bashrc</code>) for the change to take effect. On Windows, use <code>setx ANTHROPIC_API_KEY "sk-ant-api03-your-key-here"</code> in a Command Prompt or set it through System Properties.</p>
+
+<div class="tip-box">
+  <strong>Tip:</strong> New Anthropic accounts receive free credits to experiment with the API. Check your usage and billing tier at <a href="https://console.anthropic.com">console.anthropic.com</a> under the Plans &amp; Billing section.
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: YOUR FIRST API CALL -->
+<!-- ============================================================ -->
+<h2 id="first-call">2. Your First API Call</h2>
+
+<p>The Claude API uses the <strong>Messages API</strong> endpoint. Every request requires three things: a <code>model</code> identifier, a <code>max_tokens</code> limit for the response, and a <code>messages</code> array containing the conversation. Let us walk through your first call in three languages.</p>
+
+<h3>Install the SDK</h3>
+
+<p><strong>Python</strong> (requires Python 3.8+):</p>
+<pre><code>pip install anthropic</code></pre>
+
+<p><strong>JavaScript/TypeScript</strong> (requires Node.js 18+):</p>
+<pre><code>npm install @anthropic-ai/sdk</code></pre>
+
+<p>For <strong>cURL</strong>, no installation is needed — it comes pre-installed on macOS and most Linux distributions.</p>
+
+<h3>Make the request</h3>
+
+<p><strong>Python example:</strong></p>
+<pre><code>import anthropic
+
+client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+
+message = client.messages.create(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "What is the Claude API and how does it work?"}
+    ]
+)
+
+print(message.content[0].text)</code></pre>
+
+<p><strong>JavaScript/TypeScript example:</strong></p>
+<pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();  // reads ANTHROPIC_API_KEY from env
+
+const message = await client.messages.create({
+    model: "claude-sonnet-4-6-20250516",
+    max_tokens: 1024,
+    messages: [
+        { role: "user", content: "What is the Claude API and how does it work?" }
+    ],
+});
+
+console.log(message.content[0].text);</code></pre>
+
+<p><strong>cURL example:</strong></p>
+<pre><code>curl https://api.anthropic.com/v1/messages \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "claude-sonnet-4-6-20250516",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "What is the Claude API and how does it work?"}
+    ]
+  }'</code></pre>
+
+<h3>Understanding the response</h3>
+
+<p>A successful API call returns a JSON object with this structure:</p>
+
+<pre><code>{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "The Claude API is a RESTful interface..."
+    }
+  ],
+  "model": "claude-sonnet-4-6-20250516",
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 247
+  }
+}</code></pre>
+
+<p>Key fields in the response:</p>
+<ul>
+  <li><strong><code>content</code></strong> — An array of content blocks. For text responses, each block has <code>type: "text"</code> and the actual response in <code>text</code>.</li>
+  <li><strong><code>stop_reason</code></strong> — Why the model stopped generating. <code>"end_turn"</code> means the model finished naturally. <code>"max_tokens"</code> means it hit your token limit. <code>"stop_sequence"</code> means it encountered a custom stop sequence.</li>
+  <li><strong><code>usage</code></strong> — Token counts for billing. <code>input_tokens</code> is what you sent; <code>output_tokens</code> is what Claude generated.</li>
+  <li><strong><code>model</code></strong> — The exact model version that processed your request.</li>
+</ul>
+
+<div class="tip-box">
+  <strong>Tip:</strong> Try the <a href="/">ClaudKit Playground</a> to experiment with different parameters and see responses in real time before writing any code.
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: INTERACTIVE API REQUEST BUILDER -->
+<!-- ============================================================ -->
+<h2 id="builder">3. Interactive API Request Builder</h2>
+
+<p>Configure your API request below and get formatted code in cURL, Python, JavaScript, and Go. Adjust the model, parameters, system prompt, and user message to see the request update in real time.</p>
+
+<div class="builder-container">
+  <div class="builder-grid">
+    <!-- Left: Config -->
+    <div class="builder-panel">
+      <h3>Configure Request</h3>
+
+      <div class="builder-row">
+        <label for="b-model">Model</label>
+        <select id="b-model">
+          <option value="claude-opus-4-6-20250516">Claude Opus 4.6</option>
+          <option value="claude-sonnet-4-6-20250516" selected>Claude Sonnet 4.6</option>
+          <option value="claude-haiku-4-5-20250414">Claude Haiku 4.5</option>
+        </select>
+      </div>
+
+      <div class="builder-row">
+        <label for="b-max-tokens">Max Tokens</label>
+        <input type="number" id="b-max-tokens" value="1024" min="1" max="128000" step="256">
+      </div>
+
+      <div class="builder-row">
+        <label>Temperature</label>
+        <div class="range-row">
+          <input type="range" id="b-temp" min="0" max="1" step="0.1" value="1.0">
+          <span class="range-val" id="b-temp-val">1.0</span>
+        </div>
+      </div>
+
+      <div class="builder-row">
+        <label for="b-system">System Prompt (optional)</label>
+        <textarea id="b-system" placeholder="You are a helpful assistant that responds concisely."></textarea>
+      </div>
+
+      <div class="builder-row">
+        <label for="b-user">User Message</label>
+        <textarea id="b-user" placeholder="Explain how the Claude API works in 3 sentences.">Explain how the Claude API works in 3 sentences.</textarea>
+      </div>
+
+      <div class="estimate-bar" id="estimates">
+        <div class="estimate-item">
+          <div class="label">Est. Input Tokens</div>
+          <div class="val" id="est-input">~18</div>
+        </div>
+        <div class="estimate-item">
+          <div class="label">Max Output Tokens</div>
+          <div class="val" id="est-output">1,024</div>
+        </div>
+        <div class="estimate-item">
+          <div class="label">Est. Max Cost</div>
+          <div class="val" id="est-cost">$0.0154</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Output -->
+    <div class="builder-panel">
+      <h3>Generated Code</h3>
+      <div class="lang-tabs" id="lang-tabs">
+        <button class="lang-tab active" data-lang="curl">cURL</button>
+        <button class="lang-tab" data-lang="python">Python</button>
+        <button class="lang-tab" data-lang="javascript">JavaScript</button>
+        <button class="lang-tab" data-lang="go">Go</button>
+      </div>
+      <div class="code-out-wrap">
+        <button class="copy-code-btn" id="copy-btn" onclick="copyBuilderCode()">Copy</button>
+        <pre class="code-out" id="code-output"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: MODEL SELECTION GUIDE -->
+<!-- ============================================================ -->
+<h2 id="models">4. Model Selection Guide — Opus vs Sonnet vs Haiku</h2>
+
+<p>Anthropic offers three model tiers. Choosing the right one depends on your task complexity, latency requirements, and budget. Here is a detailed comparison to help you decide.</p>
+
+<div class="model-grid">
+  <div class="model-card">
+    <h4>Claude Opus 4.6</h4>
+    <div class="price">$15 / $75 per 1M tokens (in/out)</div>
+    <ul>
+      <li>Most capable model</li>
+      <li>Best for complex reasoning</li>
+      <li>Research &amp; analysis</li>
+      <li>Multi-step agentic tasks</li>
+      <li>200K context window</li>
+    </ul>
+  </div>
+  <div class="model-card">
+    <h4>Claude Sonnet 4.6</h4>
+    <div class="price">$3 / $15 per 1M tokens (in/out)</div>
+    <ul>
+      <li>Best balance of speed &amp; quality</li>
+      <li>Production workhorse</li>
+      <li>Code generation</li>
+      <li>Content creation</li>
+      <li>200K context window</li>
+    </ul>
+  </div>
+  <div class="model-card">
+    <h4>Claude Haiku 4.5</h4>
+    <div class="price">$0.80 / $4 per 1M tokens (in/out)</div>
+    <ul>
+      <li>Fastest response time</li>
+      <li>Lowest cost per token</li>
+      <li>Classification &amp; extraction</li>
+      <li>Real-time chat</li>
+      <li>200K context window</li>
+    </ul>
+  </div>
+</div>
+
+<h3>When to use each model</h3>
+
+<p><strong>Choose Opus</strong> when you need maximum intelligence and accuracy matters more than speed or cost. Ideal use cases: legal document analysis, scientific reasoning, complex code architecture decisions, writing that requires nuance, and agentic workflows where the model needs to plan multiple steps autonomously. If a wrong answer costs more than the API call, use Opus.</p>
+
+<p><strong>Choose Sonnet</strong> for the vast majority of production workloads. It delivers excellent quality at a fraction of Opus pricing and responds significantly faster. Sonnet is the default choice for: chat applications, code generation and review, content writing, summarization, data analysis, and customer support automation. Most developers start and stay with Sonnet.</p>
+
+<p><strong>Choose Haiku</strong> when speed and cost are your primary constraints. Haiku excels at high-volume, lower-complexity tasks: text classification, entity extraction, sentiment analysis, simple Q&amp;A, content moderation, and routing decisions. At roughly 4x cheaper than Sonnet, Haiku can process millions of requests economically. It is also the best choice for real-time applications where low latency is critical.</p>
+
+<div class="tip-box">
+  <strong>Pro tip:</strong> Many production systems use a <strong>model cascade</strong> — route simple queries to Haiku for speed, medium queries to Sonnet, and only escalate complex queries to Opus. This optimizes both cost and user experience.
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: ADVANCED FEATURES -->
+<!-- ============================================================ -->
+<h2 id="advanced">5. Advanced Features</h2>
+
+<h3>Streaming responses</h3>
+
+<p>Streaming delivers response tokens as they are generated rather than waiting for the complete response. This dramatically reduces perceived latency — your users see text appearing in real time instead of waiting seconds for a full response to arrive.</p>
+
+<p><strong>Python streaming:</strong></p>
+<pre><code>import anthropic
+
+client = anthropic.Anthropic()
+
+with client.messages.stream(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Write a haiku about APIs."}]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)</code></pre>
+
+<p><strong>JavaScript streaming:</strong></p>
+<pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const stream = await client.messages.stream({
+    model: "claude-sonnet-4-6-20250516",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: "Write a haiku about APIs." }],
+});
+
+for await (const event of stream) {
+    if (event.type === "content_block_delta" &&
+        event.delta.type === "text_delta") {
+        process.stdout.write(event.delta.text);
+    }
+}</code></pre>
+
+<p>With cURL, add <code>"stream": true</code> to the request body. The response will be Server-Sent Events (SSE) with each event containing a delta of the response content.</p>
+
+<h3>System prompts</h3>
+
+<p>System prompts set the behavior, tone, and constraints for Claude's responses. They are provided as a top-level <code>system</code> parameter, not inside the <code>messages</code> array. System prompts are powerful for controlling output format, enforcing guardrails, and establishing persona.</p>
+
+<pre><code>message = client.messages.create(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    system="You are a senior Python developer. Respond only with code. No explanations unless asked.",
+    messages=[
+        {"role": "user", "content": "Write a function to retry HTTP requests with exponential backoff."}
+    ]
+)</code></pre>
+
+<p>System prompts are cached separately from messages, so reusing the same system prompt across multiple requests can benefit from Anthropic's prompt caching and reduce input token costs.</p>
+
+<h3>Tool use (function calling)</h3>
+
+<p>Tool use lets Claude call external functions you define. You describe tools with JSON schemas, Claude decides when to call them, and you execute the function and return results. This enables Claude to interact with databases, APIs, file systems, and any external service.</p>
+
+<pre><code>message = client.messages.create(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    tools=[
+        {
+            "name": "get_weather",
+            "description": "Get the current weather for a location.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "City and state, e.g., 'San Francisco, CA'"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    ],
+    messages=[
+        {"role": "user", "content": "What's the weather like in London?"}
+    ]
+)</code></pre>
+
+<p>When Claude wants to use a tool, the response will contain a <code>tool_use</code> content block with the tool name and input arguments. You then execute the function, and send the result back in a <code>tool_result</code> message to continue the conversation.</p>
+
+<h3>Vision (image understanding)</h3>
+
+<p>Claude can analyze images passed as base64-encoded data or URLs. This enables document analysis, chart reading, screenshot understanding, UI review, and visual question answering. Supported formats: JPEG, PNG, GIF, and WebP.</p>
+
+<pre><code>import base64
+
+with open("chart.png", "rb") as f:
+    image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+message = client.messages.create(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/png",
+                        "data": image_data
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": "Describe the trends shown in this chart."
+                }
+            ]
+        }
+    ]
+)</code></pre>
+
+<p>Images are tokenized based on their dimensions. A typical screenshot uses around 1,000-2,000 tokens. You can send multiple images in a single request by including multiple image content blocks in the messages array.</p>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: ERROR HANDLING -->
+<!-- ============================================================ -->
+<h2 id="errors">6. Error Handling</h2>
+
+<p>The Claude API returns standard HTTP status codes with detailed error messages. Proper error handling is essential for building reliable applications. Here are the most common errors and how to fix them.</p>
+
+<h3>Common error codes</h3>
+
+<ul>
+  <li><strong>400 — Bad Request</strong>: Your request body is malformed. Common causes: messages array does not start with a <code>user</code> role, <code>max_tokens</code> exceeds the model limit, invalid model name, or empty content blocks. Read the error message carefully — Anthropic provides field-level validation details.</li>
+  <li><strong>401 — Unauthorized</strong>: Invalid or missing API key. Verify your key starts with <code>sk-ant-</code>, has not been revoked, and is passed in the <code>x-api-key</code> header (not <code>Authorization: Bearer</code>).</li>
+  <li><strong>403 — Forbidden</strong>: Your API key does not have permission for the requested resource or model. Check your account's access level in the Anthropic Console.</li>
+  <li><strong>429 — Rate Limited</strong>: You have exceeded your requests-per-minute or tokens-per-minute limit. Implement exponential backoff and check the <code>Retry-After</code> header for the required wait time.</li>
+  <li><strong>500 — Internal Server Error</strong>: A server-side issue at Anthropic. Retry with exponential backoff. If persistent, check <a href="https://status.anthropic.com">status.anthropic.com</a>.</li>
+  <li><strong>529 — Overloaded</strong>: Anthropic's servers are temporarily overloaded. Different from 429 — this means the service itself is under heavy load. Retry with longer backoff intervals.</li>
+</ul>
+
+<h3>Error handling in Python</h3>
+
+<pre><code>import anthropic
+
+client = anthropic.Anthropic()
+
+try:
+    message = client.messages.create(
+        model="claude-sonnet-4-6-20250516",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Hello"}]
+    )
+except anthropic.AuthenticationError as e:
+    print(f"Invalid API key: {e}")
+except anthropic.RateLimitError as e:
+    print(f"Rate limited — retry after backoff: {e}")
+except anthropic.APIStatusError as e:
+    print(f"API error {e.status_code}: {e.message}")
+except anthropic.APIConnectionError as e:
+    print(f"Connection error: {e}")</code></pre>
+
+<p>The Python SDK has built-in retry logic. By default, it retries 429 and 5xx errors with exponential backoff up to 2 times. You can configure this with the <code>max_retries</code> parameter when creating the client:</p>
+
+<pre><code># Retry up to 5 times with exponential backoff
+client = anthropic.Anthropic(max_retries=5)</code></pre>
+
+<div class="tip-box">
+  <strong>Deep dive:</strong> For a complete reference of every error code with community-reported causes and fixes, see the <a href="/research/claude-api-error-guide.html">Claude API Error Guide</a>.
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: RATE LIMITS & BEST PRACTICES -->
+<!-- ============================================================ -->
+<h2 id="rate-limits">7. Rate Limits &amp; Best Practices</h2>
+
+<p>Anthropic enforces rate limits to ensure fair usage and service stability. Understanding these limits and designing around them is critical for production applications.</p>
+
+<h3>Rate limit tiers</h3>
+
+<p>Your rate limits depend on your account's usage tier, which increases automatically as you spend more on the API:</p>
+
+<ul>
+  <li><strong>Tier 1</strong> (new accounts): 50 requests/min, 40,000 input tokens/min, 8,000 output tokens/min</li>
+  <li><strong>Tier 2</strong> ($40+ spend): 1,000 requests/min, 80,000 input tokens/min, 16,000 output tokens/min</li>
+  <li><strong>Tier 3</strong> ($200+ spend): 2,000 requests/min, 160,000 input tokens/min, 32,000 output tokens/min</li>
+  <li><strong>Tier 4</strong> ($2,000+ spend): 4,000 requests/min, 400,000 input tokens/min, 80,000 output tokens/min</li>
+</ul>
+
+<p>Check your current tier and limits in the Anthropic Console under Settings &gt; Limits.</p>
+
+<h3>Reading rate limit headers</h3>
+
+<p>Every API response includes rate limit headers that tell you exactly where you stand:</p>
+
+<pre><code>x-ratelimit-limit-requests: 50        # Your max requests per minute
+x-ratelimit-limit-tokens: 40000       # Your max tokens per minute
+x-ratelimit-remaining-requests: 47    # Requests remaining in this window
+x-ratelimit-remaining-tokens: 38500   # Tokens remaining in this window
+x-ratelimit-reset-requests: 2026-05-16T12:00:30Z  # When requests reset
+x-ratelimit-reset-tokens: 2026-05-16T12:00:15Z    # When tokens reset</code></pre>
+
+<h3>Best practices for rate limit management</h3>
+
+<ol>
+  <li><strong>Implement exponential backoff</strong> — When you receive a 429, wait 1 second, then 2, then 4, up to a maximum of 60 seconds. Add random jitter (0-1 second) to prevent thundering herd effects.</li>
+  <li><strong>Monitor remaining capacity</strong> — Read the <code>x-ratelimit-remaining-*</code> headers proactively. Throttle requests before hitting limits rather than reacting to 429s.</li>
+  <li><strong>Use token-aware batching</strong> — Group small requests together and spread large requests over time. A single 100K-token request consumes more rate limit capacity than ten 10K-token requests.</li>
+  <li><strong>Cache identical requests</strong> — If multiple users send the same prompt, cache the response and reuse it. This is especially effective for common questions and system prompt outputs.</li>
+  <li><strong>Use the Batch API for non-urgent work</strong> — Anthropic's Message Batches API processes requests asynchronously at 50% cost with no rate limits. Ideal for data processing, evaluations, and offline analysis.</li>
+</ol>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: BUILDING PRODUCTION APPS -->
+<!-- ============================================================ -->
+<h2 id="production">8. Building Production Apps</h2>
+
+<p>Moving from a prototype to a production Claude integration requires careful attention to reliability, cost management, and observability. Here are the key patterns every production app should implement.</p>
+
+<h3>Retry logic with exponential backoff</h3>
+
+<p>Production applications must handle transient errors gracefully. Here is a robust retry implementation:</p>
+
+<pre><code>import anthropic
+import time
+import random
+
+def call_claude_with_retry(prompt, max_retries=5):
+    client = anthropic.Anthropic()
+
+    for attempt in range(max_retries):
+        try:
+            return client.messages.create(
+                model="claude-sonnet-4-6-20250516",
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}]
+            )
+        except anthropic.RateLimitError:
+            if attempt == max_retries - 1:
+                raise
+            wait = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(wait)
+        except anthropic.APIStatusError as e:
+            if e.status_code >= 500:
+                if attempt == max_retries - 1:
+                    raise
+                wait = (2 ** attempt) + random.uniform(0, 1)
+                time.sleep(wait)
+            else:
+                raise  # Don't retry client errors (4xx)</code></pre>
+
+<div class="tip-box">
+  <strong>Note:</strong> The official Python SDK already has built-in retry logic for 429 and 5xx errors. Use <code>anthropic.Anthropic(max_retries=5)</code> instead of writing your own retry loop in most cases. The example above is useful when you need custom retry behavior or logging.
+</div>
+
+<h3>Token budgeting and cost control</h3>
+
+<p>Uncontrolled token usage is the most common source of unexpected API bills. Implement these safeguards:</p>
+
+<ul>
+  <li><strong>Set <code>max_tokens</code> appropriately</strong> — Do not use the maximum value unless you need it. A classification task might only need 10-50 tokens. A summary might need 500. Match the limit to the expected output size.</li>
+  <li><strong>Track usage per request</strong> — Log <code>usage.input_tokens</code> and <code>usage.output_tokens</code> from every response. Aggregate by user, feature, or endpoint.</li>
+  <li><strong>Implement spending alerts</strong> — Set up daily and monthly cost thresholds. Alert when spending exceeds expected levels.</li>
+  <li><strong>Truncate long inputs</strong> — If users can submit arbitrary text, truncate or summarize inputs before sending them to the API. A 200K-token input on Opus costs $3 per request.</li>
+  <li><strong>Use prompt caching</strong> — Anthropic caches repeated system prompts automatically in many cases. Structure your prompts so the static parts (system prompt, few-shot examples) are consistent across requests.</li>
+</ul>
+
+<h3>Structured output and validation</h3>
+
+<p>For applications that need structured data (JSON, CSV, specific formats), use system prompts and output validation:</p>
+
+<pre><code>import json
+
+message = client.messages.create(
+    model="claude-sonnet-4-6-20250516",
+    max_tokens=1024,
+    system="You are a data extraction API. Always respond with valid JSON matching the requested schema. Never include explanations outside the JSON.",
+    messages=[
+        {"role": "user", "content": "Extract the name, email, and company from this text: 'Contact Jane Smith at jane@acme.com, she works at Acme Corp.'"}
+    ]
+)
+
+# Parse and validate
+try:
+    data = json.loads(message.content[0].text)
+    assert "name" in data and "email" in data
+except (json.JSONDecodeError, AssertionError):
+    # Handle malformed output — retry or fall back
+    pass</code></pre>
+
+<h3>Observability and logging</h3>
+
+<p>In production, you need visibility into every API call. Log these fields for each request:</p>
+
+<ul>
+  <li>Request timestamp, model, and parameters</li>
+  <li>Response latency (time to first token and total time)</li>
+  <li>Token usage (input and output)</li>
+  <li>Stop reason (end_turn, max_tokens, stop_sequence)</li>
+  <li>Error codes and retry counts</li>
+  <li>Cost per request (calculated from model pricing and token usage)</li>
+</ul>
+
+<p>Many teams use structured logging with tools like Datadog, Grafana, or simple JSON log files. The key is to have enough data to debug issues and optimize costs after deployment.</p>
+
+<h3>Security considerations</h3>
+
+<ul>
+  <li><strong>Never expose your API key to the client</strong> — Always proxy API calls through your backend. Embedding the key in frontend JavaScript exposes it to anyone who inspects your page source.</li>
+  <li><strong>Sanitize user inputs</strong> — While Claude is resistant to prompt injection, you should still validate and sanitize user inputs before including them in API calls.</li>
+  <li><strong>Implement output filtering</strong> — For user-facing applications, check Claude's outputs against your content policies before displaying them.</li>
+  <li><strong>Use separate API keys per environment</strong> — Create distinct keys for development, staging, and production. If a key is compromised, you can revoke it without affecting other environments.</li>
+</ul>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: FAQ -->
+<!-- ============================================================ -->
+<h2 id="faq">9. Frequently Asked Questions</h2>
+
+<section class="faq-section" style="max-width:100%;margin:0;padding:0;">
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How much does the Claude API cost?</div>
+    <div class="faq-a">Claude API pricing varies by model. Claude Haiku 4.5 costs $0.80 per million input tokens and $4 per million output tokens — the most economical option. Claude Sonnet 4.6 costs $3 per million input tokens and $15 per million output tokens — the best value for most applications. Claude Opus 4.6 costs $15 per million input tokens and $75 per million output tokens — for when maximum quality matters. A typical request with 1,000 input tokens and 500 output tokens on Sonnet costs about $0.01. Use the <a href="#builder">request builder above</a> to estimate costs for your specific use case.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is the difference between Claude Opus, Sonnet, and Haiku?</div>
+    <div class="faq-a">They represent three tiers of capability and cost. Opus 4.6 is the most intelligent model — best for complex reasoning, research, and multi-step agentic tasks. Sonnet 4.6 balances capability and speed, making it the default choice for most production workloads including code generation, content creation, and chat. Haiku 4.5 is the fastest and cheapest model, optimized for high-volume tasks like classification, extraction, and real-time applications. All three share a 200K-token context window.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I get a Claude API key?</div>
+    <div class="faq-a">Sign up at <a href="https://console.anthropic.com">console.anthropic.com</a>, go to Settings &gt; API Keys, click Create Key, name it, and copy it immediately (it is shown only once). Store the key as an environment variable called <code>ANTHROPIC_API_KEY</code>. New accounts receive free credits to experiment. See <a href="#api-key">Section 1</a> for the full step-by-step process.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Does the Claude API support streaming responses?</div>
+    <div class="faq-a">Yes. Add <code>"stream": true</code> to your request body (cURL) or use the SDK's streaming methods: <code>client.messages.stream()</code> in Python and <code>client.messages.stream()</code> in JavaScript. Streaming delivers tokens via Server-Sent Events as they are generated, dramatically reducing time-to-first-token. See <a href="#advanced">Section 5</a> for full streaming examples in Python and JavaScript.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What are Claude API rate limits?</div>
+    <div class="faq-a">Rate limits depend on your account tier. Tier 1 (new accounts) allows 50 requests per minute and 40,000 tokens per minute. Limits increase automatically as you spend more — up to 4,000 requests/min and 400,000 tokens/min at Tier 4. Check your current limits under Settings &gt; Limits in the Anthropic Console. Every response includes <code>x-ratelimit-remaining-*</code> headers so you can monitor usage proactively. See <a href="#rate-limits">Section 7</a> for detailed tier breakdowns.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can the Claude API process images and PDFs?</div>
+    <div class="faq-a">Yes. Claude supports vision by accepting base64-encoded images or image URLs in the messages content array with <code>type: "image"</code>. Supported formats include JPEG, PNG, GIF, and WebP. Claude can also process PDF documents. Use cases include document analysis, chart reading, screenshot understanding, UI review, and visual QA. Images are tokenized based on their dimensions, typically using 1,000-2,000 tokens per image. See <a href="#advanced">Section 5</a> for a complete vision code example.</div>
+  </div>
+</section>
+
+</div><!-- /guide-content -->
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools & Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  // === MODEL PRICING (per 1M tokens) ===
+  const PRICING = {
+    "claude-opus-4-6-20250516":   { input: 15,   output: 75,  label: "Opus 4.6" },
+    "claude-sonnet-4-6-20250516": { input: 3,    output: 15,  label: "Sonnet 4.6" },
+    "claude-haiku-4-5-20250414":  { input: 0.80, output: 4,   label: "Haiku 4.5" }
+  };
+
+  const $ = id => document.getElementById(id);
+  let activeLang = "curl";
+
+  // Rough token estimator (~4 chars per token for English)
+  function estimateTokens(text) {
+    if (!text) return 0;
+    return Math.max(1, Math.ceil(text.length / 4));
+  }
+
+  function escapeJSON(str) {
+    return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+  }
+
+  function getConfig() {
+    const model = $("b-model").value;
+    const maxTokens = parseInt($("b-max-tokens").value) || 1024;
+    const temp = parseFloat($("b-temp").value);
+    const system = $("b-system").value.trim();
+    const user = $("b-user").value.trim() || "Hello, Claude.";
+    return { model, maxTokens, temp, system, user };
+  }
+
+  function generateCurl(cfg) {
+    let body = `{
+    "model": "${cfg.model}",
+    "max_tokens": ${cfg.maxTokens},`;
+    if (cfg.temp !== 1.0) body += `\n    "temperature": ${cfg.temp},`;
+    if (cfg.system) body += `\n    "system": "${escapeJSON(cfg.system)}",`;
+    body += `
+    "messages": [
+      {"role": "user", "content": "${escapeJSON(cfg.user)}"}
+    ]
+  }`;
+    return `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '${body}'`;
+  }
+
+  function generatePython(cfg) {
+    let code = `import anthropic
+
+client = anthropic.Anthropic()
+
+message = client.messages.create(
+    model="${cfg.model}",
+    max_tokens=${cfg.maxTokens},`;
+    if (cfg.temp !== 1.0) code += `\n    temperature=${cfg.temp},`;
+    if (cfg.system) code += `\n    system="${escapeJSON(cfg.system)}",`;
+    code += `
+    messages=[
+        {"role": "user", "content": "${escapeJSON(cfg.user)}"}
+    ]
+)
+
+print(message.content[0].text)`;
+    return code;
+  }
+
+  function generateJS(cfg) {
+    let code = `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const message = await client.messages.create({
+    model: "${cfg.model}",
+    max_tokens: ${cfg.maxTokens},`;
+    if (cfg.temp !== 1.0) code += `\n    temperature: ${cfg.temp},`;
+    if (cfg.system) code += `\n    system: "${escapeJSON(cfg.system)}",`;
+    code += `
+    messages: [
+        { role: "user", content: "${escapeJSON(cfg.user)}" }
+    ],
+});
+
+console.log(message.content[0].text);`;
+    return code;
+  }
+
+  function generateGo(cfg) {
+    let systemParam = "";
+    if (cfg.system) {
+      systemParam = `
+		System: []anthropic.TextBlockParam{
+			anthropic.NewTextBlock("${escapeJSON(cfg.system)}"),
+		},`;
+    }
+    let tempParam = "";
+    if (cfg.temp !== 1.0) {
+      tempParam = `\n\t\tTemperature: anthropic.Float(${cfg.temp}),`;
+    }
+    return `package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/anthropics/anthropic-sdk-go"
+)
+
+func main() {
+	client := anthropic.NewClient()
+
+	message, err := client.Messages.New(context.TODO(),
+		anthropic.MessageNewParams{
+			Model:     anthropic.ModelClaude${cfg.model.includes("opus") ? "Opus" : cfg.model.includes("sonnet") ? "Sonnet" : "Haiku"}Latest,
+			MaxTokens: int64(${cfg.maxTokens}),${tempParam}${systemParam}
+			Messages: []anthropic.MessageParam{
+				anthropic.NewUserMessage(
+					anthropic.NewTextBlock("${escapeJSON(cfg.user)}"),
+				),
+			},
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(message.Content[0].Text)
+}`;
+  }
+
+  function update() {
+    const cfg = getConfig();
+    const pricing = PRICING[cfg.model];
+
+    // Estimate tokens
+    const sysTokens = estimateTokens(cfg.system);
+    const userTokens = estimateTokens(cfg.user);
+    const inputTokens = sysTokens + userTokens + 10; // overhead
+    const maxOut = cfg.maxTokens;
+
+    // Cost estimate (max cost scenario)
+    const inputCost = (inputTokens / 1000000) * pricing.input;
+    const outputCost = (maxOut / 1000000) * pricing.output;
+    const totalCost = inputCost + outputCost;
+
+    $("est-input").textContent = "~" + inputTokens.toLocaleString();
+    $("est-output").textContent = maxOut.toLocaleString();
+    $("est-cost").textContent = "$" + totalCost.toFixed(4);
+
+    // Generate code
+    let code;
+    switch (activeLang) {
+      case "curl": code = generateCurl(cfg); break;
+      case "python": code = generatePython(cfg); break;
+      case "javascript": code = generateJS(cfg); break;
+      case "go": code = generateGo(cfg); break;
+    }
+    $("code-output").textContent = code;
+  }
+
+  // Tab switching
+  document.querySelectorAll(".lang-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".lang-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      update();
+    });
+  });
+
+  // Copy button
+  window.copyBuilderCode = function() {
+    const text = $("code-output").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  // Temperature display
+  $("b-temp").addEventListener("input", function() {
+    $("b-temp-val").textContent = parseFloat(this.value).toFixed(1);
+    update();
+  });
+
+  // All inputs trigger update
+  ["b-model", "b-max-tokens", "b-system", "b-user"].forEach(id => {
+    $(id).addEventListener("input", update);
+    $(id).addEventListener("change", update);
+  });
+
+  // Initial render
+  update();
+})();
+</script>
+</body>
+</html>
