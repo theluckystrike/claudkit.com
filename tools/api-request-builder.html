@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude API Request Builder — Generate curl, Python &amp; JS Code Instantly | ClaudKit</title>
+<meta name="description" content="Build Claude API requests visually. Select a model, configure parameters, and generate production-ready code in curl, Python, and JavaScript. Includes token counting and cost estimation per request.">
+<link rel="canonical" href="https://claudkit.com/tools/api-request-builder.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/tools/api-request-builder.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/tools/api-request-builder.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude API Request Builder — Generate curl, Python & JS Code Instantly">
+<meta property="og:description" content="Build Claude API requests visually. Select a model, configure parameters, and generate production-ready code in curl, Python, and JavaScript.">
+<meta property="og:url" content="https://claudkit.com/tools/api-request-builder.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude API Request Builder — Generate curl, Python & JS Code Instantly">
+<meta name="twitter:description" content="Build Claude API requests visually. Select a model, configure parameters, and generate production-ready code in curl, Python, and JavaScript.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude API Request Builder",
+  "description": "Visual API request builder for Anthropic Claude. Configure model, system prompt, temperature, max_tokens, and top_p, then generate production-ready code in curl, Python, and JavaScript with token counting and cost estimation.",
+  "url": "https://claudkit.com/tools/api-request-builder.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Model selector for Claude Opus 4, Sonnet 4, and Haiku 3.5",
+    "System prompt and user message configuration",
+    "Temperature and top_p sliders with real-time preview",
+    "Code generation in curl, Python, and JavaScript",
+    "Formatted JSON request body preview",
+    "Token count estimator for input and output",
+    "Per-request cost estimation based on current Anthropic pricing",
+    "One-click copy to clipboard"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Claude API Request Builder — Generate curl, Python & JS Code Instantly",
+  "description": "Build Claude API requests visually with model selection, parameter configuration, and production-ready code generation in three languages. Includes token counting and cost estimation.",
+  "url": "https://claudkit.com/tools/api-request-builder.html",
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "mainEntityOfPage": "https://claudkit.com/tools/api-request-builder.html",
+  "keywords": ["claude api request builder", "claude api code generator", "anthropic api curl", "claude api python", "claude api javascript", "claude api cost calculator"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I build a Claude API request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Claude API request requires a POST to api.anthropic.com/v1/messages with headers for content-type, x-api-key, and anthropic-version. The JSON body needs a model name (e.g., claude-opus-4-20250514), max_tokens integer, and a messages array with user/assistant role objects. Optional parameters include system prompt, temperature (0-1), and top_p (0-1). Use ClaudKit's visual builder to configure all parameters and generate ready-to-use code."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between temperature and top_p in the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Temperature controls randomness in Claude's output: 0.0 produces deterministic responses while 1.0 produces creative, varied responses. Top_p (nucleus sampling) limits token selection to a cumulative probability threshold. A top_p of 0.9 means Claude only considers tokens whose cumulative probability reaches 90%. For most use cases, adjust temperature alone and leave top_p at the default. Setting both low produces very predictable output; both high produces very creative output."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does a single Claude API request cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cost depends on the model and token count. Claude Haiku 3.5 costs $0.80 per million input tokens and $4 per million output tokens. Claude Sonnet 4 costs $3 per million input and $15 per million output. Claude Opus 4 costs $15 per million input and $75 per million output. A typical 500-token input and 1,024-token output on Sonnet costs about $0.017. Use the built-in cost estimator in ClaudKit's request builder to calculate exact costs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I estimate token count for a Claude API request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A rough estimate is 1 token per 4 characters of English text. For precise counts, use Anthropic's tokenizer or the token count endpoint. The ClaudKit request builder provides real-time token estimates as you type your system prompt and user message, factoring in JSON overhead from the request structure. Input tokens include both the system prompt and user message; output tokens are bounded by your max_tokens parameter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use the Claude API request builder output in production?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The generated code is production-ready and uses the official Anthropic API format and SDK methods. The curl output works in any terminal or CI/CD pipeline. The Python output uses the official anthropic SDK. The JavaScript output uses the @anthropic-ai/sdk package. You only need to replace the placeholder API key with your actual key from console.anthropic.com. Always store your API key in environment variables, never in source code."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://claudkit.com/tools/"},{"@type":"ListItem","position":3,"name":"API Request Builder"}]}</script>
+
+<style>
+  .builder-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1200px; margin:0 auto 2rem; padding:0 2rem; }
+  .builder-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .builder-panel h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .output-tabs { display:flex; gap:0; margin-bottom:0.75rem; border-bottom:1px solid var(--border); }
+  .output-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .output-tab:hover { color:var(--text); }
+  .output-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.8rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-floating { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-floating:hover { border-color:var(--accent); }
+  .json-preview { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.5; overflow-x:auto; white-space:pre-wrap; max-height:300px; overflow-y:auto; margin-top:1rem; color:var(--text-muted); }
+  .estimate-row { display:flex; gap:1.5rem; margin-top:1rem; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); }
+  .estimate-item { text-align:center; flex:1; }
+  .estimate-label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
+  .estimate-value { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--accent); margin-top:0.25rem; }
+  .slider-row { display:flex; align-items:center; gap:0.75rem; }
+  .slider-row input[type="range"] { flex:1; accent-color:var(--accent); }
+  .slider-val { font-family:var(--font-display); font-size:0.85rem; min-width:35px; text-align:right; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .builder-grid { grid-template-columns:1fr; padding:0 1rem; } .estimate-row { flex-direction:column; gap:0.75rem; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/tools/" style="color:var(--accent);text-decoration:none;">Tools</a> <span>/</span> <span>API Request Builder</span></nav>
+    <h1>Claude API Request Builder</h1>
+    <p>Configure every parameter visually and generate production-ready code in curl, Python, and JavaScript. Includes real-time token counting and per-request cost estimation.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="builder-grid">
+    <!-- Left: Config Panel -->
+    <div class="builder-panel">
+      <h2>Request Configuration</h2>
+
+      <div class="form-group">
+        <label>Model</label>
+        <select id="rb-model">
+          <option value="claude-opus-4-20250514">claude-opus-4-20250514 ($15 / $75 per 1M)</option>
+          <option value="claude-sonnet-4-20250514" selected>claude-sonnet-4-20250514 ($3 / $15 per 1M)</option>
+          <option value="claude-haiku-3-5-20241022">claude-haiku-3.5-20241022 ($0.80 / $4 per 1M)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>System Prompt</label>
+        <textarea id="rb-system" rows="3" placeholder="You are a helpful assistant..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>User Message</label>
+        <textarea id="rb-user" rows="4" placeholder="Enter your message to Claude...">Explain the difference between REST and GraphQL APIs in 3 paragraphs.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Temperature</label>
+        <div class="slider-row">
+          <input type="range" id="rb-temp" min="0" max="1" step="0.1" value="0.3">
+          <span class="slider-val" id="rb-temp-val">0.3</span>
+        </div>
+        <span style="font-size:0.75rem;color:var(--text-muted);">0.0 = deterministic, 1.0 = creative</span>
+      </div>
+
+      <div class="form-group">
+        <label>Max Tokens</label>
+        <input type="text" id="rb-max-tokens" value="1024" placeholder="1024">
+      </div>
+
+      <div class="form-group">
+        <label>Top P (nucleus sampling)</label>
+        <div class="slider-row">
+          <input type="range" id="rb-top-p" min="0" max="1" step="0.05" value="1.0">
+          <span class="slider-val" id="rb-top-p-val">1.0</span>
+        </div>
+        <span style="font-size:0.75rem;color:var(--text-muted);">1.0 = consider all tokens, 0.1 = only top 10% probability mass</span>
+      </div>
+
+      <div class="estimate-row">
+        <div class="estimate-item">
+          <div class="estimate-label">Input Tokens</div>
+          <div class="estimate-value" id="rb-est-in">~25</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Max Output</div>
+          <div class="estimate-value" id="rb-est-out">1,024</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Est. Cost</div>
+          <div class="estimate-value" id="rb-est-cost">$0.0154</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Output Panel -->
+    <div class="builder-panel">
+      <h2>Generated Code</h2>
+
+      <div class="output-tabs">
+        <button class="output-tab active" data-lang="curl">curl</button>
+        <button class="output-tab" data-lang="python">Python</button>
+        <button class="output-tab" data-lang="javascript">JavaScript</button>
+      </div>
+
+      <div style="position:relative;">
+        <div class="code-out" id="rb-code-output"></div>
+        <button class="copy-floating" id="rb-copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+
+      <h3 style="font-size:0.85rem;color:var(--accent);margin-top:1.25rem;font-family:var(--font-display);">JSON Request Body</h3>
+      <div class="json-preview" id="rb-json-preview"></div>
+    </div>
+  </div>
+
+  <!-- Long-form article content -->
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What This Tool Does</h2>
+
+    <p>The Claude API Request Builder is an interactive code generator for the Anthropic Messages API. It takes the guesswork out of constructing API requests by providing a visual form for every configurable parameter. As you adjust the model, system prompt, user message, temperature, max tokens, and top_p values, the tool generates syntactically correct code in three languages simultaneously: curl for terminal testing, Python using the official <code>anthropic</code> SDK, and JavaScript using the <code>@anthropic-ai/sdk</code> package. Every code snippet updates in real time as you modify any field.</p>
+
+    <p>The builder also provides a formatted JSON request body preview that shows exactly what will be sent to the <code>/v1/messages</code> endpoint. This is useful for developers who prefer to see the raw payload structure or who are integrating with the API using a language or HTTP client that is not covered by the three built-in output formats. You can copy the JSON body and use it with any HTTP library in any programming language.</p>
+
+    <h2>Understanding Each Parameter</h2>
+
+    <p>The <strong>model</strong> parameter determines which Claude model processes your request. Claude Opus 4 is the most capable model, designed for complex reasoning, research synthesis, and multi-step analysis tasks. Claude Sonnet 4 balances capability and speed, making it the default choice for most production applications including code generation, content creation, and conversational AI. Claude Haiku 3.5 is the fastest and most economical model, optimized for high-volume tasks such as text classification, entity extraction, and real-time chat applications where latency matters more than depth of reasoning.</p>
+
+    <p>The <strong>system prompt</strong> establishes Claude's behavior and personality before the conversation begins. Think of it as background instructions that frame every response. Effective system prompts are specific about output format, tone, and constraints. For example, a system prompt like "You are a senior Python developer. Always include type hints and docstrings. Explain your reasoning before writing code." produces noticeably different results than a generic "You are a helpful assistant." The system prompt is counted as input tokens and affects pricing accordingly.</p>
+
+    <p>The <strong>temperature</strong> parameter controls randomness in token selection. At 0.0, Claude always selects the highest-probability token, producing deterministic and focused output. At 1.0, the selection is more random, producing creative and varied responses. For factual queries, code generation, and data extraction, use 0.0 to 0.3. For creative writing, brainstorming, and conversational applications, use 0.7 to 1.0. The default of 1.0 works for general-purpose use, but most production applications benefit from explicitly setting this value. If you need to compare how different Claude models respond to the same prompt and temperature, <a href="https://lockml.com">LockML</a> provides side-by-side model comparison tools.</p>
+
+    <p>The <strong>max_tokens</strong> parameter sets an upper bound on the number of tokens Claude can generate in its response. One token is approximately four characters of English text, so 1,024 tokens is roughly 750 to 800 words. If Claude reaches the max_tokens limit, the response is truncated and the <code>stop_reason</code> in the response will be <code>"max_tokens"</code> instead of <code>"end_turn"</code>. Set this high enough to avoid truncation but low enough to control costs, since you pay for actual tokens generated, not the maximum.</p>
+
+    <p>The <strong>top_p</strong> parameter (nucleus sampling) provides an alternative way to control output diversity. It limits token selection to the smallest set of tokens whose cumulative probability exceeds the threshold. A top_p of 0.9 means Claude considers only the tokens that collectively make up 90% of the probability distribution, discarding the long tail of unlikely tokens. In practice, most developers use temperature alone and leave top_p at the default of 1.0. If you adjust both simultaneously, the effects compound, so it is best to tune one at a time.</p>
+
+    <h2>How Token Counting Works</h2>
+
+    <p>The token estimator in this tool uses a rough approximation of one token per four characters of English text. This is a reasonable estimate for typical English prose, but actual token counts can vary based on language, code syntax, whitespace, and special characters. For precise token counting before sending a request, Anthropic provides a token counting endpoint and the Python SDK includes a <code>count_tokens</code> method. The estimator here is designed for quick cost projections, not exact billing calculations.</p>
+
+    <p>Input tokens include everything you send to the API: the system prompt, all messages in the conversation, and structural JSON overhead (role labels, array brackets, and so on). The overhead is typically 10 to 20 tokens for a simple single-turn request. Output tokens are the tokens Claude actually generates, bounded by your max_tokens parameter. You are billed for actual output tokens, not the max_tokens value. So if you set max_tokens to 4096 but Claude finishes its response in 200 tokens, you only pay for 200 output tokens. For tracking costs across multiple API calls and models, <a href="https://kickllm.com">KickLLM</a> offers comprehensive LLM cost monitoring dashboards.</p>
+
+    <h2>Cost Estimation Methodology</h2>
+
+    <p>The cost estimate shown in the builder calculates the worst-case scenario: the full input token count plus the full max_tokens value as output. This gives you a ceiling on what a single request could cost. In practice, most responses use fewer output tokens than the maximum, so actual costs are usually lower than the estimate. For production budgeting, track your actual token usage over a sample period and calculate the average output-to-max ratio for your specific use case.</p>
+
+    <p>Current pricing as of May 2026 is: Claude Haiku 3.5 at $0.80 per million input tokens and $4.00 per million output tokens; Claude Sonnet 4 at $3.00 per million input and $15.00 per million output; Claude Opus 4 at $15.00 per million input and $75.00 per million output. Anthropic also offers prompt caching for repeated system prompts at reduced rates, and a Batch API for non-time-sensitive workloads at 50% of standard pricing.</p>
+
+    <h2>Using the Generated Code</h2>
+
+    <p>The <strong>curl</strong> output is designed for terminal testing and CI/CD pipelines. It assumes your API key is stored in the <code>ANTHROPIC_API_KEY</code> environment variable. Copy the command, paste it into your terminal, and you will receive a JSON response from Claude within seconds. The curl format is also useful for sharing reproducible API calls in bug reports, documentation, and team communication.</p>
+
+    <p>The <strong>Python</strong> output uses the official <code>anthropic</code> Python SDK, which handles authentication, retries, and response parsing automatically. Install it with <code>pip install anthropic</code>. The SDK reads the <code>ANTHROPIC_API_KEY</code> environment variable by default, so you do not need to pass the key explicitly. The generated code includes proper method calls with named parameters and produces clean, idiomatic Python that you can drop directly into your project.</p>
+
+    <p>The <strong>JavaScript</strong> output uses the official <code>@anthropic-ai/sdk</code> package. Install it with <code>npm install @anthropic-ai/sdk</code>. The generated code uses ES module imports and async/await syntax compatible with Node.js 18+ and modern bundlers. Like the Python SDK, it reads the <code>ANTHROPIC_API_KEY</code> environment variable automatically. For webhook-driven architectures where API calls are triggered by events, <a href="https://invokebot.com">InvokeBot</a> provides webhook management tools that complement this request builder.</p>
+
+    <h2>Best Practices for API Requests</h2>
+
+    <p>Start with a specific system prompt. Generic system prompts like "You are a helpful assistant" waste tokens and produce generic responses. Instead, specify the exact role, output format, constraints, and tone. A well-crafted system prompt of 50 to 100 tokens can dramatically improve response quality and reduce the need for follow-up requests, saving both time and money.</p>
+
+    <p>Set temperature intentionally. For any task where consistency matters (code generation, data extraction, classification), use temperature 0.0 to 0.2. For tasks where variety is valuable (creative writing, brainstorming, conversation), use 0.7 to 1.0. Avoid the trap of using the default temperature for all tasks. The difference in output quality between a well-tuned temperature and the default is often significant.</p>
+
+    <p>Right-size your max_tokens. Setting max_tokens to the model maximum for every request is wasteful if most responses are short. Analyze your typical response length and set max_tokens to 1.5 times that value. This provides headroom for longer responses while keeping cost estimates realistic. For the Claude API playground with more presets and live testing, try the <a href="/">ClaudKit homepage tool</a>.</p>
+
+    <p>Use the JSON body preview to debug issues. When you receive unexpected errors from the API, compare the raw JSON body from this tool against the error message. Common issues include misspelled model names, max_tokens exceeding the model limit, and malformed message arrays. The JSON preview makes these issues visible before you send the request. For a comprehensive reference of every API error code and how to fix it, see the <a href="/research/claude-api-error-guide.html">ClaudKit API Error Guide</a>.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How do I build a Claude API request?</summary>
+      <p>A Claude API request requires a POST to api.anthropic.com/v1/messages with headers for content-type, x-api-key, and anthropic-version. The JSON body needs a model name (e.g., claude-opus-4-20250514), a max_tokens integer, and a messages array with user/assistant role objects. Optional parameters include system prompt, temperature (0-1), and top_p (0-1). Use this visual builder to configure all parameters and generate ready-to-use code in curl, Python, or JavaScript.</p>
+    </details>
+
+    <details>
+      <summary>What is the difference between temperature and top_p in the Claude API?</summary>
+      <p>Temperature controls randomness in Claude's output: 0.0 produces deterministic responses while 1.0 produces creative, varied responses. Top_p (nucleus sampling) limits token selection to a cumulative probability threshold. A top_p of 0.9 means Claude only considers tokens whose cumulative probability reaches 90%. For most use cases, adjust temperature alone and leave top_p at the default of 1.0. Setting both low produces very predictable output; both high produces very creative output.</p>
+    </details>
+
+    <details>
+      <summary>How much does a single Claude API request cost?</summary>
+      <p>Cost depends on the model and token count. Claude Haiku 3.5 costs $0.80 per million input tokens and $4 per million output tokens. Claude Sonnet 4 costs $3 per million input and $15 per million output. Claude Opus 4 costs $15 per million input and $75 per million output. A typical 500-token input and 1,024-token output on Sonnet costs about $0.017. Use the built-in cost estimator above to calculate exact costs for your configuration.</p>
+    </details>
+
+    <details>
+      <summary>How do I estimate token count for a Claude API request?</summary>
+      <p>A rough estimate is 1 token per 4 characters of English text. For precise counts, use Anthropic's tokenizer endpoint or the Python SDK's count_tokens method. This request builder provides real-time token estimates as you type your system prompt and user message, factoring in JSON overhead from the request structure. Input tokens include both the system prompt and user message; output tokens are bounded by your max_tokens parameter.</p>
+    </details>
+
+    <details>
+      <summary>Can I use the generated code in production?</summary>
+      <p>Yes. The generated code is production-ready and uses the official Anthropic API format and SDK methods. The curl output works in any terminal or CI/CD pipeline. The Python output uses the official anthropic SDK. The JavaScript output uses the @anthropic-ai/sdk package. Replace the placeholder API key with your actual key from console.anthropic.com. Always store your API key in environment variables, never in source code.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/" class="related-card">
+        <h3>ClaudKit Playground</h3>
+        <p>Full API playground with live testing using your own API key.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Responses Guide</h3>
+        <p>Interactive streaming demo with code generation in Python, JS, and curl.</p>
+      </a>
+      <a href="/answers/claude-model-picker.html" class="related-card">
+        <h3>Claude Model Picker</h3>
+        <p>Step-by-step wizard to find the right Claude model for your use case.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes and code examples.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across all major providers.</p>
+      </a>
+      <a href="https://claudhq.com" class="related-card">
+        <h3>ClaudHQ</h3>
+        <p>Prompt library with 30+ tested templates optimized for Claude.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const PRICING = {
+    "claude-opus-4-20250514":     { input: 15,   output: 75,   label: "Opus 4" },
+    "claude-sonnet-4-20250514":   { input: 3,    output: 15,   label: "Sonnet 4" },
+    "claude-haiku-3-5-20241022":  { input: 0.80, output: 4,    label: "Haiku 3.5" }
+  };
+
+  const $ = id => document.getElementById(id);
+  let activeLang = "curl";
+
+  function estimateTokens(text) {
+    if (!text) return 0;
+    return Math.max(1, Math.ceil(text.length / 4));
+  }
+
+  function escJSON(s) {
+    return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+  }
+
+  function getConfig() {
+    return {
+      model: $("rb-model").value,
+      system: $("rb-system").value.trim(),
+      user: $("rb-user").value.trim() || "Hello, Claude.",
+      temp: parseFloat($("rb-temp").value),
+      maxTokens: parseInt($("rb-max-tokens").value) || 1024,
+      topP: parseFloat($("rb-top-p").value)
+    };
+  }
+
+  function buildBody(cfg) {
+    const body = { model: cfg.model, max_tokens: cfg.maxTokens };
+    if (cfg.temp !== 1.0) body.temperature = cfg.temp;
+    if (cfg.topP !== 1.0) body.top_p = cfg.topP;
+    if (cfg.system) body.system = cfg.system;
+    body.messages = [{ role: "user", content: cfg.user }];
+    return body;
+  }
+
+  function genCurl(cfg) {
+    const body = JSON.stringify(buildBody(cfg), null, 2);
+    return `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '${body}'`;
+  }
+
+  function genPython(cfg) {
+    let code = `import anthropic\n\nclient = anthropic.Anthropic()\n\nmessage = client.messages.create(\n    model="${cfg.model}",\n    max_tokens=${cfg.maxTokens},`;
+    if (cfg.temp !== 1.0) code += `\n    temperature=${cfg.temp},`;
+    if (cfg.topP !== 1.0) code += `\n    top_p=${cfg.topP},`;
+    if (cfg.system) code += `\n    system="${escJSON(cfg.system)}",`;
+    code += `\n    messages=[\n        {"role": "user", "content": "${escJSON(cfg.user)}"}\n    ]\n)\n\nprint(message.content[0].text)\nprint(f"Input tokens: {message.usage.input_tokens}")\nprint(f"Output tokens: {message.usage.output_tokens}")`;
+    return code;
+  }
+
+  function genJS(cfg) {
+    let code = `import Anthropic from "@anthropic-ai/sdk";\n\nconst client = new Anthropic();\n\nconst message = await client.messages.create({\n    model: "${cfg.model}",\n    max_tokens: ${cfg.maxTokens},`;
+    if (cfg.temp !== 1.0) code += `\n    temperature: ${cfg.temp},`;
+    if (cfg.topP !== 1.0) code += `\n    top_p: ${cfg.topP},`;
+    if (cfg.system) code += `\n    system: "${escJSON(cfg.system)}",`;
+    code += `\n    messages: [\n        { role: "user", content: "${escJSON(cfg.user)}" }\n    ],\n});\n\nconsole.log(message.content[0].text);\nconsole.log(\`Input tokens: \${message.usage.input_tokens}\`);\nconsole.log(\`Output tokens: \${message.usage.output_tokens}\`);`;
+    return code;
+  }
+
+  function update() {
+    const cfg = getConfig();
+    const pricing = PRICING[cfg.model];
+
+    // Token estimates
+    const sysTokens = estimateTokens(cfg.system);
+    const userTokens = estimateTokens(cfg.user);
+    const inputTokens = sysTokens + userTokens + 12;
+
+    // Cost (worst case: full max_tokens output)
+    const inputCost = (inputTokens / 1e6) * pricing.input;
+    const outputCost = (cfg.maxTokens / 1e6) * pricing.output;
+    const totalCost = inputCost + outputCost;
+
+    $("rb-est-in").textContent = "~" + inputTokens.toLocaleString();
+    $("rb-est-out").textContent = cfg.maxTokens.toLocaleString();
+    $("rb-est-cost").textContent = "$" + totalCost.toFixed(4);
+
+    // Code output
+    let code;
+    switch (activeLang) {
+      case "curl": code = genCurl(cfg); break;
+      case "python": code = genPython(cfg); break;
+      case "javascript": code = genJS(cfg); break;
+    }
+    $("rb-code-output").textContent = code;
+
+    // JSON body preview
+    $("rb-json-preview").textContent = JSON.stringify(buildBody(cfg), null, 2);
+  }
+
+  // Tab switching
+  document.querySelectorAll(".output-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".output-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      update();
+    });
+  });
+
+  // Copy button
+  window.copyCode = function() {
+    const text = $("rb-code-output").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("rb-copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  // Slider displays
+  $("rb-temp").addEventListener("input", function() {
+    $("rb-temp-val").textContent = parseFloat(this.value).toFixed(1);
+    update();
+  });
+  $("rb-top-p").addEventListener("input", function() {
+    $("rb-top-p-val").textContent = parseFloat(this.value).toFixed(2);
+    update();
+  });
+
+  // All inputs trigger update
+  ["rb-model", "rb-max-tokens", "rb-system", "rb-user"].forEach(id => {
+    $(id).addEventListener("input", update);
+    $(id).addEventListener("change", update);
+  });
+
+  // Initial render
+  update();
+})();
+</script>
+</body>
+</html>

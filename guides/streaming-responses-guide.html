@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude API Streaming Responses Guide — Interactive Demo &amp; Code Generator | ClaudKit</title>
+<meta name="description" content="Learn how to implement Claude API streaming responses. Interactive demo simulates real-time token delivery. Generate production streaming code in Python, JavaScript, and curl with event handling and error recovery.">
+<link rel="canonical" href="https://claudkit.com/guides/streaming-responses-guide.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/guides/streaming-responses-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/guides/streaming-responses-guide.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude API Streaming Responses Guide — Interactive Demo & Code Generator">
+<meta property="og:description" content="Learn Claude API streaming with an interactive demo. Generate production-ready streaming code in Python, JavaScript, and curl.">
+<meta property="og:url" content="https://claudkit.com/guides/streaming-responses-guide.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude API Streaming Responses Guide — Interactive Demo & Code Generator">
+<meta name="twitter:description" content="Learn Claude API streaming with an interactive demo. Generate production-ready streaming code in Python, JavaScript, and curl.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Claude API Streaming Responses Guide — Interactive Demo & Code Generator",
+  "description": "Comprehensive guide to implementing Claude API streaming responses with an interactive demo, production code in Python, JavaScript, and curl, and a configuration builder for event handling, error recovery, and token counting.",
+  "url": "https://claudkit.com/guides/streaming-responses-guide.html",
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "mainEntityOfPage": "https://claudkit.com/guides/streaming-responses-guide.html",
+  "keywords": ["claude api streaming", "anthropic streaming responses", "server-sent events claude", "claude streaming python", "claude streaming javascript", "real-time ai responses"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Implement Claude API Streaming Responses",
+  "description": "Step-by-step guide to streaming responses from the Claude API using Server-Sent Events in Python, JavaScript, and curl.",
+  "totalTime": "PT20M",
+  "estimatedCost": {"@type": "MonetaryAmount", "currency": "USD", "value": "0.00"},
+  "step": [
+    {"@type": "HowToStep", "position": 1, "name": "Set stream parameter to true", "text": "Add 'stream': true to your API request body to enable Server-Sent Events streaming."},
+    {"@type": "HowToStep", "position": 2, "name": "Handle SSE events", "text": "Parse incoming events: message_start, content_block_start, content_block_delta, content_block_stop, message_delta, and message_stop."},
+    {"@type": "HowToStep", "position": 3, "name": "Extract text deltas", "text": "From content_block_delta events, extract the text field to display tokens as they arrive."},
+    {"@type": "HowToStep", "position": 4, "name": "Implement error recovery", "text": "Handle connection drops with exponential backoff retry logic. Check the final message_delta for usage statistics."},
+    {"@type": "HowToStep", "position": 5, "name": "Count tokens from the stream", "text": "The message_delta event includes usage.output_tokens for the total token count of the streamed response."}
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I enable streaming in the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Add 'stream': true to your request body. The API will respond with a stream of Server-Sent Events (SSE) instead of a single JSON response. In the Python SDK, use client.messages.stream() which returns an iterator. In JavaScript, use client.messages.stream() which returns an async iterable. In curl, add -N flag for unbuffered output and parse the SSE events."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What events does the Claude streaming API send?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Claude streaming API sends six event types: message_start (contains the message object with model and usage info), content_block_start (signals the beginning of a content block), content_block_delta (contains the actual text tokens as they are generated), content_block_stop (signals end of a content block), message_delta (contains stop_reason and final usage statistics), and message_stop (signals the stream is complete). Most applications only need to process content_block_delta for the text and message_delta for usage info."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I handle streaming errors and connection drops?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Implement retry logic with exponential backoff. If the connection drops before receiving a message_stop event, the response was interrupted. Store the partial response and decide whether to retry the full request or present the partial result. The Python SDK's stream() method handles basic connection management. For production, wrap the stream in a try/except block and implement a circuit breaker for repeated failures. Set explicit timeouts for both connection establishment and inter-event intervals."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Claude API streaming faster than non-streaming?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Streaming delivers the same total content but with much lower perceived latency. The time-to-first-token (TTFT) with streaming is typically 200-500ms compared to waiting 5-30 seconds for a complete non-streaming response. Total generation time is identical — streaming does not make the model faster. The advantage is that users see output immediately and can start reading while the rest generates. For applications where user experience matters, streaming is strongly recommended."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I count tokens from a Claude streaming response?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Token usage information is included in the stream events. The message_start event contains usage.input_tokens with the input token count. The message_delta event (sent near the end of the stream) contains usage.output_tokens with the final output token count. You do not need to count tokens manually from the text deltas — the API provides exact counts in the stream metadata. Use these values for cost calculation and logging."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://claudkit.com/guides/"},{"@type":"ListItem","position":3,"name":"Streaming Responses Guide"}]}</script>
+
+<style>
+  .demo-container { max-width:960px; margin:0 auto 2rem; padding:0 2rem; }
+  .demo-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem; }
+  .demo-box h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .stream-output { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.85rem; line-height:1.7; min-height:120px; max-height:300px; overflow-y:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); }
+  .stream-controls { display:flex; gap:0.75rem; margin-bottom:1rem; align-items:center; flex-wrap:wrap; }
+  .stream-controls .btn { padding:0.5rem 1.25rem; }
+  .speed-slider { display:flex; align-items:center; gap:0.5rem; margin-left:auto; }
+  .speed-slider label { font-size:0.8rem; color:var(--text-muted); white-space:nowrap; }
+  .speed-slider input[type="range"] { width:120px; accent-color:var(--accent); }
+  .speed-slider .speed-val { font-family:var(--font-display); font-size:0.8rem; min-width:40px; }
+  .stream-stats { display:flex; gap:1.5rem; margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted); }
+  .stream-stats span { font-family:var(--font-display); color:var(--accent); }
+  .code-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:0.75rem; }
+  .code-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .code-tab:hover { color:var(--text); }
+  .code-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-display { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.8rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:500px; overflow-y:auto; position:relative; }
+  .copy-btn-float { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-btn-float:hover { border-color:var(--accent); }
+  .config-builder { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1.5rem; }
+  .config-options { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .config-options h3 { font-size:0.85rem; color:var(--accent); font-family:var(--font-display); margin-bottom:0.75rem; }
+  .config-check { display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem; font-size:0.85rem; }
+  .config-check input[type="checkbox"] { accent-color:var(--accent); }
+  .config-output { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.5; overflow-x:auto; white-space:pre-wrap; max-height:400px; overflow-y:auto; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem 2rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); }
+  .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-name a { color:var(--accent); text-decoration:none; }
+  .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .config-builder { grid-template-columns:1fr; } .stream-controls { flex-direction:column; align-items:stretch; } .speed-slider { margin-left:0; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/guides/" style="color:var(--accent);text-decoration:none;">Guides</a> <span>/</span> <span>Streaming Responses Guide</span></nav>
+    <h1>Claude API Streaming Responses Guide</h1>
+    <p>Learn how streaming works with an interactive demo, then generate production-ready streaming code in Python, JavaScript, and curl. Configure event handling, error recovery, and token counting options.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <!-- Interactive Streaming Demo -->
+  <div class="demo-container">
+    <div class="demo-box">
+      <h2>Interactive Streaming Demo</h2>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Watch text appear character-by-character, simulating how Claude streams tokens via Server-Sent Events. Adjust the speed slider to control the animation rate.</p>
+
+      <div class="stream-controls">
+        <button class="btn btn-accent" id="stream-start" onclick="startStream()">Start Streaming</button>
+        <button class="btn" id="stream-stop" onclick="stopStream()" style="display:none;">Stop</button>
+        <button class="btn" onclick="resetStream()">Reset</button>
+        <div class="speed-slider">
+          <label>Speed:</label>
+          <input type="range" id="stream-speed" min="5" max="100" value="30">
+          <span class="speed-val" id="stream-speed-val">30ms</span>
+        </div>
+      </div>
+
+      <div class="stream-output" id="stream-output"></div>
+
+      <div class="stream-stats">
+        <div>Characters: <span id="stat-chars">0</span></div>
+        <div>Est. tokens: <span id="stat-tokens">0</span></div>
+        <div>Elapsed: <span id="stat-time">0.0s</span></div>
+        <div>Status: <span id="stat-status">Ready</span></div>
+      </div>
+    </div>
+
+    <!-- Code Generation Panel -->
+    <div class="demo-box">
+      <h2>Streaming Code Generator</h2>
+
+      <div class="code-tabs">
+        <button class="code-tab active" data-lang="python" onclick="switchCodeTab('python')">Python</button>
+        <button class="code-tab" data-lang="javascript" onclick="switchCodeTab('javascript')">JavaScript</button>
+        <button class="code-tab" data-lang="curl" onclick="switchCodeTab('curl')">curl</button>
+      </div>
+
+      <div style="position:relative;">
+        <div class="code-display" id="stream-code-display"></div>
+        <button class="copy-btn-float" onclick="copyStreamCode()">Copy</button>
+      </div>
+    </div>
+
+    <!-- Configuration Builder -->
+    <div class="demo-box">
+      <h2>Configuration Builder</h2>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Select the features you need and get customized streaming code with those capabilities built in.</p>
+
+      <div class="config-builder">
+        <div class="config-options">
+          <h3>Options</h3>
+          <label class="config-check"><input type="checkbox" id="cfg-events" checked onchange="updateConfig()"> Event handling (all SSE events)</label>
+          <label class="config-check"><input type="checkbox" id="cfg-error" checked onchange="updateConfig()"> Error recovery (exponential backoff)</label>
+          <label class="config-check"><input type="checkbox" id="cfg-tokens" onchange="updateConfig()"> Token counting from stream</label>
+          <label class="config-check"><input type="checkbox" id="cfg-progress" onchange="updateConfig()"> Progress callback (per-token)</label>
+          <label class="config-check"><input type="checkbox" id="cfg-timeout" onchange="updateConfig()"> Connection timeout handling</label>
+          <label class="config-check"><input type="checkbox" id="cfg-partial" onchange="updateConfig()"> Partial response accumulation</label>
+        </div>
+        <div>
+          <div class="config-output" id="config-code-output"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Long-form article content -->
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What Is Streaming in the Claude API?</h2>
+
+    <p>Streaming allows the Claude API to deliver response tokens incrementally as they are generated, rather than waiting for the entire response to complete before sending anything. This is implemented using Server-Sent Events (SSE), a standard HTTP protocol for server-to-client streaming over a single persistent connection. When you enable streaming, the API opens a long-lived connection and pushes events to your client as each token or group of tokens is produced by the model.</p>
+
+    <p>The practical impact is dramatic. Without streaming, a request that generates 2,000 tokens might take 10 to 15 seconds before you receive any data. With streaming, the first token arrives in 200 to 500 milliseconds, and subsequent tokens flow in continuously. The total generation time is the same, but the perceived latency drops by an order of magnitude. For user-facing applications such as chatbots, writing assistants, and code completion tools, streaming is essential for a responsive experience.</p>
+
+    <h2>How Server-Sent Events Work</h2>
+
+    <p>When you set <code>"stream": true</code> in your request body, the API responds with a <code>Content-Type: text/event-stream</code> header instead of <code>application/json</code>. The response body is a sequence of SSE events, each consisting of an <code>event:</code> type line and a <code>data:</code> payload line. The Claude API sends six distinct event types during a streaming response:</p>
+
+    <ul>
+      <li><strong>message_start</strong> — Sent first. Contains the message object with the model name, message ID, and initial usage information (input_tokens count). This event fires once per request.</li>
+      <li><strong>content_block_start</strong> — Signals the beginning of a content block. Contains the block type (usually "text") and index. For multi-block responses (such as those with tool use), you may receive multiple content_block_start events.</li>
+      <li><strong>content_block_delta</strong> — The main event. Each delta contains a small piece of generated text (typically 1 to 5 tokens). This event fires many times during a response and is where you extract the text to display to the user.</li>
+      <li><strong>content_block_stop</strong> — Signals that a content block is complete. Useful for multi-block responses where you need to know when one block ends and another begins.</li>
+      <li><strong>message_delta</strong> — Sent near the end. Contains the stop_reason (end_turn, max_tokens, or stop_sequence) and final usage statistics including output_tokens. This is your definitive source for billing-accurate token counts.</li>
+      <li><strong>message_stop</strong> — The final event. Signals that the stream is complete and the connection will close. If you do not receive this event, the stream was interrupted.</li>
+    </ul>
+
+    <p>For most applications, you only need to handle three events: <code>content_block_delta</code> for displaying text, <code>message_delta</code> for usage stats, and checking for the presence of <code>message_stop</code> to confirm completion. The Python and JavaScript SDKs abstract this into convenient iterator patterns, but understanding the raw event structure is valuable for debugging and for implementations in other languages. For a visual way to experiment with these events, the <a href="/">ClaudKit playground</a> provides an interactive testing environment.</p>
+
+    <h2>Implementing Streaming in Python</h2>
+
+    <p>The official <code>anthropic</code> Python SDK provides two approaches for streaming. The <code>client.messages.stream()</code> method returns a context manager that yields events, while passing <code>stream=True</code> to <code>client.messages.create()</code> returns a raw event stream. The recommended approach is <code>client.messages.stream()</code> because it handles connection management and provides helper methods for common patterns.</p>
+
+    <p>The basic pattern is straightforward: open a stream, iterate over text events, and process each chunk. The SDK handles SSE parsing, reconnection on transient errors, and proper resource cleanup. For production use, wrap the stream in error handling and add logging for the usage statistics from the final message_delta event. The Python SDK also supports async streaming with <code>async_client.messages.stream()</code>, which is essential for asyncio-based applications such as FastAPI or aiohttp backends.</p>
+
+    <h2>Implementing Streaming in JavaScript</h2>
+
+    <p>The <code>@anthropic-ai/sdk</code> JavaScript SDK provides async iterable streams. Call <code>client.messages.stream()</code> and iterate with a <code>for await</code> loop. Each iteration yields a stream event that you can inspect for its type and data. The SDK also provides convenience methods like <code>stream.on('text', callback)</code> for simplified text extraction. If you need to pipe the stream to multiple consumers, tools like <a href="https://claudflow.com">ClaudFlow</a> can help manage multi-step streaming workflows.</p>
+
+    <p>For browser-based applications, you cannot call the Claude API directly from the client due to CORS restrictions and the need to protect your API key. Instead, set up a server-side proxy (Node.js, Deno, or a serverless function) that streams from the Claude API and re-streams to the browser using SSE or WebSockets. The pattern is: browser connects to your server via SSE, your server connects to Claude via the SDK's streaming method, and each text delta is forwarded to the browser in real time.</p>
+
+    <h2>Streaming with curl</h2>
+
+    <p>For quick testing, you can stream Claude responses directly in the terminal with curl. Add <code>"stream": true</code> to the JSON body and use the <code>-N</code> flag to disable output buffering. The raw SSE events will print to your terminal as they arrive. This is useful for debugging the event format, testing network connectivity, and verifying that your API key and model parameters are correct before writing application code.</p>
+
+    <p>The curl output shows the raw SSE protocol: each event has an <code>event:</code> line with the type and a <code>data:</code> line with the JSON payload. Events are separated by blank lines. You can pipe curl output through <code>jq</code> or a custom parser to extract just the text content if you want a cleaner terminal experience.</p>
+
+    <h2>Error Recovery and Production Patterns</h2>
+
+    <p>Streams can fail mid-response due to network issues, API overload (529 errors), or timeout. Your error recovery strategy depends on whether the failure is transient or persistent. For transient failures (network blips, 529 overload), implement exponential backoff with jitter and retry the full request. For persistent failures (400 bad request, 401 auth error), do not retry and surface the error to the user. If you need to track error patterns across your API integrations, <a href="https://lochbot.com">LochBot</a> provides security and monitoring tools for API endpoints.</p>
+
+    <p>A robust production pattern includes: (1) set an explicit connection timeout so you do not wait indefinitely, (2) set an inter-event timeout that fires if no event arrives within a reasonable interval (30 seconds is a common choice), (3) accumulate partial responses so you can present what was received even if the stream fails, (4) log the message_delta usage statistics for cost tracking, and (5) implement a circuit breaker that stops retrying and falls back to a cached or default response after a configurable number of consecutive failures.</p>
+
+    <p>Token counting from the stream is straightforward. The <code>message_start</code> event includes <code>usage.input_tokens</code>, and the <code>message_delta</code> event includes <code>usage.output_tokens</code>. These are the authoritative values for billing and should be logged with every request. Do not estimate token counts from the text length of content_block_delta events, as the relationship between text characters and tokens varies by language and content type. For detailed cost analysis of your streaming usage, <a href="https://kickllm.com">KickLLM</a> offers LLM cost tracking tools that support token-level granularity.</p>
+
+    <h2>When to Use Streaming vs Non-Streaming</h2>
+
+    <p>Use streaming for any user-facing application where perceived responsiveness matters. Chatbots, writing assistants, code completion, and interactive Q&A tools should always stream. The time-to-first-token improvement transforms the user experience from "waiting for a loading spinner" to "watching the answer appear in real time."</p>
+
+    <p>Non-streaming is appropriate for batch processing, background jobs, and automation pipelines where the consumer is another program rather than a human. Non-streaming responses are simpler to handle (a single JSON object instead of an event stream) and are easier to log, cache, and retry. For testing API requests before implementing streaming, use the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a> to generate and test non-streaming requests first, then add streaming once the basic integration works.</p>
+
+    <p>Anthropic also provides a Batch API for high-volume non-time-sensitive workloads at 50% of standard pricing. If you are processing thousands of requests and do not need results in real time, the Batch API is more cost-effective than either streaming or standard requests. For choosing the right model for your streaming workload, the <a href="/answers/claude-model-picker.html">Claude Model Picker</a> can help you evaluate speed, cost, and capability tradeoffs.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How do I enable streaming in the Claude API?</summary>
+      <p>Add <code>"stream": true</code> to your request body. The API will respond with a stream of Server-Sent Events (SSE) instead of a single JSON response. In the Python SDK, use <code>client.messages.stream()</code> which returns an iterator. In JavaScript, use <code>client.messages.stream()</code> which returns an async iterable. In curl, add the <code>-N</code> flag for unbuffered output and parse the SSE events.</p>
+    </details>
+
+    <details>
+      <summary>What events does the Claude streaming API send?</summary>
+      <p>The Claude streaming API sends six event types: message_start (contains the message object with model and usage info), content_block_start (signals the beginning of a content block), content_block_delta (contains the actual text tokens as they are generated), content_block_stop (signals end of a content block), message_delta (contains stop_reason and final usage statistics), and message_stop (signals the stream is complete). Most applications only need to process content_block_delta for the text and message_delta for usage info.</p>
+    </details>
+
+    <details>
+      <summary>How do I handle streaming errors and connection drops?</summary>
+      <p>Implement retry logic with exponential backoff. If the connection drops before receiving a message_stop event, the response was interrupted. Store the partial response and decide whether to retry the full request or present the partial result. The Python SDK's stream() method handles basic connection management. For production, wrap the stream in a try/except block and implement a circuit breaker for repeated failures.</p>
+    </details>
+
+    <details>
+      <summary>Is Claude API streaming faster than non-streaming?</summary>
+      <p>Streaming delivers the same total content but with much lower perceived latency. The time-to-first-token (TTFT) with streaming is typically 200-500ms compared to waiting 5-30 seconds for a complete non-streaming response. Total generation time is identical. The advantage is that users see output immediately and can start reading while the rest generates.</p>
+    </details>
+
+    <details>
+      <summary>How do I count tokens from a Claude streaming response?</summary>
+      <p>Token usage information is included in the stream events. The message_start event contains <code>usage.input_tokens</code>. The message_delta event (sent near the end of the stream) contains <code>usage.output_tokens</code>. You do not need to count tokens manually from the text deltas. Use these values for cost calculation and logging.</p>
+    </details>
+  </section>
+
+  <div class="author-box">
+    <div>
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/" class="related-card">
+        <h3>ClaudKit Playground</h3>
+        <p>Full API playground with live testing using your own API key.</p>
+      </a>
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Visual request builder with code generation in curl, Python, and JS.</p>
+      </a>
+      <a href="/answers/claude-model-picker.html" class="related-card">
+        <h3>Claude Model Picker</h3>
+        <p>Step-by-step wizard to find the right Claude model for your use case.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes and code examples.</p>
+      </a>
+      <a href="https://claudflow.com" class="related-card">
+        <h3>ClaudFlow</h3>
+        <p>Visual workflow designer for chaining multiple Claude API calls.</p>
+      </a>
+      <a href="https://invokebot.com" class="related-card">
+        <h3>InvokeBot</h3>
+        <p>Webhook management for event-driven API architectures.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  // Streaming demo
+  const DEMO_TEXT = `The Claude API uses Server-Sent Events (SSE) for streaming responses. When you set "stream": true in your request body, the API establishes a persistent HTTP connection and delivers tokens incrementally as they are generated by the model.
+
+Each streaming response consists of a sequence of events. The first event is message_start, which contains the message metadata including the model name, message ID, and input token count. This is followed by content_block_start, which signals that Claude is beginning to generate text.
+
+The main content arrives through content_block_delta events. Each delta contains a small piece of text, typically one to five tokens. Your application should append each delta to a buffer and render the accumulated text to the user interface. This creates the characteristic "typing" effect that makes streaming feel responsive.
+
+When Claude finishes generating, the API sends content_block_stop followed by message_delta, which contains the stop_reason and final output token count. The stream concludes with message_stop. If you do not receive message_stop, the connection was interrupted and you should implement retry logic.
+
+For production applications, always implement error recovery with exponential backoff, log token usage from the message_delta event for cost tracking, and set explicit timeouts for both connection establishment and inter-event intervals.`;
+
+  let streamTimer = null;
+  let streamIdx = 0;
+  let startTime = 0;
+  let statsTimer = null;
+
+  window.startStream = function() {
+    if (streamTimer) return;
+    const output = document.getElementById("stream-output");
+    const speed = parseInt(document.getElementById("stream-speed").value);
+    document.getElementById("stream-start").style.display = "none";
+    document.getElementById("stream-stop").style.display = "inline-block";
+    document.getElementById("stat-status").textContent = "Streaming...";
+    if (streamIdx === 0) startTime = Date.now();
+
+    statsTimer = setInterval(updateStats, 100);
+
+    streamTimer = setInterval(function() {
+      if (streamIdx >= DEMO_TEXT.length) {
+        stopStream();
+        document.getElementById("stat-status").textContent = "Complete";
+        return;
+      }
+      output.textContent += DEMO_TEXT[streamIdx];
+      streamIdx++;
+      output.scrollTop = output.scrollHeight;
+    }, speed);
+  };
+
+  window.stopStream = function() {
+    clearInterval(streamTimer);
+    clearInterval(statsTimer);
+    streamTimer = null;
+    document.getElementById("stream-start").style.display = "inline-block";
+    document.getElementById("stream-stop").style.display = "none";
+    if (document.getElementById("stat-status").textContent === "Streaming...") {
+      document.getElementById("stat-status").textContent = "Paused";
+    }
+    updateStats();
+  };
+
+  window.resetStream = function() {
+    stopStream();
+    streamIdx = 0;
+    document.getElementById("stream-output").textContent = "";
+    document.getElementById("stat-chars").textContent = "0";
+    document.getElementById("stat-tokens").textContent = "0";
+    document.getElementById("stat-time").textContent = "0.0s";
+    document.getElementById("stat-status").textContent = "Ready";
+  };
+
+  function updateStats() {
+    document.getElementById("stat-chars").textContent = streamIdx;
+    document.getElementById("stat-tokens").textContent = Math.ceil(streamIdx / 4);
+    if (startTime > 0) {
+      document.getElementById("stat-time").textContent = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+    }
+  }
+
+  document.getElementById("stream-speed").addEventListener("input", function() {
+    document.getElementById("stream-speed-val").textContent = this.value + "ms";
+    if (streamTimer) {
+      clearInterval(streamTimer);
+      streamTimer = null;
+      startStream();
+    }
+  });
+
+  // Code tabs
+  let activeCodeLang = "python";
+
+  const CODE = {
+    python: `import anthropic
+
+client = anthropic.Anthropic()
+
+# Stream responses using the SDK's stream() method
+with client.messages.stream(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "Explain how streaming works in APIs."}
+    ]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+
+# Access final message for usage stats
+message = stream.get_final_message()
+print(f"\\nInput tokens: {message.usage.input_tokens}")
+print(f"Output tokens: {message.usage.output_tokens}")`,
+
+    javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Stream responses using async iteration
+const stream = client.messages.stream({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+        { role: "user", content: "Explain how streaming works in APIs." }
+    ],
+});
+
+// Handle text events
+stream.on("text", (text) => {
+    process.stdout.write(text);
+});
+
+// Get final message with usage stats
+const message = await stream.finalMessage();
+console.log("\\nInput tokens:", message.usage.input_tokens);
+console.log("Output tokens:", message.usage.output_tokens);`,
+
+    curl: `curl -N https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "max_tokens": 1024,
+    "stream": true,
+    "messages": [
+      {"role": "user", "content": "Explain how streaming works in APIs."}
+    ]
+  }'
+
+# Output is raw SSE events:
+# event: message_start
+# data: {"type":"message_start","message":{...}}
+#
+# event: content_block_delta
+# data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"..."}}
+#
+# event: message_stop
+# data: {"type":"message_stop"}`
+  };
+
+  window.switchCodeTab = function(lang) {
+    activeCodeLang = lang;
+    document.querySelectorAll(".code-tab").forEach(t => t.classList.remove("active"));
+    document.querySelector(`.code-tab[data-lang="${lang}"]`).classList.add("active");
+    document.getElementById("stream-code-display").textContent = CODE[lang];
+  };
+
+  window.copyStreamCode = function() {
+    navigator.clipboard.writeText(document.getElementById("stream-code-display").textContent).then(() => {
+      const btns = document.querySelectorAll(".copy-btn-float");
+      btns[0].textContent = "Copied!";
+      setTimeout(() => { btns[0].textContent = "Copy"; }, 1500);
+    });
+  };
+
+  // Configuration builder
+  window.updateConfig = function() {
+    const events = document.getElementById("cfg-events").checked;
+    const error = document.getElementById("cfg-error").checked;
+    const tokens = document.getElementById("cfg-tokens").checked;
+    const progress = document.getElementById("cfg-progress").checked;
+    const timeout = document.getElementById("cfg-timeout").checked;
+    const partial = document.getElementById("cfg-partial").checked;
+
+    let code = `import anthropic\nimport time\n\nclient = anthropic.Anthropic()\n`;
+
+    if (timeout) {
+      code += `\n# Connection timeout configuration\nclient = anthropic.Anthropic(\n    timeout=httpx.Timeout(60.0, connect=5.0)\n)\n`;
+    }
+
+    if (error) {
+      code += `\ndef stream_with_retry(max_retries=3):\n    for attempt in range(max_retries):\n        try:\n            return _do_stream()\n        except (anthropic.APIConnectionError, anthropic.APIStatusError) as e:\n            if attempt == max_retries - 1:\n                raise\n            wait = min(2 ** attempt, 30)\n            print(f"Retry {attempt + 1}/{max_retries} after {wait}s: {e}")\n            time.sleep(wait)\n\ndef _do_stream():\n`;
+      code += `    `;
+    }
+
+    if (partial) {
+      code += `accumulated_text = ""\n    `;
+    }
+
+    if (tokens) {
+      code += `input_tokens = 0\n    output_tokens = 0\n    `;
+    }
+
+    code += `with client.messages.stream(\n        model="claude-sonnet-4-20250514",\n        max_tokens=1024,\n        messages=[{"role": "user", "content": "Your prompt here"}]\n    ) as stream:\n`;
+
+    if (events) {
+      code += `        for event in stream:\n            if event.type == "content_block_delta":\n                text = event.delta.text\n`;
+      if (progress) {
+        code += `                on_progress(text)  # Your callback\n`;
+      }
+      if (partial) {
+        code += `                accumulated_text += text\n`;
+      }
+      code += `                print(text, end="", flush=True)\n`;
+      if (tokens) {
+        code += `            elif event.type == "message_start":\n                input_tokens = event.message.usage.input_tokens\n            elif event.type == "message_delta":\n                output_tokens = event.usage.output_tokens\n`;
+      }
+    } else {
+      code += `        for text in stream.text_stream:\n            print(text, end="", flush=True)\n`;
+      if (partial) {
+        code += `            accumulated_text += text\n`;
+      }
+    }
+
+    code += `\n    message = stream.get_final_message()\n`;
+
+    if (tokens) {
+      code += `    print(f"\\nTokens — in: {input_tokens}, out: {output_tokens}")\n    print(f"Cost: ${'{'}(input_tokens/1e6)*3 + (output_tokens/1e6)*15:.4f{'}'}")\n`;
+    }
+
+    if (partial) {
+      code += `    return accumulated_text\n`;
+    } else {
+      code += `    return message\n`;
+    }
+
+    if (progress) {
+      code += `\ndef on_progress(text_chunk):\n    """Called for each text delta during streaming."""\n    pass  # Update UI, log, etc.\n`;
+    }
+
+    if (error) {
+      code += `\n# Usage:\nresult = stream_with_retry()\n`;
+    }
+
+    document.getElementById("config-code-output").textContent = code;
+  };
+
+  // Initial renders
+  switchCodeTab("python");
+  updateConfig();
+})();
+</script>
+</body>
+</html>

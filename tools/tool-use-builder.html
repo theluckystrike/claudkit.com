@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Tool/Function Builder — JSON Schema Generator for Tool Use | ClaudKit</title>
+<meta name="description" content="Build Claude tool definitions visually. Define tool names, descriptions, and parameters with full JSON schema support. Generate production-ready code for Python, JavaScript, and curl with nested objects, arrays, and enums.">
+<link rel="canonical" href="https://claudkit.com/tools/tool-use-builder.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/tools/tool-use-builder.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/tools/tool-use-builder.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Tool/Function Builder — JSON Schema Generator for Tool Use">
+<meta property="og:description" content="Build Claude tool definitions visually. Define tool names, descriptions, and parameters with full JSON schema support. Generate production-ready code for Python, JavaScript, and curl.">
+<meta property="og:url" content="https://claudkit.com/tools/tool-use-builder.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Tool/Function Builder — JSON Schema Generator for Tool Use">
+<meta name="twitter:description" content="Build Claude tool definitions visually. Define tool names, descriptions, and parameters with full JSON schema support. Generate production-ready code for Python, JavaScript, and curl.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Tool/Function Builder",
+  "description": "Visual tool definition builder for Claude's tool use API. Create tool names, descriptions, and input schemas with support for nested objects, arrays, enums, and required fields. Generate production-ready JSON schema and code in Python, JavaScript, and curl.",
+  "url": "https://claudkit.com/tools/tool-use-builder.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Visual form to define tool name, description, and parameters",
+    "Full JSON schema generation with type validation",
+    "Support for nested objects, arrays, enums, and required fields",
+    "Live tool definition preview with syntax highlighting",
+    "Code generation in Python, JavaScript, and curl",
+    "Test tool calls with sample input values",
+    "One-click copy to clipboard",
+    "Multi-tool definition support with add/remove"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I define a tool for the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Claude tool definition requires a name (snake_case identifier), a description (plain text explaining what the tool does and when to use it), and an input_schema (a JSON Schema object defining the parameters). The input_schema uses standard JSON Schema with type, properties, required, and description fields. Send tool definitions in the tools array of your API request. Claude will return a tool_use content block when it decides to call a tool, and you respond with a tool_result block containing the output."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What parameter types does Claude tool use support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude tool use supports all standard JSON Schema types: string, number, integer, boolean, array, and object. You can also use enum to restrict values to a predefined set, add pattern for regex validation on strings, set minimum/maximum for numbers, define items schema for arrays, and nest objects within objects. The required array specifies which parameters must be provided. Use description on each property to help Claude understand when and how to use each parameter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Claude decide when to use a tool?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude decides to use a tool based on the user's message and the tool descriptions you provide. Clear, specific descriptions with examples of when to use each tool significantly improve tool selection accuracy. Claude can also be guided with system prompts that specify tool usage preferences. When Claude calls a tool, the response includes a stop_reason of tool_use and a tool_use content block with the tool name and generated input arguments matching your schema."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Claude call multiple tools in a single response?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, Claude can call multiple tools in a single response when the task requires it. The response content array will contain multiple tool_use blocks, each with its own id, name, and input. You should execute all tool calls and return the results in a single user message containing multiple tool_result blocks, each referencing the corresponding tool_use_id. This parallel execution pattern is more efficient than sequential single-tool calls."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between tool_choice auto, any, and tool?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The tool_choice parameter controls how Claude uses tools. With 'auto' (default), Claude decides whether to use a tool or respond with text. With 'any', Claude must use at least one tool and cannot respond with text only. With 'tool' and a specified name, Claude must use that specific tool. Use 'auto' for general assistants, 'any' when you always need structured output, and 'tool' when you need a specific function called regardless of the user message."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://claudkit.com/tools/"},{"@type":"ListItem","position":3,"name":"Tool/Function Builder"}]}</script>
+
+<style>
+  .builder-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1200px; margin:0 auto 2rem; padding:0 2rem; }
+  .builder-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .builder-panel h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .output-tabs { display:flex; gap:0; margin-bottom:0.75rem; border-bottom:1px solid var(--border); }
+  .output-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .output-tab:hover { color:var(--text); }
+  .output-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.8rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-floating { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-floating:hover { border-color:var(--accent); }
+  .json-preview { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.5; overflow-x:auto; white-space:pre-wrap; max-height:300px; overflow-y:auto; margin-top:1rem; color:var(--text-muted); }
+  .param-row { display:grid; grid-template-columns:1fr 120px 80px 40px; gap:0.5rem; align-items:end; margin-bottom:0.5rem; }
+  .param-row input, .param-row select { font-size:0.85rem; }
+  .param-row .remove-param { background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; border-radius:var(--radius); padding:0.35rem 0.5rem; font-size:0.8rem; transition:all 0.2s; }
+  .param-row .remove-param:hover { border-color:#ef4444; color:#ef4444; }
+  .add-param-btn { background:none; border:1px dashed var(--border); color:var(--accent); cursor:pointer; border-radius:var(--radius); padding:0.5rem 1rem; font-size:0.85rem; width:100%; margin-top:0.5rem; transition:all 0.2s; font-family:var(--font-body); }
+  .add-param-btn:hover { border-color:var(--accent); }
+  .param-extra { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:0.35rem; margin-bottom:0.75rem; padding:0.5rem; background:var(--bg); border-radius:var(--radius); }
+  .param-extra input, .param-extra textarea { font-size:0.8rem; }
+  .param-extra textarea { min-height:2rem; resize:vertical; }
+  .test-section { margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border); }
+  .test-input-row { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem; }
+  .test-input-row label { font-size:0.8rem; min-width:100px; color:var(--text-muted); font-family:var(--font-display); }
+  .test-input-row input { flex:1; font-size:0.85rem; }
+  .test-result { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem; font-family:var(--font-display); font-size:0.8rem; line-height:1.5; margin-top:0.75rem; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  .tool-choice-row { display:flex; gap:0.75rem; margin-top:0.75rem; align-items:center; }
+  .tool-choice-row label { font-size:0.8rem; color:var(--text-muted); }
+  .tool-choice-row select { font-size:0.85rem; }
+  @media (max-width:768px) { .builder-grid { grid-template-columns:1fr; padding:0 1rem; } .param-row { grid-template-columns:1fr 100px 70px 36px; } .param-extra { grid-template-columns:1fr; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/tools/" style="color:var(--accent);text-decoration:none;">Tools</a> <span>/</span> <span>Tool/Function Builder</span></nav>
+    <h1>Claude Tool/Function Builder</h1>
+    <p>Define tools visually with full JSON schema support. Add parameters with types, descriptions, enums, and nested objects, then generate production-ready code for Python, JavaScript, and curl.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="builder-grid">
+    <!-- Left: Tool Definition Panel -->
+    <div class="builder-panel">
+      <h2>Tool Definition</h2>
+
+      <div class="form-group">
+        <label>Tool Name</label>
+        <input type="text" id="tb-name" value="get_weather" placeholder="snake_case_name">
+        <span style="font-size:0.75rem;color:var(--text-muted);">Use snake_case. This is the identifier Claude uses to call the tool.</span>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="tb-desc" rows="3" placeholder="Describe what this tool does and when Claude should use it...">Get the current weather in a given location. Use this when the user asks about weather conditions, temperature, or forecast for a specific city or region.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Parameters</label>
+        <div id="tb-params-list">
+          <!-- Param rows injected by JS -->
+        </div>
+        <button class="add-param-btn" id="tb-add-param">+ Add Parameter</button>
+      </div>
+
+      <div class="tool-choice-row">
+        <label>tool_choice:</label>
+        <select id="tb-tool-choice">
+          <option value="auto" selected>auto (Claude decides)</option>
+          <option value="any">any (must use a tool)</option>
+          <option value="tool">tool (force this tool)</option>
+        </select>
+      </div>
+
+      <div class="test-section">
+        <h2 style="font-size:0.9rem;color:var(--accent);font-family:var(--font-display);margin-bottom:0.75rem;">Test With Sample Input</h2>
+        <div id="tb-test-inputs">
+          <!-- Test inputs injected by JS -->
+        </div>
+        <button class="add-param-btn" onclick="runTest()" style="margin-top:0.5rem;border-style:solid;background:var(--bg);">Validate Sample Input</button>
+        <div class="test-result" id="tb-test-result" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Right: Output Panel -->
+    <div class="builder-panel">
+      <h2>Generated Code</h2>
+
+      <div class="output-tabs">
+        <button class="output-tab active" data-lang="json">JSON Schema</button>
+        <button class="output-tab" data-lang="python">Python</button>
+        <button class="output-tab" data-lang="javascript">JavaScript</button>
+        <button class="output-tab" data-lang="curl">curl</button>
+      </div>
+
+      <div style="position:relative;">
+        <div class="code-out" id="tb-code-output"></div>
+        <button class="copy-floating" id="tb-copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+
+      <h3 style="font-size:0.85rem;color:var(--accent);margin-top:1.25rem;font-family:var(--font-display);">Full Tool Definition Preview</h3>
+      <div class="json-preview" id="tb-json-preview"></div>
+    </div>
+  </div>
+
+  <!-- Long-form article content -->
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What This Tool Does</h2>
+
+    <p>The Claude Tool/Function Builder is a visual interface for creating tool definitions that conform to the Anthropic Messages API tool use specification. Instead of hand-writing JSON schema by trial and error, you define your tools through form fields and the builder generates the complete tool definition object, including the input_schema with proper JSON Schema types, descriptions, required fields, enum constraints, and nested structures. The output updates in real time as you modify any field.</p>
+
+    <p>Tool use is one of the most powerful features of the Claude API. It allows Claude to call external functions, query databases, interact with APIs, and perform actions in the real world. However, the tool definition format has specific requirements that are easy to get wrong: the schema must be valid JSON Schema draft 2020-12, property descriptions affect Claude's tool selection accuracy, and the required array must list mandatory fields. This builder handles all of these requirements automatically while generating code you can drop directly into your application.</p>
+
+    <h2>Understanding Tool Definitions</h2>
+
+    <p>Every Claude tool definition consists of three required fields. The <strong>name</strong> is a unique identifier in snake_case format that Claude uses to reference the tool. Choose descriptive names like <code>get_weather</code>, <code>search_database</code>, or <code>send_email</code> rather than generic names like <code>tool_1</code>. Claude uses the name as a semantic signal when deciding which tool to call, so a clear name improves selection accuracy.</p>
+
+    <p>The <strong>description</strong> is plain text that tells Claude what the tool does, when to use it, and what it returns. This is the single most important field for tool selection accuracy. A good description includes the purpose, trigger conditions, and output format. For example, "Search the product database by name or category. Use this when the user asks about products, prices, or availability. Returns a JSON array of matching products with name, price, and stock count." Bad descriptions like "Search tool" give Claude insufficient context to make good decisions.</p>
+
+    <p>The <strong>input_schema</strong> is a JSON Schema object that defines the parameters Claude must provide when calling the tool. Each property has a type (string, number, integer, boolean, array, or object), an optional description, and optional constraints like enum, minimum, maximum, or pattern. The required array lists parameters that must always be present. Optional parameters should have sensible defaults in your tool implementation.</p>
+
+    <h2>Supported Parameter Types</h2>
+
+    <p>The builder supports all JSON Schema types that the Claude API accepts. <strong>String</strong> parameters are the most common, used for text inputs like names, queries, and identifiers. Add an <code>enum</code> constraint to restrict values to a predefined list, such as <code>["celsius", "fahrenheit"]</code> for a temperature unit parameter. The <code>pattern</code> constraint accepts a regular expression for input validation, like <code>^[A-Z]{2}$</code> for a two-letter country code.</p>
+
+    <p><strong>Number</strong> and <strong>integer</strong> parameters accept numeric values with optional <code>minimum</code> and <code>maximum</code> constraints. Use integer when you need whole numbers (like page numbers or quantity), and number when decimal values are valid (like latitude/longitude or price). Claude reliably generates numbers within the specified range when constraints are provided in the schema.</p>
+
+    <p><strong>Boolean</strong> parameters are simple true/false flags. Use them for toggles and binary options. <strong>Array</strong> parameters accept a list of values with an <code>items</code> schema that defines the type of each element. For example, an array of strings for tags, or an array of objects for structured data. <strong>Object</strong> parameters allow nested structures with their own properties and required fields, enabling arbitrarily complex input schemas. For comparing how different models handle tool definitions, <a href="https://lockml.com">LockML</a> provides model comparison tools.</p>
+
+    <h2>The Tool Use Conversation Flow</h2>
+
+    <p>Tool use follows a specific request-response cycle. First, you send a request with a <code>tools</code> array containing your tool definitions and a <code>messages</code> array with the user's message. Claude analyzes the message and decides whether to call a tool. If it decides to use a tool, the response has a <code>stop_reason</code> of <code>"tool_use"</code> and the <code>content</code> array contains a <code>tool_use</code> block with the tool name, a unique ID, and the generated input arguments.</p>
+
+    <p>Your application then executes the actual function using the provided arguments and returns the result in a new message. This message has the role <code>"user"</code> and contains a <code>tool_result</code> content block with the <code>tool_use_id</code> from the previous response and the result as a string or content blocks. Claude processes the tool result and generates a final text response to the user. The entire cycle takes two API calls: one that triggers the tool call, and one that processes the result.</p>
+
+    <p>Claude can also decide that no tool is needed and respond with text directly. The <code>tool_choice</code> parameter lets you control this behavior. Set it to <code>"auto"</code> (default) to let Claude decide, <code>"any"</code> to force tool use, or <code>{"type": "tool", "name": "tool_name"}</code> to force a specific tool. For webhook-driven architectures where tool calls trigger external actions, <a href="https://invokebot.com">InvokeBot</a> provides webhook management tools.</p>
+
+    <h2>Best Practices for Tool Definitions</h2>
+
+    <p>Write descriptions as if you are explaining the tool to a new team member. Include what the tool does, when it should be used versus other available tools, what format the input should be in, and what the output looks like. Claude reads these descriptions to decide tool selection, so vague descriptions lead to incorrect or missed tool calls. A description of 50 to 150 words typically provides enough context without being wasteful.</p>
+
+    <p>Make parameter descriptions specific and include examples. Instead of describing a location parameter as "The location", write "The city and state/country, e.g., 'San Francisco, CA' or 'London, UK'. Use the most specific location the user mentions." This helps Claude generate accurate parameter values that your function can parse reliably. Parameter descriptions are part of the input token count, so keep them informative but concise.</p>
+
+    <p>Use the <code>required</code> array judiciously. Only mark parameters as required when your function truly cannot operate without them. Optional parameters should have sensible defaults in your implementation. This gives Claude flexibility to omit parameters when the user does not specify them, resulting in more natural conversations. If a parameter has a clear default value, mention it in the description: "The number of results to return (default: 10, max: 100)."</p>
+
+    <p>Test your tool definitions with the sample input validator in this builder before deploying to production. Common issues include mismatched enum values, overly restrictive patterns that reject valid input, and required parameters that should be optional. The validator checks that sample inputs conform to your schema and shows any validation errors. For comprehensive API testing including tool use flows, use the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a> to construct the full request.</p>
+
+    <h2>Code Output Formats</h2>
+
+    <p>The <strong>JSON Schema</strong> tab shows the raw tool definition object exactly as it appears in the tools array of an API request. This is useful for developers who want to store tool definitions in configuration files or databases and load them dynamically. The schema follows JSON Schema draft 2020-12 and is fully compatible with the Anthropic Messages API.</p>
+
+    <p>The <strong>Python</strong> output uses the official <code>anthropic</code> SDK with the <code>tools</code> parameter in <code>client.messages.create()</code>. The tool definition is embedded directly in the code as a Python dictionary. Install the SDK with <code>pip install anthropic</code>. The generated code includes the complete message flow: sending the initial request, checking for tool use, and handling the response.</p>
+
+    <p>The <strong>JavaScript</strong> output uses the official <code>@anthropic-ai/sdk</code> package with async/await syntax. Install with <code>npm install @anthropic-ai/sdk</code>. The tool definition is embedded as a JavaScript object. Like the Python output, it includes the complete tool use conversation flow. The <strong>curl</strong> output provides the full HTTP request body for terminal testing, with the tool definition embedded in the JSON payload. For monitoring LLM costs across tool-use-heavy applications, <a href="https://kickllm.com">KickLLM</a> offers cost tracking dashboards.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How do I define a tool for the Claude API?</summary>
+      <p>A Claude tool definition requires a name (snake_case identifier), a description (plain text explaining what the tool does and when to use it), and an input_schema (a JSON Schema object defining the parameters). The input_schema uses standard JSON Schema with type, properties, required, and description fields. Send tool definitions in the tools array of your API request. Claude will return a tool_use content block when it decides to call a tool, and you respond with a tool_result block containing the output.</p>
+    </details>
+
+    <details>
+      <summary>What parameter types does Claude tool use support?</summary>
+      <p>Claude tool use supports all standard JSON Schema types: string, number, integer, boolean, array, and object. You can also use enum to restrict values to a predefined set, add pattern for regex validation on strings, set minimum/maximum for numbers, define items schema for arrays, and nest objects within objects. The required array specifies which parameters must be provided. Use description on each property to help Claude understand when and how to use each parameter.</p>
+    </details>
+
+    <details>
+      <summary>How does Claude decide when to use a tool?</summary>
+      <p>Claude decides to use a tool based on the user's message and the tool descriptions you provide. Clear, specific descriptions with examples of when to use each tool significantly improve tool selection accuracy. Claude can also be guided with system prompts that specify tool usage preferences. When Claude calls a tool, the response includes a stop_reason of tool_use and a tool_use content block with the tool name and generated input arguments matching your schema.</p>
+    </details>
+
+    <details>
+      <summary>Can Claude call multiple tools in a single response?</summary>
+      <p>Yes, Claude can call multiple tools in a single response when the task requires it. The response content array will contain multiple tool_use blocks, each with its own id, name, and input. You should execute all tool calls and return the results in a single user message containing multiple tool_result blocks, each referencing the corresponding tool_use_id. This parallel execution pattern is more efficient than sequential single-tool calls.</p>
+    </details>
+
+    <details>
+      <summary>What is the difference between tool_choice auto, any, and tool?</summary>
+      <p>The tool_choice parameter controls how Claude uses tools. With "auto" (default), Claude decides whether to use a tool or respond with text. With "any", Claude must use at least one tool and cannot respond with text only. With "tool" and a specified name, Claude must use that specific tool. Use "auto" for general assistants, "any" when you always need structured output, and "tool" when you need a specific function called regardless of the user message.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting and cost estimation.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Responses Guide</h3>
+        <p>Interactive streaming demo with code generation in Python, JS, and curl.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes and code examples.</p>
+      </a>
+      <a href="/answers/claude-model-picker.html" class="related-card">
+        <h3>Claude Model Picker</h3>
+        <p>Step-by-step wizard to find the right Claude model for your use case.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across all major providers.</p>
+      </a>
+      <a href="https://claudhq.com" class="related-card">
+        <h3>ClaudHQ</h3>
+        <p>Prompt library with 30+ tested templates optimized for Claude.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let activeLang = "json";
+  let params = [
+    { name: "location", type: "string", required: true, desc: "The city and state, e.g. San Francisco, CA", enumVals: "", pattern: "" },
+    { name: "unit", type: "string", required: false, desc: "Temperature unit", enumVals: "celsius,fahrenheit", pattern: "" }
+  ];
+
+  function escJSON(s) {
+    return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+  }
+
+  function renderParams() {
+    const list = $("tb-params-list");
+    list.innerHTML = "";
+    params.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "param-row";
+      row.innerHTML = `
+        <input type="text" value="${p.name}" placeholder="param_name" onchange="updateParam(${i},'name',this.value)" oninput="updateParam(${i},'name',this.value)">
+        <select onchange="updateParam(${i},'type',this.value)">
+          <option value="string" ${p.type==="string"?"selected":""}>string</option>
+          <option value="number" ${p.type==="number"?"selected":""}>number</option>
+          <option value="integer" ${p.type==="integer"?"selected":""}>integer</option>
+          <option value="boolean" ${p.type==="boolean"?"selected":""}>boolean</option>
+          <option value="array" ${p.type==="array"?"selected":""}>array</option>
+          <option value="object" ${p.type==="object"?"selected":""}>object</option>
+        </select>
+        <label style="font-size:0.8rem;display:flex;align-items:center;gap:0.3rem;cursor:pointer;">
+          <input type="checkbox" ${p.required?"checked":""} onchange="updateParam(${i},'required',this.checked)"> req
+        </label>
+        <button class="remove-param" onclick="removeParam(${i})">✕</button>
+      `;
+      list.appendChild(row);
+
+      const extra = document.createElement("div");
+      extra.className = "param-extra";
+      extra.innerHTML = `
+        <input type="text" value="${p.desc}" placeholder="Description" oninput="updateParam(${i},'desc',this.value)">
+        <input type="text" value="${p.enumVals}" placeholder="Enum values (comma-sep)" oninput="updateParam(${i},'enumVals',this.value)">
+      `;
+      list.appendChild(extra);
+    });
+    renderTestInputs();
+    update();
+  }
+
+  window.updateParam = function(i, field, val) {
+    params[i][field] = val;
+    if (field === "name" || field === "type") renderTestInputs();
+    update();
+  };
+
+  window.removeParam = function(i) {
+    params.splice(i, 1);
+    renderParams();
+  };
+
+  $("tb-add-param").addEventListener("click", function() {
+    params.push({ name: "new_param", type: "string", required: false, desc: "", enumVals: "", pattern: "" });
+    renderParams();
+  });
+
+  function renderTestInputs() {
+    const container = $("tb-test-inputs");
+    container.innerHTML = "";
+    params.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "test-input-row";
+      let inputHTML = "";
+      if (p.type === "boolean") {
+        inputHTML = `<select id="test-val-${i}"><option value="true">true</option><option value="false">false</option></select>`;
+      } else if (p.enumVals && p.enumVals.trim()) {
+        const opts = p.enumVals.split(",").map(v => v.trim()).filter(Boolean).map(v => `<option value="${v}">${v}</option>`).join("");
+        inputHTML = `<select id="test-val-${i}">${opts}</select>`;
+      } else {
+        const ph = p.type === "number" || p.type === "integer" ? "0" : p.type === "array" ? '["item1","item2"]' : p.type === "object" ? '{"key":"value"}' : "value";
+        inputHTML = `<input type="text" id="test-val-${i}" placeholder="${ph}">`;
+      }
+      row.innerHTML = `<label>${p.name}${p.required?" *":""}</label>${inputHTML}`;
+      container.appendChild(row);
+    });
+  }
+
+  window.runTest = function() {
+    const result = $("tb-test-result");
+    result.style.display = "block";
+    const errors = [];
+    const values = {};
+    params.forEach((p, i) => {
+      const el = document.getElementById("test-val-" + i);
+      if (!el) return;
+      let val = el.value.trim();
+      if (p.required && !val) {
+        errors.push(`"${p.name}" is required but empty`);
+        return;
+      }
+      if (!val) return;
+      if (p.type === "number" || p.type === "integer") {
+        const n = Number(val);
+        if (isNaN(n)) errors.push(`"${p.name}" must be a valid ${p.type}, got "${val}"`);
+        else if (p.type === "integer" && !Number.isInteger(n)) errors.push(`"${p.name}" must be an integer, got ${n}`);
+        else values[p.name] = n;
+      } else if (p.type === "boolean") {
+        values[p.name] = val === "true";
+      } else if (p.type === "array" || p.type === "object") {
+        try { values[p.name] = JSON.parse(val); }
+        catch(e) { errors.push(`"${p.name}" must be valid JSON: ${e.message}`); }
+      } else {
+        values[p.name] = val;
+      }
+      if (p.enumVals && p.enumVals.trim()) {
+        const allowed = p.enumVals.split(",").map(v => v.trim());
+        if (typeof values[p.name] === "string" && !allowed.includes(values[p.name])) {
+          errors.push(`"${p.name}" value "${values[p.name]}" not in enum [${allowed.join(", ")}]`);
+        }
+      }
+    });
+    if (errors.length) {
+      result.textContent = "Validation Errors:\n" + errors.map(e => "  - " + e).join("\n");
+      result.style.borderColor = "#ef4444";
+    } else {
+      result.textContent = "Valid! Tool call input:\n" + JSON.stringify({ name: $("tb-name").value, input: values }, null, 2);
+      result.style.borderColor = "var(--accent)";
+    }
+  };
+
+  function buildToolDef() {
+    const name = $("tb-name").value.trim() || "my_tool";
+    const desc = $("tb-desc").value.trim() || "A custom tool";
+    const properties = {};
+    const required = [];
+    params.forEach(p => {
+      if (!p.name) return;
+      const prop = { type: p.type };
+      if (p.desc) prop.description = p.desc;
+      if (p.enumVals && p.enumVals.trim()) {
+        prop.enum = p.enumVals.split(",").map(v => v.trim()).filter(Boolean);
+      }
+      if (p.type === "array") {
+        prop.items = { type: "string" };
+      }
+      properties[p.name] = prop;
+      if (p.required) required.push(p.name);
+    });
+    return {
+      name: name,
+      description: desc,
+      input_schema: {
+        type: "object",
+        properties: properties,
+        required: required
+      }
+    };
+  }
+
+  function getToolChoice() {
+    const val = $("tb-tool-choice").value;
+    if (val === "auto") return { type: "auto" };
+    if (val === "any") return { type: "any" };
+    return { type: "tool", name: $("tb-name").value.trim() || "my_tool" };
+  }
+
+  function genJSON() {
+    return JSON.stringify(buildToolDef(), null, 2);
+  }
+
+  function genPython() {
+    const td = buildToolDef();
+    const tc = getToolChoice();
+    let code = `import anthropic\nimport json\n\nclient = anthropic.Anthropic()\n\ntool_definition = ${JSON.stringify(td, null, 4)}\n\nresponse = client.messages.create(\n    model="claude-sonnet-4-20250514",\n    max_tokens=1024,\n    tools=[tool_definition],`;
+    if (tc.type !== "auto") {
+      code += `\n    tool_choice=${JSON.stringify(tc)},`;
+    }
+    code += `\n    messages=[\n        {"role": "user", "content": "What is the weather in San Francisco?"}\n    ]\n)\n\n# Handle tool use response\nfor block in response.content:\n    if block.type == "tool_use":\n        print(f"Tool called: {block.name}")\n        print(f"Input: {json.dumps(block.input, indent=2)}")\n        print(f"Tool use ID: {block.id}")\n    elif block.type == "text":\n        print(f"Text: {block.text}")`;
+    return code;
+  }
+
+  function genJS() {
+    const td = buildToolDef();
+    const tc = getToolChoice();
+    let code = `import Anthropic from "@anthropic-ai/sdk";\n\nconst client = new Anthropic();\n\nconst toolDefinition = ${JSON.stringify(td, null, 4)};\n\nconst response = await client.messages.create({\n    model: "claude-sonnet-4-20250514",\n    max_tokens: 1024,\n    tools: [toolDefinition],`;
+    if (tc.type !== "auto") {
+      code += `\n    tool_choice: ${JSON.stringify(tc)},`;
+    }
+    code += `\n    messages: [\n        { role: "user", content: "What is the weather in San Francisco?" }\n    ],\n});\n\n// Handle tool use response\nfor (const block of response.content) {\n    if (block.type === "tool_use") {\n        console.log("Tool called:", block.name);\n        console.log("Input:", JSON.stringify(block.input, null, 2));\n        console.log("Tool use ID:", block.id);\n    } else if (block.type === "text") {\n        console.log("Text:", block.text);\n    }\n}`;
+    return code;
+  }
+
+  function genCurl() {
+    const td = buildToolDef();
+    const tc = getToolChoice();
+    const body = {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1024,
+      tools: [td],
+      messages: [{ role: "user", content: "What is the weather in San Francisco?" }]
+    };
+    if (tc.type !== "auto") body.tool_choice = tc;
+    return `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '${JSON.stringify(body, null, 2)}'`;
+  }
+
+  function update() {
+    let code;
+    switch (activeLang) {
+      case "json": code = genJSON(); break;
+      case "python": code = genPython(); break;
+      case "javascript": code = genJS(); break;
+      case "curl": code = genCurl(); break;
+    }
+    $("tb-code-output").textContent = code;
+    $("tb-json-preview").textContent = JSON.stringify(buildToolDef(), null, 2);
+  }
+
+  // Tab switching
+  document.querySelectorAll(".output-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".output-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      update();
+    });
+  });
+
+  // Copy button
+  window.copyCode = function() {
+    const text = $("tb-code-output").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("tb-copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  // Input listeners
+  ["tb-name", "tb-desc", "tb-tool-choice"].forEach(id => {
+    $(id).addEventListener("input", update);
+    $(id).addEventListener("change", update);
+  });
+
+  // Initial render
+  renderParams();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anthropic SDK Comparison — Python vs JavaScript vs TypeScript Feature Matrix | ClaudKit</title>
+<meta name="description" content="Compare Anthropic SDKs across Python, JavaScript, and TypeScript. Feature matrix covering streaming, tool use, retries, types, async support, and code examples for each language with installation guides.">
+<link rel="canonical" href="https://claudkit.com/research/sdk-comparison.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/research/sdk-comparison.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/research/sdk-comparison.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Anthropic SDK Comparison — Python vs JavaScript vs TypeScript Feature Matrix">
+<meta property="og:description" content="Compare Anthropic SDKs across languages. Feature matrix covering streaming, tool use, retries, types, and code examples for each language.">
+<meta property="og:url" content="https://claudkit.com/research/sdk-comparison.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Anthropic SDK Comparison — Python vs JavaScript Feature Matrix">
+<meta name="twitter:description" content="Compare Anthropic SDKs across languages. Feature matrix covering streaming, tool use, retries, and code examples.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Anthropic SDK Comparison",
+  "description": "Interactive feature matrix comparing Anthropic's official SDKs across Python, JavaScript, and TypeScript. Compare streaming support, tool use, automatic retries, type safety, async patterns, error handling, and code examples side by side with installation guides and migration tips.",
+  "url": "https://claudkit.com/research/sdk-comparison.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Side-by-side SDK feature comparison matrix",
+    "Code examples in Python and JavaScript for every feature",
+    "Installation and setup guides for each SDK",
+    "Streaming, tool use, and vision API comparison",
+    "Error handling and retry behavior comparison",
+    "Type safety and IDE support analysis",
+    "Async/sync pattern comparison",
+    "Community SDK ecosystem overview"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What official SDKs does Anthropic provide?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anthropic provides two official SDKs: the Python SDK (anthropic package on PyPI) and the TypeScript/JavaScript SDK (@anthropic-ai/sdk on npm). Both SDKs are auto-generated from the API specification, so they stay in sync with the latest API features. The Python SDK supports both sync and async usage. The TypeScript SDK provides full type definitions and works in Node.js and modern bundler environments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Anthropic Python SDK support async?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, the Anthropic Python SDK provides both synchronous and asynchronous clients. Use anthropic.Anthropic() for sync operations and anthropic.AsyncAnthropic() for async. The async client supports the same API as the sync client but all methods return coroutines that you await. Use the async client with asyncio for concurrent request processing and better performance in web frameworks like FastAPI."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do the SDKs handle rate limiting and retries?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both official SDKs include automatic retry logic with exponential backoff for rate limit (429) and server error (500, 529) responses. The default is 2 retries. You can configure max_retries when creating the client: anthropic.Anthropic(max_retries=5) in Python or new Anthropic({ maxRetries: 5 }) in TypeScript. Retries respect the Retry-After header when present. You can set max_retries to 0 to disable automatic retries."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use the Anthropic API without an SDK?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, the Anthropic API is a standard REST API that accepts JSON requests. You can use any HTTP client: curl, fetch, requests, axios, or any language's HTTP library. Set the x-api-key header for authentication, the anthropic-version header to 2023-06-01, and content-type to application/json. The request body uses the same structure as the SDK. However, using an SDK gives you automatic retries, type safety, streaming helpers, and error classification."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are there community SDKs for other languages?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, there are community-maintained SDKs for Go, Rust, Java, Ruby, PHP, C#, and other languages. These are not officially supported by Anthropic but provide idiomatic interfaces for their respective languages. Popular options include anthropic-go for Go, anthropic-rs for Rust, and anthropic-java for Java. Check the GitHub repositories for feature completeness and update frequency before using them in production."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Research","item":"https://claudkit.com/research/"},{"@type":"ListItem","position":3,"name":"SDK Comparison"}]}</script>
+
+<style>
+  .sdk-container { max-width:1100px; margin:0 auto 2rem; padding:0 2rem; }
+  .matrix-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem; overflow-x:auto; }
+  .matrix-card h2 { font-size:0.95rem; font-family:var(--font-display); color:var(--accent); margin-bottom:1rem; }
+  .feature-matrix { width:100%; border-collapse:collapse; font-size:0.82rem; min-width:600px; }
+  .feature-matrix th { text-align:left; padding:0.6rem 0.75rem; color:var(--text-muted); font-weight:normal; font-family:var(--font-display); border-bottom:1px solid var(--border); white-space:nowrap; }
+  .feature-matrix th.lang-col { text-align:center; }
+  .feature-matrix td { padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); }
+  .feature-matrix td.center { text-align:center; }
+  .check { color:var(--accent); font-weight:700; }
+  .cross { color:var(--text-muted); }
+  .partial { color:#f59e0b; }
+  .code-tabs { display:flex; gap:0; margin-bottom:0; border-bottom:1px solid var(--border); }
+  .code-tab { padding:0.5rem 1rem; font-size:0.82rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .code-tab:hover { color:var(--text); }
+  .code-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-panel { display:none; }
+  .code-panel.active { display:block; }
+  .code-block { background:var(--bg); border:1px solid var(--border); border-radius:0 0 var(--radius) var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:350px; overflow-y:auto; position:relative; border-top:none; }
+  .copy-btn { position:absolute; top:0.5rem; right:0.5rem; padding:0.25rem 0.6rem; font-size:0.75rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-btn:hover { border-color:var(--accent); }
+  .sdk-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+  .sdk-card h3 { font-size:0.9rem; font-family:var(--font-display); margin-bottom:0.5rem; }
+  .sdk-card .install-cmd { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.5rem 0.75rem; font-family:var(--font-display); font-size:0.8rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
+  .sdk-card .install-cmd button { background:none; border:1px solid var(--border); border-radius:var(--radius); padding:0.2rem 0.5rem; font-size:0.75rem; cursor:pointer; color:var(--text); }
+  .sdk-meta { font-size:0.8rem; color:var(--text-muted); line-height:1.6; }
+  .sdk-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+  .example-section { margin-bottom:1.5rem; }
+  .example-section h3 { font-size:0.9rem; font-family:var(--font-display); color:var(--accent); margin-bottom:0.75rem; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .sdk-container { padding:0 1rem; } .sdk-grid { grid-template-columns:1fr; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/research/" style="color:var(--accent);text-decoration:none;">Research</a> <span>/</span> <span>SDK Comparison</span></nav>
+    <h1>Anthropic SDK Comparison</h1>
+    <p>Side-by-side comparison of Anthropic's official Python and TypeScript SDKs with feature matrices, code examples, and installation guides. Understand the differences in streaming, tool use, error handling, and async patterns across languages.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="sdk-container">
+    <div class="sdk-grid">
+      <div class="sdk-card">
+        <h3 style="color:var(--accent);">Python SDK</h3>
+        <div class="install-cmd"><code>pip install anthropic</code><button onclick="copyText(this,'pip install anthropic')">Copy</button></div>
+        <div class="sdk-meta">
+          <strong>Package:</strong> anthropic<br>
+          <strong>Registry:</strong> PyPI<br>
+          <strong>Python:</strong> 3.8+<br>
+          <strong>License:</strong> MIT<br>
+          <strong>Repo:</strong> anthropics/anthropic-sdk-python
+        </div>
+      </div>
+      <div class="sdk-card">
+        <h3 style="color:var(--accent);">TypeScript/JavaScript SDK</h3>
+        <div class="install-cmd"><code>npm install @anthropic-ai/sdk</code><button onclick="copyText(this,'npm install @anthropic-ai/sdk')">Copy</button></div>
+        <div class="sdk-meta">
+          <strong>Package:</strong> @anthropic-ai/sdk<br>
+          <strong>Registry:</strong> npm<br>
+          <strong>Node.js:</strong> 18+<br>
+          <strong>License:</strong> MIT<br>
+          <strong>Repo:</strong> anthropics/anthropic-sdk-typescript
+        </div>
+      </div>
+    </div>
+
+    <div class="matrix-card">
+      <h2>Feature Matrix</h2>
+      <table class="feature-matrix" id="sdk-matrix">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="lang-col">Python</th>
+            <th class="lang-col">TypeScript/JS</th>
+            <th class="lang-col">REST API (curl)</th>
+          </tr>
+        </thead>
+        <tbody id="sdk-matrix-body"></tbody>
+      </table>
+    </div>
+
+    <div class="example-section" id="sdk-examples"></div>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>Choosing the Right SDK</h2>
+
+    <p>Anthropic maintains two official SDKs: Python and TypeScript/JavaScript. Both are auto-generated from the same API specification using Stainless, which ensures they stay perfectly synchronized with every API update. When Anthropic releases a new feature — like extended thinking or a new model — both SDKs receive support simultaneously. This means your choice of SDK should be driven by your application's language, not by feature availability.</p>
+
+    <p>The Python SDK is the most widely used and has the most community examples and tutorials. It provides both synchronous and asynchronous clients, making it suitable for scripts, web backends (Django, Flask, FastAPI), data pipelines, and Jupyter notebooks. The synchronous client is simpler for scripts and prototyping, while the async client enables concurrent request processing for production applications that need to handle multiple Claude calls simultaneously.</p>
+
+    <p>The TypeScript SDK provides full type definitions for every API object, giving you autocomplete, inline documentation, and compile-time type checking in editors like VS Code. It works in Node.js 18+ and can be bundled for edge runtime environments. All methods return Promises that you await, following standard async JavaScript patterns. The SDK also provides streaming helpers that emit typed events for real-time response processing.</p>
+
+    <h2>Authentication and Client Setup</h2>
+
+    <p>Both SDKs automatically read the <code>ANTHROPIC_API_KEY</code> environment variable if no key is passed explicitly. This is the recommended approach for production because it keeps secrets out of your codebase. You can also pass the key directly: <code>anthropic.Anthropic(api_key="sk-ant-...")</code> in Python or <code>new Anthropic({ apiKey: "sk-ant-..." })</code> in TypeScript. For Azure deployments, both SDKs support custom base URLs through the <code>base_url</code> parameter.</p>
+
+    <p>The client object is designed to be created once and reused across your application. It manages an internal HTTP connection pool that reuses connections for better performance. In Python, the sync client uses httpx under the hood. In TypeScript, it uses the native fetch API. Both handle keep-alive connections, request timeouts, and connection pooling automatically. Creating a new client for every request wastes resources and can trigger rate limits from excessive connection churn.</p>
+
+    <h2>Streaming Comparison</h2>
+
+    <p>Streaming is where the SDKs differ most in ergonomics. The Python SDK provides <code>client.messages.stream()</code> as a context manager with a <code>text_stream</code> property that yields text chunks. The async version uses <code>async with</code> and <code>async for</code>. The TypeScript SDK provides <code>client.messages.stream()</code> that returns an event emitter with <code>on("text", callback)</code> for text events and also supports async iteration with <code>for await...of</code>.</p>
+
+    <p>Both SDKs provide a <code>get_final_message()</code> method (or <code>finalMessage()</code> property in TypeScript) that returns the complete message object after streaming finishes. This gives you access to usage statistics, stop reason, and the full content array. For tool use with streaming, both SDKs emit input_json_delta events that you accumulate to build the complete tool input JSON. The SDK streaming helpers handle the low-level server-sent event parsing and reconnection logic.</p>
+
+    <h2>Error Handling Patterns</h2>
+
+    <p>The Python SDK raises typed exceptions: <code>anthropic.RateLimitError</code> for 429, <code>anthropic.BadRequestError</code> for 400, <code>anthropic.AuthenticationError</code> for 401, and <code>anthropic.APIStatusError</code> as a base class for all HTTP errors. Each exception has a <code>status_code</code>, <code>message</code>, and <code>response</code> property. The TypeScript SDK mirrors this with <code>Anthropic.RateLimitError</code>, <code>Anthropic.BadRequestError</code>, and so on, all extending <code>Anthropic.APIError</code>.</p>
+
+    <p>Both SDKs include automatic retry logic with exponential backoff for retryable errors (429, 500, 529). The default is 2 retries with configurable <code>max_retries</code>. Retries respect the <code>Retry-After</code> header when the server provides one. For production applications, you may want to add additional retry logic with longer backoffs for specific error types. Set <code>max_retries=0</code> to disable automatic retries and implement your own strategy. For monitoring errors in production, <a href="https://kickllm.com">KickLLM</a> tracks error rates across LLM providers.</p>
+
+    <h2>Using the REST API Directly</h2>
+
+    <p>You do not need an SDK to use the Anthropic API. It is a standard REST API that accepts JSON POST requests to <code>https://api.anthropic.com/v1/messages</code>. Set three headers: <code>x-api-key</code> with your API key, <code>anthropic-version</code> with <code>2023-06-01</code>, and <code>content-type</code> with <code>application/json</code>. The request body matches the SDK parameters. This approach works in any language with an HTTP client.</p>
+
+    <p>The main downsides of using the REST API directly are: no automatic retries (you must implement your own), no type safety (you parse raw JSON), no streaming helpers (you handle server-sent events manually), and no version-specific error classification. For production applications, the SDKs are strongly recommended. For quick testing, prototyping, or languages without an official SDK, the REST API works well. The <a href="/tools/api-request-builder.html">API Request Builder</a> generates curl commands you can test immediately.</p>
+
+    <h2>Community SDKs</h2>
+
+    <p>Community-maintained SDKs exist for Go, Rust, Java, Kotlin, Ruby, PHP, C#, Elixir, and other languages. These are not officially supported by Anthropic, which means they may lag behind API updates, have incomplete feature coverage, or contain bugs. Before using a community SDK in production, check the GitHub repository for recent commits, open issues, feature completeness, and test coverage. Popular community options include <code>anthropic-go</code> for Go and the Rust crate <code>anthropic-rs</code>.</p>
+
+    <p>For languages without a dedicated SDK, wrapping the REST API is straightforward. You need an HTTP client that supports POST requests, JSON serialization, and optionally server-sent event parsing for streaming. Most production integrations in non-SDK languages use a thin wrapper around the REST API with retry logic and error handling. The API surface is small — just the messages endpoint for most use cases — so the wrapper can be built in under 200 lines of code. For comparing API patterns across providers, <a href="https://lockml.com">LockML</a> provides cross-provider documentation tools.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>What official SDKs does Anthropic provide?</summary>
+      <p>Anthropic provides two official SDKs: the Python SDK (anthropic package on PyPI) and the TypeScript/JavaScript SDK (@anthropic-ai/sdk on npm). Both are auto-generated from the API specification and stay in sync with the latest API features.</p>
+    </details>
+
+    <details>
+      <summary>Does the Anthropic Python SDK support async?</summary>
+      <p>Yes, the Python SDK provides both synchronous (anthropic.Anthropic()) and asynchronous (anthropic.AsyncAnthropic()) clients. The async client supports the same API but returns coroutines. Use it with asyncio for concurrent request processing.</p>
+    </details>
+
+    <details>
+      <summary>How do the SDKs handle rate limiting and retries?</summary>
+      <p>Both SDKs include automatic retry logic with exponential backoff for 429 and 500/529 errors. The default is 2 retries, configurable via max_retries. Retries respect the Retry-After header when present. Set max_retries to 0 to disable.</p>
+    </details>
+
+    <details>
+      <summary>Can I use the Anthropic API without an SDK?</summary>
+      <p>Yes, it is a standard REST API. Use any HTTP client with the x-api-key, anthropic-version, and content-type headers. However, SDKs provide automatic retries, type safety, streaming helpers, and error classification.</p>
+    </details>
+
+    <details>
+      <summary>Are there community SDKs for other languages?</summary>
+      <p>Yes, community SDKs exist for Go, Rust, Java, Ruby, PHP, C#, and more. These are not officially supported by Anthropic. Check their repositories for feature completeness and recent activity before production use.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/research/anthropic-model-changelog.html" class="related-card">
+        <h3>Model Changelog</h3>
+        <p>Interactive timeline of all Claude model releases with comparisons.</p>
+      </a>
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting.</p>
+      </a>
+      <a href="/answers/claude-code-snippets.html" class="related-card">
+        <h3>Code Snippets</h3>
+        <p>Searchable library of Claude API patterns in Python and JS.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every error code explained with fixes and code examples.</p>
+      </a>
+      <a href="https://lockml.com" class="related-card">
+        <h3>LockML</h3>
+        <p>Cross-provider ML model comparison tool.</p>
+      </a>
+      <a href="https://kappakit.com" class="related-card">
+        <h3>KappaKit</h3>
+        <p>Developer toolkit with JSON tools, formatters, and converters.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const features = [
+    { name:"Messages API", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Streaming", py:"Yes (.stream())", ts:"Yes (.stream())", rest:"Yes (SSE)" },
+    { name:"Tool Use", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Vision (Images)", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"System Prompts", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Prompt Caching", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Message Batches", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Extended Thinking", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Automatic Retries", py:"Yes (2 default)", ts:"Yes (2 default)", rest:"No" },
+    { name:"Exponential Backoff", py:"Yes", ts:"Yes", rest:"No" },
+    { name:"Typed Errors", py:"Yes", ts:"Yes", rest:"No" },
+    { name:"Async Support", py:"Yes (AsyncAnthropic)", ts:"Yes (native async)", rest:"N/A" },
+    { name:"Sync Support", py:"Yes (Anthropic)", ts:"No (async only)", rest:"N/A" },
+    { name:"Type Definitions", py:"Yes (mypy compatible)", ts:"Yes (full types)", rest:"No" },
+    { name:"Connection Pooling", py:"Yes (httpx)", ts:"Yes (fetch)", rest:"No" },
+    { name:"Timeout Configuration", py:"Yes", ts:"Yes", rest:"No" },
+    { name:"Custom Base URL", py:"Yes", ts:"Yes", rest:"Yes" },
+    { name:"Proxy Support", py:"Yes", ts:"Yes", rest:"Depends" },
+    { name:"Pagination Helpers", py:"Yes", ts:"Yes", rest:"No" },
+    { name:"Request/Response Logging", py:"Yes", ts:"Yes", rest:"No" }
+  ];
+
+  const body = document.getElementById("sdk-matrix-body");
+  features.forEach(f => {
+    const tr = document.createElement("tr");
+    const cls = v => v.startsWith("Yes") ? "check" : v === "No" ? "cross" : "partial";
+    tr.innerHTML = `<td>${f.name}</td><td class="center ${cls(f.py)}">${f.py}</td><td class="center ${cls(f.ts)}">${f.ts}</td><td class="center ${cls(f.rest)}">${f.rest}</td>`;
+    body.appendChild(tr);
+  });
+
+  const examples = [
+    {
+      title: "Basic Message",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "Hello, Claude!"}
+    ]
+)
+
+print(response.content[0].text)`,
+      typescript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+        { role: "user", content: "Hello, Claude!" }
+    ],
+});
+
+console.log(response.content[0].text);`,
+      curl: `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello, Claude!"}]
+  }'`
+    },
+    {
+      title: "Streaming",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+with client.messages.stream(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Tell me a story."}]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+
+final = stream.get_final_message()
+print(f"\\nTokens: {final.usage.output_tokens}")`,
+      typescript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const stream = client.messages.stream({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: "Tell me a story." }],
+});
+
+stream.on("text", (text) => process.stdout.write(text));
+
+const final = await stream.finalMessage();
+console.log("\\nTokens:", final.usage.output_tokens);`,
+      curl: `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "max_tokens": 1024,
+    "stream": true,
+    "messages": [{"role": "user", "content": "Tell me a story."}]
+  }'`
+    },
+    {
+      title: "Error Handling",
+      python: `import anthropic
+
+client = anthropic.Anthropic(max_retries=3)
+
+try:
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "Hello!"}]
+    )
+except anthropic.RateLimitError as e:
+    print(f"Rate limited: {e.status_code}")
+except anthropic.BadRequestError as e:
+    print(f"Bad request: {e.message}")
+except anthropic.AuthenticationError as e:
+    print(f"Auth error: check API key")
+except anthropic.APIError as e:
+    print(f"API error {e.status_code}: {e.message}")`,
+      typescript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ maxRetries: 3 });
+
+try {
+    const response = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        messages: [{ role: "user", content: "Hello!" }],
+    });
+} catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+        console.log("Rate limited:", error.status);
+    } else if (error instanceof Anthropic.BadRequestError) {
+        console.log("Bad request:", error.message);
+    } else if (error instanceof Anthropic.AuthenticationError) {
+        console.log("Auth error: check API key");
+    } else if (error instanceof Anthropic.APIError) {
+        console.log("API error:", error.status, error.message);
+    }
+}`,
+      curl: `# No automatic error handling with curl
+# Check HTTP status code in response:
+curl -s -w "\\nHTTP_CODE:%{http_code}" \\
+  https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "claude-sonnet-4-20250514",
+    "max_tokens": 1024,
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+# 200 = success, 429 = rate limit, 400 = bad request`
+    }
+  ];
+
+  const exSection = document.getElementById("sdk-examples");
+  examples.forEach((ex, ei) => {
+    const div = document.createElement("div");
+    div.className = "example-section";
+    div.innerHTML = `<h3>${ex.title}</h3>
+      <div class="code-tabs" data-group="${ei}">
+        <button class="code-tab active" data-lang="python" data-group="${ei}">Python</button>
+        <button class="code-tab" data-lang="typescript" data-group="${ei}">TypeScript</button>
+        <button class="code-tab" data-lang="curl" data-group="${ei}">curl</button>
+      </div>
+      <div class="code-panel active" data-lang="python" data-group="${ei}"><div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">Copy</button>${escHtml(ex.python)}</div></div>
+      <div class="code-panel" data-lang="typescript" data-group="${ei}"><div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">Copy</button>${escHtml(ex.typescript)}</div></div>
+      <div class="code-panel" data-lang="curl" data-group="${ei}"><div class="code-block"><button class="copy-btn" onclick="copyBlock(this)">Copy</button>${escHtml(ex.curl)}</div></div>`;
+    exSection.appendChild(div);
+  });
+
+  document.querySelectorAll(".code-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      const group = this.dataset.group;
+      document.querySelectorAll(`.code-tab[data-group="${group}"]`).forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(`.code-panel[data-group="${group}"]`).forEach(p => p.classList.remove("active"));
+      this.classList.add("active");
+      document.querySelector(`.code-panel[data-lang="${this.dataset.lang}"][data-group="${group}"]`).classList.add("active");
+    });
+  });
+
+  function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  window.copyBlock = function(btn) {
+    const code = btn.parentElement.textContent.replace("Copy","").trim();
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  window.copyText = function(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+})();
+</script>
+</body>
+</html>

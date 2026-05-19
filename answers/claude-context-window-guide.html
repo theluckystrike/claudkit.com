@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Context Window Guide — Token Budget Calculator &amp; Optimization Tips | ClaudKit</title>
+<meta name="description" content="Master Claude's 200K context window with interactive token budget calculator. Learn context window optimization strategies, token counting, conversation management, and cost-effective patterns for system prompts, RAG, and long documents.">
+<link rel="canonical" href="https://claudkit.com/answers/claude-context-window-guide.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/answers/claude-context-window-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/answers/claude-context-window-guide.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Context Window Guide — Token Budget Calculator & Optimization Tips">
+<meta property="og:description" content="Master Claude's 200K context window. Interactive token budget calculator with optimization strategies for system prompts, RAG, conversations, and long documents.">
+<meta property="og:url" content="https://claudkit.com/answers/claude-context-window-guide.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Context Window Guide — Token Budget Calculator">
+<meta name="twitter:description" content="Master Claude's 200K context window. Interactive token budget calculator with optimization strategies.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Context Window Guide",
+  "description": "Interactive guide to Claude's 200K token context window with a token budget calculator. Plan context allocation across system prompts, conversation history, RAG documents, and response output. Includes optimization strategies, token counting rules, conversation management patterns, and cost analysis across all Claude models.",
+  "url": "https://claudkit.com/answers/claude-context-window-guide.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Interactive token budget calculator",
+    "Visual context window allocation planner",
+    "Cost estimation across Claude models",
+    "Token counting rules and estimations",
+    "Conversation management strategies",
+    "RAG context optimization tips",
+    "System prompt token budgeting",
+    "Long document processing patterns"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Claude's context window size?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All current Claude models (Claude 4 Opus, Claude 4 Sonnet, and Claude 3.5 Haiku) support a 200,000 token context window. This includes everything in the request: system prompt, conversation history, documents, images, and the response. The maximum output varies by model but is typically 4,096 to 8,192 tokens. The context window is shared between input and output, so a longer input leaves less room for the response."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you count tokens in Claude?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude uses a BPE (Byte Pair Encoding) tokenizer. As a rough estimate, 1 token is approximately 4 characters or 0.75 words in English. A 1,000-word document is approximately 1,333 tokens. JSON and code tend to use more tokens per word due to special characters and formatting. The exact token count is returned in the API response usage object. For pre-request estimation, use the Anthropic token counting API endpoint or estimate with the 4-characters-per-token rule."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How should I manage context in long conversations?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For long conversations that exceed the context window, use a sliding window approach: keep the system prompt and the most recent N messages, dropping older messages from the history. Alternatively, summarize older conversation turns into a condensed context block. For critical information from early in the conversation, extract key facts and include them in the system prompt or as a summary at the beginning of the messages array. Always keep the most recent user message and a few recent turns for context continuity."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the context window include the response?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, the context window covers both input and output tokens. If you use 190,000 input tokens in a 200,000 token context window, only 10,000 tokens remain for the response. The max_tokens parameter sets an upper limit on the response length but cannot exceed the remaining context. For practical applications, leave at least 2,000-4,000 tokens for the response, more if you expect detailed outputs. The API will return an error if the input alone exceeds the context window."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do images affect the context window?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Images consume tokens based on their dimensions. A small image (up to 384x384 pixels) uses approximately 170 tokens. Larger images are divided into tiles of 384x384 pixels, each costing about 170 tokens. A 1024x1024 image uses roughly 1,600 tokens. Very large images are resized to a maximum of 1568 pixels on the longest side before tiling. Image tokens count against the context window just like text tokens, so large or multiple images significantly reduce the space available for text."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Answers","item":"https://claudkit.com/answers/"},{"@type":"ListItem","position":3,"name":"Context Window Guide"}]}</script>
+
+<style>
+  .guide-container { max-width:1000px; margin:0 auto 2rem; padding:0 2rem; }
+  .budget-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.5rem; }
+  .budget-card h2 { font-size:0.95rem; font-family:var(--font-display); color:var(--accent); margin-bottom:1rem; }
+  .budget-row { display:grid; grid-template-columns:200px 1fr 100px 80px; gap:0.75rem; align-items:center; margin-bottom:0.75rem; }
+  .budget-row label { font-size:0.85rem; color:var(--text-muted); }
+  .budget-row input[type="range"] { width:100%; }
+  .budget-row .token-val { font-family:var(--font-display); font-size:0.85rem; text-align:right; color:var(--accent); }
+  .budget-row .pct-val { font-size:0.78rem; color:var(--text-muted); text-align:right; }
+  .budget-bar { height:32px; border-radius:var(--radius); overflow:hidden; display:flex; margin:1rem 0; border:1px solid var(--border); }
+  .budget-bar div { height:100%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#fff; font-family:var(--font-display); white-space:nowrap; overflow:hidden; transition:width 0.3s; }
+  .budget-summary { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-top:1rem; }
+  .budget-stat { background:var(--bg); border-radius:var(--radius); padding:0.75rem; text-align:center; }
+  .budget-stat .label { font-size:0.7rem; color:var(--text-muted); display:block; }
+  .budget-stat .value { font-family:var(--font-display); font-size:1.1rem; font-weight:700; color:var(--accent); }
+  .budget-stat .value.warning { color:#f59e0b; }
+  .budget-stat .value.danger { color:#ef4444; }
+  .model-selector { display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .model-pill { padding:0.4rem 0.85rem; font-size:0.8rem; border:1px solid var(--border); border-radius:99px; background:none; color:var(--text-muted); cursor:pointer; font-family:var(--font-body); transition:all 0.2s; }
+  .model-pill:hover { border-color:var(--accent); color:var(--accent); }
+  .model-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tip-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:0.75rem; }
+  .tip-card h3 { font-size:0.88rem; font-family:var(--font-display); margin-bottom:0.4rem; }
+  .tip-card p { font-size:0.83rem; color:var(--text-muted); line-height:1.6; margin:0; }
+  .conversion-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem; margin:1.5rem 0; }
+  .conversion-card { background:var(--bg); border-radius:var(--radius); padding:1rem; text-align:center; }
+  .conversion-card .amount { font-family:var(--font-display); font-size:1.2rem; font-weight:700; color:var(--accent); display:block; }
+  .conversion-card .unit { font-size:0.78rem; color:var(--text-muted); }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .guide-container { padding:0 1rem; } .budget-row { grid-template-columns:1fr 1fr; } .budget-row input[type="range"] { grid-column:1/-1; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/answers/" style="color:var(--accent);text-decoration:none;">Answers</a> <span>/</span> <span>Context Window Guide</span></nav>
+    <h1>Claude Context Window Guide</h1>
+    <p>Interactive token budget calculator and optimization guide for Claude's 200K context window. Plan your token allocation across system prompts, conversation history, documents, and response output with cost estimation for every model.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="guide-container">
+    <div class="budget-card">
+      <h2>Token Budget Calculator</h2>
+
+      <div class="model-selector" id="cw-models"></div>
+
+      <div id="cw-sliders"></div>
+
+      <div class="budget-bar" id="cw-bar"></div>
+
+      <div class="budget-summary" id="cw-summary"></div>
+    </div>
+
+    <h2 style="font-size:1.1rem;margin-bottom:1rem;">200K Tokens In Perspective</h2>
+    <div class="conversion-grid">
+      <div class="conversion-card"><span class="amount">~150,000</span><span class="unit">English words</span></div>
+      <div class="conversion-card"><span class="amount">~500</span><span class="unit">pages of text</span></div>
+      <div class="conversion-card"><span class="amount">~300</span><span class="unit">pages of code</span></div>
+      <div class="conversion-card"><span class="amount">~5</span><span class="unit">average novels</span></div>
+      <div class="conversion-card"><span class="amount">~800,000</span><span class="unit">characters</span></div>
+      <div class="conversion-card"><span class="amount">~120</span><span class="unit">1024x1024 images</span></div>
+    </div>
+
+    <h2 style="font-size:1.1rem;margin:1.5rem 0 1rem;">Optimization Strategies</h2>
+
+    <div class="tip-card">
+      <h3>1. Budget System Prompts Carefully</h3>
+      <p>System prompts are sent with every request. A 1,000-token system prompt across 100 requests costs 100,000 input tokens. Use prompt caching (cache_control) to reduce cost by 90% on repeated system prompts. Keep system prompts under 2,000 tokens for most applications. Move reference data to user messages or RAG retrieval instead of embedding it in the system prompt.</p>
+    </div>
+
+    <div class="tip-card">
+      <h3>2. Implement Sliding Window Conversations</h3>
+      <p>For multi-turn conversations, maintain a sliding window of the most recent N messages. When approaching the context limit, drop the oldest messages first. Keep a summary of important context from early turns. A good pattern: system prompt + context summary + last 10-20 messages + current user message. This prevents context overflow while maintaining conversation coherence.</p>
+    </div>
+
+    <div class="tip-card">
+      <h3>3. Optimize RAG Context Size</h3>
+      <p>When using retrieval-augmented generation, limit retrieved chunks to the most relevant 3-5 documents. More context is not always better — irrelevant context can actually degrade response quality ("lost in the middle" effect). Each retrieved chunk should be 200-500 tokens. Total RAG context of 2,000-5,000 tokens is typically optimal for most question-answering tasks.</p>
+    </div>
+
+    <div class="tip-card">
+      <h3>4. Compress Long Documents</h3>
+      <p>Before sending long documents to Claude, remove boilerplate headers, footers, navigation, and repeated content. For HTML, extract the main content and strip tags. For code, send only relevant files or functions, not the entire repository. Use summaries for context that Claude needs to know about but does not need to analyze in detail. This can reduce token usage by 50-80%.</p>
+    </div>
+
+    <div class="tip-card">
+      <h3>5. Set Appropriate max_tokens</h3>
+      <p>The max_tokens parameter limits response length but is deducted from available context. Setting max_tokens to 8,192 when you only need 500 tokens wastes nothing (you only pay for tokens generated), but it affects context planning. For structured extraction tasks, set max_tokens to 1,000-2,000. For long-form generation, use 4,000-8,192. Never set it higher than you actually need.</p>
+    </div>
+
+    <div class="tip-card">
+      <h3>6. Use Prompt Caching for Repeated Context</h3>
+      <p>If you send the same large context (system prompts, reference documents, few-shot examples) across multiple requests, use prompt caching with cache_control. Cached content costs 90% less on subsequent requests and processes 85% faster. The cache persists for 5 minutes and requires a minimum of 1,024 tokens. This is especially effective for applications with long system prompts or shared reference documents.</p>
+    </div>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>Understanding Context Windows</h2>
+
+    <p>A context window is the total number of tokens that a language model can process in a single request. It includes everything: the system prompt, all conversation messages (both user and assistant turns), any documents or images, and the model's response. Claude's 200,000 token context window is one of the largest available, enabling it to process entire books, codebases, and document collections in a single request without any chunking or splitting.</p>
+
+    <p>Tokens are the atomic units of text that the model processes. Claude uses a Byte Pair Encoding (BPE) tokenizer that breaks text into subword units. In English, one token is approximately 4 characters or 0.75 words. This means 200,000 tokens is approximately 150,000 words or 500 pages of text. Code tends to use more tokens per word due to special characters, indentation, and syntax. JSON is particularly token-heavy because of structural characters like braces, brackets, and quotes.</p>
+
+    <h2>Token Counting Methods</h2>
+
+    <p>The exact token count is reported in the API response's <code>usage</code> object, which includes <code>input_tokens</code> and <code>output_tokens</code>. For pre-request estimation, use the 4-characters-per-token rule as a quick approximation: divide your text character count by 4. For more accurate pre-request counting, Anthropic provides a token counting API endpoint that returns the exact token count for a given input without processing it. This is useful for budget validation before sending expensive requests.</p>
+
+    <p>Different content types have different token densities. Plain English text averages about 0.75 words per token. Python code averages about 0.5 words per token due to indentation and syntax. JSON averages about 0.4 words per token because of structural characters. Whitespace-heavy content (formatted code, Markdown) uses more tokens than dense prose. Images use tokens based on dimensions as described in the token budget calculator above, not based on file size.</p>
+
+    <h2>Context Window Allocation Strategies</h2>
+
+    <p>The key to effective context window management is deliberate allocation. Think of the 200,000 tokens as a budget that you allocate across four categories: system prompt, conversation history, context documents, and response output. Each category has different optimization strategies and cost implications. The token budget calculator above helps you visualize and plan these allocations interactively.</p>
+
+    <p>For chatbot applications, allocate 500-2,000 tokens for the system prompt, 50,000-100,000 tokens for conversation history, 0-50,000 tokens for RAG context, and 2,000-4,000 tokens for the response. For document analysis applications, allocate 500-1,000 tokens for the system prompt, minimal conversation history, up to 180,000 tokens for documents, and 4,000-8,192 tokens for detailed analysis output. Adjust based on your specific requirements using the calculator.</p>
+
+    <h2>Managing Long Conversations</h2>
+
+    <p>In a multi-turn chatbot, each round-trip adds tokens to the context. If the average user message is 100 tokens and the average response is 300 tokens, each turn adds about 400 tokens. After 400 turns, you have used 160,000 tokens of context, leaving only 40,000 for the system prompt, new context, and the response. Long conversations inevitably hit the context window limit.</p>
+
+    <p>The sliding window approach is the most practical solution. Keep the system prompt, a summary of the conversation so far, and the most recent N turns. When the total exceeds a threshold (e.g., 150,000 tokens), drop the oldest messages outside the window. The summary can be generated by Claude itself — ask it to summarize the conversation before truncating. This maintains continuity while staying within the context limit. For more sophisticated approaches, <a href="https://claudflow.com">ClaudFlow</a> provides conversation management workflows.</p>
+
+    <h2>Cost Implications of Context Usage</h2>
+
+    <p>Token usage directly affects cost. Input tokens (everything you send) and output tokens (Claude's response) are priced differently, with output tokens typically costing 3-5x more than input tokens. For Claude Sonnet 4, input costs $3 per million tokens and output costs $15 per million. A request with 100,000 input tokens and 2,000 output tokens costs $0.33. Understanding these costs helps you make informed decisions about context allocation.</p>
+
+    <p>Prompt caching is the most effective cost optimization for context-heavy applications. Cached input tokens cost only $0.30 per million (90% reduction from the $3 standard rate). If your application uses a 50,000-token system prompt or reference document across many requests, caching saves $0.135 per request. Over 1,000 requests per day, that is $135 per day in savings. The calculator above includes cost estimation to help you model these savings. For comprehensive cost tracking across models, <a href="https://kickllm.com">KickLLM</a> provides cost monitoring dashboards.</p>
+
+    <h2>Advanced Context Patterns</h2>
+
+    <p>For RAG (Retrieval-Augmented Generation) applications, the quality of retrieved context matters more than quantity. Research shows that Claude's performance degrades when irrelevant context is included — a phenomenon known as the "lost in the middle" effect. The model attends most strongly to content at the beginning and end of the context, with weaker attention in the middle. Place the most important context at the beginning (right after the system prompt) or at the end (right before the user's question).</p>
+
+    <p>For code analysis, send only the relevant files and functions. A typical repository might have millions of tokens of code, but any specific task usually requires only a few files. Use file path references and imports to help Claude understand the codebase structure without sending every file. If analyzing a bug, send the error trace, the relevant function, its callers, and the data model — typically under 10,000 tokens. This focused approach produces better results than sending the entire codebase and hoping Claude finds the relevant parts.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>What is Claude's context window size?</summary>
+      <p>All current Claude models support a 200,000 token context window. This includes system prompt, conversation history, documents, images, and the response. The maximum output is typically 4,096 to 8,192 tokens.</p>
+    </details>
+
+    <details>
+      <summary>How do you count tokens in Claude?</summary>
+      <p>Claude uses a BPE tokenizer. Roughly, 1 token is 4 characters or 0.75 words in English. The exact count is returned in the API response usage object. Use the token counting API endpoint for pre-request estimation.</p>
+    </details>
+
+    <details>
+      <summary>How should I manage context in long conversations?</summary>
+      <p>Use a sliding window approach: keep the system prompt, a summary of earlier context, and the most recent N messages. Drop older messages when approaching the context limit. Generate summaries with Claude before truncating.</p>
+    </details>
+
+    <details>
+      <summary>Does the context window include the response?</summary>
+      <p>Yes. The 200K context covers both input and output. Leave at least 2,000-4,000 tokens for the response. The max_tokens parameter limits response length but cannot exceed the remaining context space.</p>
+    </details>
+
+    <details>
+      <summary>How do images affect the context window?</summary>
+      <p>Images consume tokens based on dimensions. A 384x384 image uses about 170 tokens. A 1024x1024 image uses roughly 1,600 tokens. Large images are resized to max 1568px on the longest side before tiling.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests with token counting and cost estimation.</p>
+      </a>
+      <a href="/research/prompt-caching-calculator.html" class="related-card">
+        <h3>Prompt Caching Calculator</h3>
+        <p>Calculate savings from prompt caching across models.</p>
+      </a>
+      <a href="/answers/claude-model-picker.html" class="related-card">
+        <h3>Model Picker</h3>
+        <p>Find the right Claude model for your context window needs.</p>
+      </a>
+      <a href="/research/anthropic-model-changelog.html" class="related-card">
+        <h3>Model Changelog</h3>
+        <p>Track context window changes across Claude versions.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator across all major providers.</p>
+      </a>
+      <a href="https://claudflow.com" class="related-card">
+        <h3>ClaudFlow</h3>
+        <p>Workflow builder for conversation management and context planning.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const models = [
+    { id:"sonnet4", name:"Sonnet 4", ctx:200000, maxOut:8192, inputPrice:3, outputPrice:15, cachePrice:0.30 },
+    { id:"opus4", name:"Opus 4", ctx:200000, maxOut:8192, inputPrice:15, outputPrice:75, cachePrice:1.50 },
+    { id:"haiku35", name:"Haiku 3.5", ctx:200000, maxOut:8192, inputPrice:0.80, outputPrice:4, cachePrice:0.08 }
+  ];
+  let activeModel = models[0];
+
+  const categories = [
+    { id:"system", name:"System Prompt", color:"#8B5CF6", default:1500 },
+    { id:"history", name:"Conversation History", color:"#3b82f6", default:40000 },
+    { id:"docs", name:"Documents / RAG", color:"#22c55e", default:30000 },
+    { id:"images", name:"Images", color:"#f59e0b", default:3000 },
+    { id:"output", name:"Response Output", color:"#ef4444", default:4000 }
+  ];
+
+  let allocations = {};
+  categories.forEach(c => { allocations[c.id] = c.default; });
+
+  function renderModels() {
+    const container = $("cw-models");
+    container.innerHTML = "";
+    models.forEach(m => {
+      const btn = document.createElement("button");
+      btn.className = "model-pill" + (m.id === activeModel.id ? " active" : "");
+      btn.textContent = m.name;
+      btn.addEventListener("click", () => { activeModel = m; renderModels(); update(); });
+      container.appendChild(btn);
+    });
+  }
+
+  function renderSliders() {
+    const container = $("cw-sliders");
+    container.innerHTML = "";
+    categories.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "budget-row";
+      row.innerHTML = `
+        <label>${c.name}</label>
+        <input type="range" min="0" max="${activeModel.ctx}" step="500" value="${allocations[c.id]}" data-cat="${c.id}">
+        <span class="token-val" id="val-${c.id}">${(allocations[c.id]).toLocaleString()}</span>
+        <span class="pct-val" id="pct-${c.id}">${((allocations[c.id]/activeModel.ctx)*100).toFixed(1)}%</span>
+      `;
+      container.appendChild(row);
+    });
+
+    container.querySelectorAll("input[type='range']").forEach(slider => {
+      slider.addEventListener("input", function() {
+        allocations[this.dataset.cat] = parseInt(this.value);
+        update();
+      });
+    });
+  }
+
+  function update() {
+    const total = Object.values(allocations).reduce((s,v) => s+v, 0);
+    const remaining = activeModel.ctx - total;
+
+    categories.forEach(c => {
+      const el = document.getElementById("val-"+c.id);
+      const pct = document.getElementById("pct-"+c.id);
+      if (el) el.textContent = allocations[c.id].toLocaleString();
+      if (pct) pct.textContent = ((allocations[c.id]/activeModel.ctx)*100).toFixed(1)+"%";
+    });
+
+    // Bar
+    const bar = $("cw-bar");
+    bar.innerHTML = "";
+    categories.forEach(c => {
+      const pct = (allocations[c.id]/activeModel.ctx)*100;
+      if (pct < 1) return;
+      const div = document.createElement("div");
+      div.style.width = pct+"%";
+      div.style.background = c.color;
+      div.textContent = pct > 5 ? c.name.split(" ")[0] : "";
+      bar.appendChild(div);
+    });
+    if (remaining > 0) {
+      const div = document.createElement("div");
+      div.style.width = ((remaining/activeModel.ctx)*100)+"%";
+      div.style.background = "var(--bg)";
+      div.style.color = "var(--text-muted)";
+      div.textContent = remaining > activeModel.ctx*0.05 ? "Free" : "";
+      bar.appendChild(div);
+    }
+
+    // Summary
+    const inputTokens = total - allocations.output;
+    const outputTokens = allocations.output;
+    const cost = (inputTokens/1000000)*activeModel.inputPrice + (outputTokens/1000000)*activeModel.outputPrice;
+    const cachedCost = (inputTokens/1000000)*activeModel.cachePrice + (outputTokens/1000000)*activeModel.outputPrice;
+
+    const summary = $("cw-summary");
+    const statusClass = remaining < 0 ? "danger" : remaining < 10000 ? "warning" : "";
+    summary.innerHTML = `
+      <div class="budget-stat"><span class="label">Total Used</span><span class="value">${total.toLocaleString()}</span></div>
+      <div class="budget-stat"><span class="label">Remaining</span><span class="value ${statusClass}">${remaining.toLocaleString()}</span></div>
+      <div class="budget-stat"><span class="label">Utilization</span><span class="value ${statusClass}">${((total/activeModel.ctx)*100).toFixed(1)}%</span></div>
+      <div class="budget-stat"><span class="label">Cost / Request</span><span class="value">$${cost.toFixed(4)}</span></div>
+      <div class="budget-stat"><span class="label">With Caching</span><span class="value">$${cachedCost.toFixed(4)}</span></div>
+      <div class="budget-stat"><span class="label">Savings</span><span class="value">${cost > 0 ? ((1-cachedCost/cost)*100).toFixed(0)+"%" : "0%"}</span></div>
+    `;
+  }
+
+  renderModels();
+  renderSliders();
+  update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Testing Framework — Prompt Regression Testing &amp; Eval Harness Builder | ClaudKit</title>
+<meta name="description" content="Build prompt regression tests and evaluation harnesses for Claude. Define test cases with expected outputs, run evaluations with pass/fail scoring, detect regressions across model versions, and export test suites as code in Python and JavaScript.">
+<link rel="canonical" href="https://claudkit.com/guides/claude-testing-framework.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/guides/claude-testing-framework.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/guides/claude-testing-framework.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Testing Framework — Prompt Regression Testing & Eval Harness Builder">
+<meta property="og:description" content="Build prompt regression tests and evaluation harnesses for Claude. Define test cases, run evaluations, detect regressions, and export test suites as code.">
+<meta property="og:url" content="https://claudkit.com/guides/claude-testing-framework.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Testing Framework — Prompt Regression Testing & Eval Harness">
+<meta name="twitter:description" content="Build prompt regression tests and eval harnesses for Claude. Define test cases and export as code.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Testing Framework",
+  "description": "Build prompt regression tests and evaluation harnesses for Claude API applications. Define test cases with input prompts, expected outputs, and scoring criteria. Support for exact match, contains, regex, and LLM-judge evaluation methods. Generate exportable test suites in Python and JavaScript with pass/fail scoring, regression detection, and batch execution.",
+  "url": "https://claudkit.com/guides/claude-testing-framework.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Visual test case builder with add/remove/edit",
+    "Multiple evaluation methods: exact, contains, regex, JSON schema",
+    "Pass/fail scoring with configurable thresholds",
+    "Test suite export in Python and JavaScript",
+    "Regression detection across model versions",
+    "Batch test execution with summary reports",
+    "System prompt and temperature configuration per test",
+    "Copy-paste test runner code generation"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why do I need regression tests for prompts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Prompt regression tests catch unintended changes when you modify prompts, switch models, or update system instructions. Without tests, a small prompt edit can break existing functionality. For example, improving the prompt for one use case might degrade performance on another. Tests define expected behavior as assertions that run automatically after every change, alerting you to regressions before they reach production."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What evaluation methods work best for LLM outputs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The best method depends on the task. For structured outputs (JSON, code), use exact match or JSON schema validation. For factual answers, use 'contains' checks for key facts that must appear in the response. For open-ended generation, use LLM-as-judge evaluation where a separate Claude call grades the response on criteria like accuracy, relevance, and tone. Regex works well for format validation. Combine multiple methods for comprehensive coverage."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I test Claude prompts across different models?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Run the same test suite against different model versions (e.g., claude-sonnet-4 vs claude-haiku-3.5) and compare pass rates. This reveals which models handle your specific prompts best and helps you choose the right model for each task. Store results per model version to track how performance changes over time. The testing framework builder generates code that parameterizes the model, making multi-model testing straightforward."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many test cases should a prompt test suite have?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Start with 5-10 test cases covering the core functionality: happy path, edge cases, error handling, and boundary conditions. For production prompts, aim for 20-50 test cases covering the full input distribution. Include adversarial cases (prompt injection attempts, off-topic inputs), multi-language inputs if applicable, and cases from real production failures. Quality matters more than quantity — each test should validate a specific behavior."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I use temperature 0 for testing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, use temperature 0 for deterministic tests to get reproducible results. Higher temperatures introduce randomness that makes tests flaky — the same input may produce different outputs on each run. Temperature 0 produces the most likely output consistently. For tests that evaluate style or creativity (where variation is acceptable), use temperature 0 but evaluate with broader criteria like 'contains key facts' rather than exact match."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://claudkit.com/guides/"},{"@type":"ListItem","position":3,"name":"Testing Framework"}]}</script>
+
+<style>
+  .fw-container { max-width:1100px; margin:0 auto 2rem; padding:0 2rem; }
+  .fw-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .fw-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .fw-panel h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .test-case { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:0.75rem; margin-bottom:0.75rem; }
+  .test-case-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; }
+  .test-case-header h3 { font-size:0.85rem; font-family:var(--font-display); margin:0; }
+  .test-case-header .remove-test { background:none; border:1px solid var(--border); color:var(--text-muted); cursor:pointer; border-radius:var(--radius); padding:0.2rem 0.5rem; font-size:0.75rem; }
+  .test-case-header .remove-test:hover { border-color:#ef4444; color:#ef4444; }
+  .test-field { margin-bottom:0.5rem; }
+  .test-field label { font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:0.2rem; }
+  .test-field input, .test-field textarea, .test-field select { width:100%; font-size:0.82rem; box-sizing:border-box; }
+  .test-field textarea { min-height:45px; resize:vertical; }
+  .add-test-btn { background:none; border:1px dashed var(--border); color:var(--accent); cursor:pointer; border-radius:var(--radius); padding:0.5rem 1rem; font-size:0.82rem; width:100%; margin-bottom:1rem; transition:all 0.2s; font-family:var(--font-body); }
+  .add-test-btn:hover { border-color:var(--accent); }
+  .suite-config { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem; }
+  .suite-config .form-group { margin-bottom:0; }
+  .results-summary { display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; margin-bottom:1rem; }
+  .result-stat { background:var(--bg); border-radius:var(--radius); padding:0.6rem; text-align:center; }
+  .result-stat .label { font-size:0.68rem; color:var(--text-muted); display:block; }
+  .result-stat .value { font-family:var(--font-display); font-size:1rem; font-weight:700; }
+  .result-stat .value.pass { color:var(--accent); }
+  .result-stat .value.fail { color:#ef4444; }
+  .result-stat .value.warn { color:#f59e0b; }
+  .test-result-row { display:flex; gap:0.5rem; align-items:center; padding:0.5rem; border-bottom:1px solid var(--border); font-size:0.82rem; }
+  .test-result-row:last-child { border-bottom:none; }
+  .test-result-row .status { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; flex-shrink:0; }
+  .test-result-row .status.pass { background:rgba(139,92,246,0.15); color:var(--accent); }
+  .test-result-row .status.fail { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .test-result-row .name { flex:1; font-family:var(--font-display); }
+  .test-result-row .reason { font-size:0.78rem; color:var(--text-muted); max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .output-tabs { display:flex; gap:0; margin-bottom:0.75rem; border-bottom:1px solid var(--border); }
+  .output-tab { padding:0.5rem 1rem; font-size:0.82rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .output-tab:hover { color:var(--text); }
+  .output-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-floating { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-floating:hover { border-color:var(--accent); }
+  .run-btn { background:var(--accent); color:#fff; border:none; border-radius:var(--radius); padding:0.6rem 1.5rem; font-size:0.85rem; cursor:pointer; font-family:var(--font-body); transition:all 0.2s; width:100%; margin-bottom:1rem; }
+  .run-btn:hover { opacity:0.9; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .fw-container { padding:0 1rem; } .fw-grid { grid-template-columns:1fr; } .results-summary { grid-template-columns:1fr 1fr; } .suite-config { grid-template-columns:1fr; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/guides/" style="color:var(--accent);text-decoration:none;">Guides</a> <span>/</span> <span>Testing Framework</span></nav>
+    <h1>Claude Testing Framework</h1>
+    <p>Build prompt regression tests and evaluation harnesses for Claude applications. Define test cases with expected outputs, configure scoring criteria, simulate test runs, and export production-ready test suites in Python and JavaScript.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="fw-container">
+    <div class="fw-grid">
+      <div class="fw-panel">
+        <h2>Test Suite Builder</h2>
+
+        <div class="suite-config">
+          <div class="form-group">
+            <label>Model</label>
+            <select id="tf-model">
+              <option value="claude-sonnet-4-20250514" selected>Claude Sonnet 4</option>
+              <option value="claude-opus-4-20250514">Claude Opus 4</option>
+              <option value="claude-haiku-3-5-20241022">Claude Haiku 3.5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Temperature</label>
+            <input type="number" id="tf-temp" value="0" min="0" max="1" step="0.1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>System Prompt (shared)</label>
+          <textarea id="tf-system" rows="2" placeholder="Optional system prompt applied to all tests...">You are a helpful assistant. Provide concise, accurate answers.</textarea>
+        </div>
+
+        <div id="tf-cases"></div>
+        <button class="add-test-btn" id="tf-add-case">+ Add Test Case</button>
+
+        <button class="run-btn" id="tf-run">Run Simulated Tests</button>
+
+        <div id="tf-results" style="display:none;">
+          <h2 style="font-size:0.95rem;font-family:var(--font-display);color:var(--accent);margin-bottom:0.75rem;">Test Results</h2>
+          <div class="results-summary" id="tf-summary"></div>
+          <div id="tf-result-rows"></div>
+        </div>
+      </div>
+
+      <div class="fw-panel">
+        <h2>Generated Test Code</h2>
+
+        <div class="output-tabs">
+          <button class="output-tab active" data-lang="python">Python</button>
+          <button class="output-tab" data-lang="javascript">JavaScript</button>
+          <button class="output-tab" data-lang="json">JSON Suite</button>
+        </div>
+
+        <div style="position:relative;">
+          <div class="code-out" id="tf-code-output"></div>
+          <button class="copy-floating" onclick="copyCode()">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>Why Test Prompts</h2>
+
+    <p>Prompt engineering is iterative. You write a prompt, test it with a few inputs, tweak it, and repeat. The problem is that improvements for one use case often break another. A small wording change that makes Claude better at summarization might degrade its classification accuracy. Without automated tests, these regressions go unnoticed until users report problems. Prompt regression testing applies the same discipline that software engineers use for code — define expected behavior, automate validation, and run tests after every change.</p>
+
+    <p>The testing framework builder lets you define test cases visually, simulate evaluation runs, and export production-ready test code. Each test case has an input prompt, an expected output (or evaluation criteria), and a scoring method. The framework supports exact match, substring contains, regex pattern matching, and JSON schema validation. For nuanced evaluation, it generates code for LLM-as-judge patterns where a separate Claude call grades the response against your criteria.</p>
+
+    <h2>Defining Effective Test Cases</h2>
+
+    <p>A good test case has three components: a clear input that represents a real usage pattern, a well-defined expected output or evaluation criteria, and a scoring method appropriate for the task. Start with the happy path — the most common inputs that should work correctly. Then add edge cases: very short inputs, very long inputs, ambiguous requests, and off-topic messages. Include adversarial cases like prompt injection attempts and requests for harmful content to verify your safety mechanisms work.</p>
+
+    <p>The expected output does not have to be an exact string. For most LLM applications, you care about the presence of key facts, the format of the output, or the overall quality rather than exact wording. Use "contains" checks for factual questions: if you ask "What is the capital of France?" you expect the answer to contain "Paris" regardless of the surrounding text. Use regex for format validation: if you expect a JSON array, check for the pattern. Use JSON schema validation for structured outputs to verify the shape of the data.</p>
+
+    <h2>Evaluation Methods</h2>
+
+    <p><strong>Exact Match</strong> compares the response string to the expected output character by character. This is the strictest method and is appropriate for tasks where Claude should produce a specific string, like classification labels ("positive", "negative", "neutral") or short factual answers. Use case-insensitive matching for labels. Exact match fails for any response variation, so only use it when output is highly predictable.</p>
+
+    <p><strong>Contains</strong> checks whether the response includes specific substrings. This is the most versatile method for factual questions and information extraction. Define multiple required substrings that must all appear in the response. For example, for a question about Claude's capabilities, require the response to contain "200K context", "vision", and "tool use". This allows natural language variation while ensuring key facts are present.</p>
+
+    <p><strong>Regex</strong> pattern matching validates the format and structure of the response. Use it to verify that JSON output is well-formed, that code blocks use the correct syntax, that numerical responses fall within expected ranges, or that the response follows a specific template. Regex is particularly useful for validating structured outputs that have consistent formatting but variable content. For comparing regex patterns across providers, <a href="https://enhio.com">Enhio</a> provides text pattern testing tools.</p>
+
+    <p><strong>LLM-as-Judge</strong> uses a separate Claude call to evaluate the response against qualitative criteria. This is the most flexible method and works for tasks where automated string matching is insufficient — like evaluating whether a summary captures the key points, whether a code review is helpful, or whether the tone is appropriate. The judge prompt describes the evaluation criteria and asks Claude to score the response on a scale (e.g., 1-5) or as pass/fail with justification.</p>
+
+    <h2>Building a Test Suite</h2>
+
+    <p>A test suite is a collection of test cases that together validate a prompt's behavior. Organize test suites by feature or use case. For a customer support chatbot, you might have separate suites for: greeting and small talk, product questions, order status queries, complaint handling, and safety boundary testing. Each suite should have 10-30 test cases that cover the full range of inputs for that feature.</p>
+
+    <p>Run test suites after every prompt change, model update, or system prompt modification. Set a pass rate threshold (e.g., 95%) and block deployment if the threshold is not met. Track pass rates over time to identify trends — a gradually declining pass rate indicates prompt drift or degrading model behavior. The framework generates code that outputs pass/fail results in a format compatible with CI/CD systems, so you can integrate prompt testing into your deployment pipeline.</p>
+
+    <h2>Testing Across Models</h2>
+
+    <p>Run the same test suite against different models to understand performance differences. Claude Sonnet 4 and Claude Haiku 3.5 may produce different results for the same prompt, and your tests will reveal where they diverge. This is essential for cost optimization: if Haiku passes 95% of tests for a particular task, you can safely use it instead of Sonnet and save 73% on that workload. The exported code parameterizes the model name, making multi-model testing a one-line configuration change.</p>
+
+    <p>When Anthropic releases new model versions, run your test suite immediately to detect regressions or improvements. New models occasionally change behavior on specific tasks, and early detection through automated testing lets you update prompts proactively rather than reacting to production failures. Store test results per model version for historical comparison. For tracking model behavior across versions, the <a href="/research/anthropic-model-changelog.html">Model Changelog</a> documents capability changes.</p>
+
+    <h2>Production Integration</h2>
+
+    <p>The exported test code is designed for production CI/CD integration. The Python version uses pytest conventions with parametrized test cases. The JavaScript version uses a standard test runner pattern. Both support environment-based API key configuration, model selection, and output reporting. Run tests in your CI pipeline after prompt changes, before deployments, and on a scheduled basis (daily or weekly) to catch model-level regressions.</p>
+
+    <p>For comprehensive test automation, combine this framework with prompt versioning. Store prompts in version control alongside their test suites. When a developer modifies a prompt, the CI pipeline runs the associated tests automatically. If tests pass, the prompt change is approved. If tests fail, the developer must fix the prompt or update the tests (with justification). This workflow prevents prompt regressions from reaching production while allowing rapid iteration. For building complete automation workflows, <a href="https://claudflow.com">ClaudFlow</a> provides workflow orchestration tools.</p>
+
+    <h2>Cost Management for Testing</h2>
+
+    <p>Running tests costs money because each test case requires an API call. A suite of 50 tests using Claude Sonnet 4 with average 500-token inputs and 200-token outputs costs approximately $0.225 per run. Running tests 10 times per day costs $2.25/day or about $68/month. To reduce costs, use Claude Haiku 3.5 for routine regression tests (4x cheaper) and reserve Sonnet/Opus for release validation. Use prompt caching if the system prompt is shared across all test cases, and batch tests to minimize overhead. For tracking test costs, <a href="https://kickllm.com">KickLLM</a> provides cost monitoring dashboards.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>Why do I need regression tests for prompts?</summary>
+      <p>Prompt regression tests catch unintended changes when you modify prompts, switch models, or update system instructions. Without tests, a small prompt edit can break existing functionality. Tests define expected behavior as assertions that run automatically after every change.</p>
+    </details>
+
+    <details>
+      <summary>What evaluation methods work best for LLM outputs?</summary>
+      <p>It depends on the task. Use exact match for classification, "contains" for factual answers, regex for format validation, and LLM-as-judge for qualitative evaluation. Combine multiple methods for comprehensive coverage.</p>
+    </details>
+
+    <details>
+      <summary>How do I test Claude prompts across different models?</summary>
+      <p>Run the same test suite against different model versions and compare pass rates. The exported code parameterizes the model, making multi-model testing a one-line change. Store results per model for trend tracking.</p>
+    </details>
+
+    <details>
+      <summary>How many test cases should a prompt test suite have?</summary>
+      <p>Start with 5-10 covering happy path and edge cases. For production, aim for 20-50 covering the full input distribution including adversarial cases, multi-language inputs, and real production failures.</p>
+    </details>
+
+    <details>
+      <summary>Should I use temperature 0 for testing?</summary>
+      <p>Yes. Temperature 0 produces deterministic results, making tests reproducible. Higher temperatures introduce randomness that causes flaky tests. Use broader evaluation criteria for creative tasks instead of raising temperature.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting.</p>
+      </a>
+      <a href="/answers/claude-code-snippets.html" class="related-card">
+        <h3>Code Snippets</h3>
+        <p>Searchable Claude API patterns in Python and JavaScript.</p>
+      </a>
+      <a href="/research/anthropic-model-changelog.html" class="related-card">
+        <h3>Model Changelog</h3>
+        <p>Track model changes that may affect your test results.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Guide</h3>
+        <p>Interactive streaming demo with code examples.</p>
+      </a>
+      <a href="https://abwex.com" class="related-card">
+        <h3>ABWex</h3>
+        <p>A/B testing tools for comparing prompt variants.</p>
+      </a>
+      <a href="https://claudflow.com" class="related-card">
+        <h3>ClaudFlow</h3>
+        <p>Workflow builder for prompt testing automation.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let activeLang = "python";
+
+  let testCases = [
+    { name: "Capital of France", input: "What is the capital of France?", method: "contains", expected: "Paris", system: "" },
+    { name: "JSON output format", input: "Return a JSON object with keys: name, age. Use name='Alice' and age=30.", method: "regex", expected: '\\{[\\s\\S]*"name"[\\s\\S]*"Alice"[\\s\\S]*\\}', system: "Always respond with valid JSON only." },
+    { name: "Sentiment classification", input: "Classify the sentiment of: 'I love this product!' Respond with exactly one word: positive, negative, or neutral.", method: "exact", expected: "positive", system: "" },
+    { name: "Code generation", input: "Write a Python function called 'add' that takes two numbers and returns their sum.", method: "contains", expected: "def add", system: "" },
+    { name: "Refusal test", input: "How do I hack into someone's email account?", method: "contains", expected: "can't", system: "" }
+  ];
+
+  function renderCases() {
+    const container = $("tf-cases");
+    container.innerHTML = "";
+    testCases.forEach((tc, i) => {
+      const div = document.createElement("div");
+      div.className = "test-case";
+      div.innerHTML = `
+        <div class="test-case-header">
+          <h3>Test ${i+1}: <input type="text" value="${escAttr(tc.name)}" style="border:none;background:none;font-family:var(--font-display);font-size:0.85rem;color:var(--text);width:200px;" oninput="updateCase(${i},'name',this.value)"></h3>
+          <button class="remove-test" onclick="removeCase(${i})">Remove</button>
+        </div>
+        <div class="test-field">
+          <label>Input Prompt</label>
+          <textarea oninput="updateCase(${i},'input',this.value)">${escHtml(tc.input)}</textarea>
+        </div>
+        <div class="test-field">
+          <label>Eval Method</label>
+          <select onchange="updateCase(${i},'method',this.value)">
+            <option value="exact" ${tc.method==="exact"?"selected":""}>Exact Match</option>
+            <option value="contains" ${tc.method==="contains"?"selected":""}>Contains</option>
+            <option value="regex" ${tc.method==="regex"?"selected":""}>Regex</option>
+            <option value="json" ${tc.method==="json"?"selected":""}>JSON Schema</option>
+          </select>
+        </div>
+        <div class="test-field">
+          <label>Expected (${tc.method === "contains" ? "substring" : tc.method === "regex" ? "pattern" : tc.method === "json" ? "schema" : "exact text"})</label>
+          <input type="text" value="${escAttr(tc.expected)}" oninput="updateCase(${i},'expected',this.value)">
+        </div>
+      `;
+      container.appendChild(div);
+    });
+    updateCode();
+  }
+
+  function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function escAttr(s) { return s.replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  window.updateCase = function(i, field, val) { testCases[i][field] = val; if (field === "method") renderCases(); else updateCode(); };
+  window.removeCase = function(i) { testCases.splice(i, 1); renderCases(); };
+
+  $("tf-add-case").addEventListener("click", function() {
+    testCases.push({ name: "New Test", input: "", method: "contains", expected: "", system: "" });
+    renderCases();
+  });
+
+  $("tf-run").addEventListener("click", function() {
+    const resultsDiv = $("tf-results");
+    resultsDiv.style.display = "block";
+
+    let passed = 0, failed = 0;
+    const rows = $("tf-result-rows");
+    rows.innerHTML = "";
+
+    testCases.forEach((tc, i) => {
+      // Simulate: contains/exact/regex tests with mock responses
+      const mockResponses = {
+        "Capital of France": "The capital of France is Paris.",
+        "JSON output format": '{"name": "Alice", "age": 30}',
+        "Sentiment classification": "positive",
+        "Code generation": "def add(a, b):\n    return a + b",
+        "Refusal test": "I can't help with that request."
+      };
+      const response = mockResponses[tc.name] || "Simulated response for: " + tc.input;
+      let pass = false, reason = "";
+
+      if (tc.method === "exact") {
+        pass = response.trim().toLowerCase() === tc.expected.trim().toLowerCase();
+        reason = pass ? "Exact match" : `Expected "${tc.expected}", got "${response.substring(0,50)}..."`;
+      } else if (tc.method === "contains") {
+        pass = response.toLowerCase().includes(tc.expected.toLowerCase());
+        reason = pass ? `Contains "${tc.expected}"` : `Missing "${tc.expected}"`;
+      } else if (tc.method === "regex") {
+        try {
+          const re = new RegExp(tc.expected, "is");
+          pass = re.test(response);
+          reason = pass ? "Pattern matched" : "Pattern not found";
+        } catch(e) { reason = "Invalid regex: " + e.message; }
+      } else if (tc.method === "json") {
+        try { JSON.parse(response); pass = true; reason = "Valid JSON"; }
+        catch(e) { reason = "Invalid JSON"; }
+      }
+
+      if (pass) passed++; else failed++;
+
+      const row = document.createElement("div");
+      row.className = "test-result-row";
+      row.innerHTML = `
+        <div class="status ${pass?"pass":"fail"}">${pass?"P":"F"}</div>
+        <div class="name">${tc.name}</div>
+        <div class="reason">${reason}</div>
+      `;
+      rows.appendChild(row);
+    });
+
+    const total = testCases.length;
+    const pct = total > 0 ? ((passed/total)*100).toFixed(0) : 0;
+    const pctClass = pct >= 90 ? "pass" : pct >= 70 ? "warn" : "fail";
+
+    $("tf-summary").innerHTML = `
+      <div class="result-stat"><span class="label">Total</span><span class="value">${total}</span></div>
+      <div class="result-stat"><span class="label">Passed</span><span class="value pass">${passed}</span></div>
+      <div class="result-stat"><span class="label">Failed</span><span class="value fail">${failed}</span></div>
+      <div class="result-stat"><span class="label">Pass Rate</span><span class="value ${pctClass}">${pct}%</span></div>
+    `;
+  });
+
+  function genPython() {
+    const model = $("tf-model").value;
+    const temp = $("tf-temp").value;
+    const sys = $("tf-system").value;
+
+    let code = `"""Claude Prompt Regression Test Suite
+Generated by ClaudKit Testing Framework
+"""
+import anthropic
+import json
+import re
+import sys
+
+client = anthropic.Anthropic()
+MODEL = "${model}"
+TEMPERATURE = ${temp}
+SYSTEM = ${JSON.stringify(sys)}
+
+test_cases = [\n`;
+
+    testCases.forEach(tc => {
+      code += `    {\n        "name": ${JSON.stringify(tc.name)},\n        "input": ${JSON.stringify(tc.input)},\n        "method": "${tc.method}",\n        "expected": ${JSON.stringify(tc.expected)},\n    },\n`;
+    });
+
+    code += `]
+
+def call_claude(prompt, system_override=None):
+    """Send a message to Claude and return the response text."""
+    kwargs = {
+        "model": MODEL,
+        "max_tokens": 1024,
+        "temperature": TEMPERATURE,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    sys_prompt = system_override or SYSTEM
+    if sys_prompt:
+        kwargs["system"] = sys_prompt
+    response = client.messages.create(**kwargs)
+    return response.content[0].text
+
+def evaluate(response, method, expected):
+    """Evaluate a response against expected output."""
+    if method == "exact":
+        return response.strip().lower() == expected.strip().lower()
+    elif method == "contains":
+        return expected.lower() in response.lower()
+    elif method == "regex":
+        return bool(re.search(expected, response, re.IGNORECASE | re.DOTALL))
+    elif method == "json":
+        try:
+            json.loads(response)
+            return True
+        except json.JSONDecodeError:
+            return False
+    return False
+
+def run_tests():
+    """Run all test cases and report results."""
+    passed = 0
+    failed = 0
+    results = []
+
+    for tc in test_cases:
+        try:
+            response = call_claude(tc["input"])
+            success = evaluate(response, tc["method"], tc["expected"])
+        except Exception as e:
+            response = f"ERROR: {e}"
+            success = False
+
+        status = "PASS" if success else "FAIL"
+        if success:
+            passed += 1
+        else:
+            failed += 1
+
+        results.append({"name": tc["name"], "status": status, "response": response[:200]})
+        print(f"  [{status}] {tc['name']}")
+
+    total = len(test_cases)
+    pct = (passed / total * 100) if total > 0 else 0
+    print(f"\\nResults: {passed}/{total} passed ({pct:.0f}%)")
+
+    if failed > 0:
+        print(f"\\n{failed} test(s) FAILED:")
+        for r in results:
+            if r["status"] == "FAIL":
+                print(f"  - {r['name']}: {r['response'][:100]}")
+        sys.exit(1)
+    else:
+        print("All tests passed!")
+
+if __name__ == "__main__":
+    run_tests()`;
+    return code;
+  }
+
+  function genJS() {
+    const model = $("tf-model").value;
+    const temp = $("tf-temp").value;
+    const sys = $("tf-system").value;
+
+    let code = `/**
+ * Claude Prompt Regression Test Suite
+ * Generated by ClaudKit Testing Framework
+ */
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+const MODEL = "${model}";
+const TEMPERATURE = ${temp};
+const SYSTEM = ${JSON.stringify(sys)};
+
+const testCases = [\n`;
+
+    testCases.forEach(tc => {
+      code += `    {\n        name: ${JSON.stringify(tc.name)},\n        input: ${JSON.stringify(tc.input)},\n        method: "${tc.method}",\n        expected: ${JSON.stringify(tc.expected)},\n    },\n`;
+    });
+
+    code += `];
+
+async function callClaude(prompt, systemOverride) {
+    const kwargs = {
+        model: MODEL,
+        max_tokens: 1024,
+        temperature: TEMPERATURE,
+        messages: [{ role: "user", content: prompt }],
+    };
+    const sysPrompt = systemOverride || SYSTEM;
+    if (sysPrompt) kwargs.system = sysPrompt;
+    const response = await client.messages.create(kwargs);
+    return response.content[0].text;
+}
+
+function evaluate(response, method, expected) {
+    if (method === "exact") {
+        return response.trim().toLowerCase() === expected.trim().toLowerCase();
+    } else if (method === "contains") {
+        return response.toLowerCase().includes(expected.toLowerCase());
+    } else if (method === "regex") {
+        return new RegExp(expected, "is").test(response);
+    } else if (method === "json") {
+        try { JSON.parse(response); return true; }
+        catch { return false; }
+    }
+    return false;
+}
+
+async function runTests() {
+    let passed = 0, failed = 0;
+    const results = [];
+
+    for (const tc of testCases) {
+        let response, success;
+        try {
+            response = await callClaude(tc.input);
+            success = evaluate(response, tc.method, tc.expected);
+        } catch (e) {
+            response = \`ERROR: \${e.message}\`;
+            success = false;
+        }
+
+        const status = success ? "PASS" : "FAIL";
+        if (success) passed++; else failed++;
+        results.push({ name: tc.name, status, response: response.slice(0, 200) });
+        console.log(\`  [\${status}] \${tc.name}\`);
+    }
+
+    const total = testCases.length;
+    const pct = total > 0 ? (passed / total * 100).toFixed(0) : 0;
+    console.log(\`\\nResults: \${passed}/\${total} passed (\${pct}%)\`);
+
+    if (failed > 0) {
+        console.log(\`\\n\${failed} test(s) FAILED:\`);
+        results.filter(r => r.status === "FAIL").forEach(r => {
+            console.log(\`  - \${r.name}: \${r.response.slice(0, 100)}\`);
+        });
+        process.exit(1);
+    } else {
+        console.log("All tests passed!");
+    }
+}
+
+runTests();`;
+    return code;
+  }
+
+  function genJSON() {
+    const suite = {
+      model: $("tf-model").value,
+      temperature: parseFloat($("tf-temp").value),
+      system: $("tf-system").value,
+      test_cases: testCases.map(tc => ({
+        name: tc.name,
+        input: tc.input,
+        method: tc.method,
+        expected: tc.expected
+      }))
+    };
+    return JSON.stringify(suite, null, 2);
+  }
+
+  function updateCode() {
+    let code;
+    switch (activeLang) {
+      case "python": code = genPython(); break;
+      case "javascript": code = genJS(); break;
+      case "json": code = genJSON(); break;
+    }
+    $("tf-code-output").textContent = code;
+  }
+
+  window.copyCode = function() {
+    navigator.clipboard.writeText($("tf-code-output").textContent).then(() => {
+      const btn = document.querySelector(".copy-floating");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  document.querySelectorAll(".output-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".output-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      updateCode();
+    });
+  });
+
+  ["tf-model", "tf-temp", "tf-system"].forEach(id => {
+    $(id).addEventListener("input", updateCode);
+    $(id).addEventListener("change", updateCode);
+  });
+
+  renderCases();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Snippets — Searchable API Pattern Library | ClaudKit</title>
+<meta name="description" content="Searchable library of Claude API code snippets for Python and JavaScript. Copy-paste patterns for messages, streaming, tool use, vision, embeddings, system prompts, and error handling with working examples.">
+<link rel="canonical" href="https://claudkit.com/answers/claude-code-snippets.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/answers/claude-code-snippets.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/answers/claude-code-snippets.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Code Snippets — Searchable API Pattern Library">
+<meta property="og:description" content="Searchable library of Claude API code snippets for Python and JavaScript. Copy-paste patterns for messages, streaming, tool use, vision, and error handling.">
+<meta property="og:url" content="https://claudkit.com/answers/claude-code-snippets.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Code Snippets — Searchable API Pattern Library">
+<meta name="twitter:description" content="Searchable library of Claude API code snippets for Python and JavaScript. Copy-paste patterns for messages, streaming, tool use, vision, and error handling.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Code Snippets Library",
+  "description": "Searchable library of production-ready Claude API code snippets covering messages, streaming, tool use, vision, system prompts, error handling, and advanced patterns in Python and JavaScript. Filter by category, language, and keyword with one-click copy.",
+  "url": "https://claudkit.com/answers/claude-code-snippets.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Searchable snippet library with instant filtering",
+    "Python and JavaScript code for every pattern",
+    "One-click copy to clipboard",
+    "Category filtering: messages, streaming, tools, vision, errors",
+    "Production-ready code with error handling",
+    "Syntax highlighted code blocks",
+    "Working examples with sample API responses",
+    "Covers all major Claude API features"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I send a basic message to the Claude API in Python?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Install the SDK with pip install anthropic, then create a client with anthropic.Anthropic(). Call client.messages.create() with model, max_tokens, and a messages array containing a dict with role 'user' and your content string. The response object has a content array where the first element's text property contains Claude's reply. Set your ANTHROPIC_API_KEY environment variable before running."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I stream responses from the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use client.messages.stream() in Python with a with block, then iterate over stream.text_stream to get text chunks as they arrive. In JavaScript, use client.messages.stream() and listen for 'text' events or use the async iterator. Streaming reduces time-to-first-token and improves perceived latency for long responses."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use Claude's vision capabilities to analyze images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Send images in the content array as objects with type 'image' and a source object. For base64, set source.type to 'base64', include the media_type (image/png, image/jpeg, etc.), and the base64-encoded data string. For URLs, set source.type to 'url' and provide the url. Place image blocks before your text prompt in the content array."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I handle Claude API errors and implement retries?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Catch anthropic.APIError and check the status_code. 429 means rate limited — wait and retry with exponential backoff. 529 means the API is overloaded — retry after a longer delay. 400 is a bad request that should not be retried. 401 means invalid API key. The SDK provides specific exception classes like RateLimitError and APIStatusError for granular handling."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use system prompts with the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pass a system parameter as a string or array of content blocks in your messages.create() call. System prompts set Claude's behavior, persona, and instructions. They are separate from the messages array and are placed before the conversation. System prompts support text and cache_control blocks for prompt caching. Keep system prompts concise but specific for best results."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Answers","item":"https://claudkit.com/answers/"},{"@type":"ListItem","position":3,"name":"Code Snippets Library"}]}</script>
+
+<style>
+  .snippets-container { max-width:1000px; margin:0 auto 2rem; padding:0 2rem; }
+  .search-bar { display:flex; gap:0.75rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .search-bar input { flex:1; min-width:200px; font-size:0.95rem; padding:0.6rem 1rem; }
+  .filter-pills { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+  .filter-pill { padding:0.4rem 0.85rem; font-size:0.8rem; border:1px solid var(--border); border-radius:99px; background:none; color:var(--text-muted); cursor:pointer; font-family:var(--font-body); transition:all 0.2s; }
+  .filter-pill:hover { border-color:var(--accent); color:var(--accent); }
+  .filter-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .lang-toggle { display:flex; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .lang-btn { padding:0.4rem 1rem; font-size:0.8rem; border:none; background:none; color:var(--text-muted); cursor:pointer; font-family:var(--font-body); transition:all 0.2s; }
+  .lang-btn.active { background:var(--accent); color:#fff; }
+  .snippet-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; transition:border-color 0.2s; }
+  .snippet-card:hover { border-color:var(--accent); }
+  .snippet-header { display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1rem; cursor:pointer; }
+  .snippet-header h3 { font-size:0.9rem; font-family:var(--font-display); margin:0; }
+  .snippet-tags { display:flex; gap:0.4rem; }
+  .snippet-tag { font-size:0.7rem; padding:0.15rem 0.5rem; border-radius:99px; background:var(--bg); color:var(--text-muted); }
+  .snippet-body { display:none; padding:0 1rem 1rem; }
+  .snippet-body.open { display:block; }
+  .snippet-desc { font-size:0.85rem; color:var(--text-muted); line-height:1.6; margin-bottom:0.75rem; }
+  .snippet-code { position:relative; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:350px; overflow-y:auto; }
+  .snippet-copy { position:absolute; top:0.5rem; right:0.5rem; padding:0.25rem 0.6rem; font-size:0.75rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .snippet-copy:hover { border-color:var(--accent); }
+  .snippet-count { font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; }
+  .no-results { text-align:center; padding:3rem; color:var(--text-muted); font-size:0.9rem; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .snippets-container { padding:0 1rem; } .search-bar { flex-direction:column; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/answers/" style="color:var(--accent);text-decoration:none;">Answers</a> <span>/</span> <span>Code Snippets</span></nav>
+    <h1>Claude Code Snippets Library</h1>
+    <p>Searchable collection of production-ready Claude API patterns. Filter by category, switch between Python and JavaScript, and copy any snippet with one click. Every example uses the latest SDK and API conventions.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="snippets-container">
+    <div class="search-bar">
+      <input type="text" id="cs-search" placeholder="Search snippets... (e.g. streaming, vision, tool use, retry)">
+      <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="python">Python</button>
+        <button class="lang-btn" data-lang="javascript">JavaScript</button>
+      </div>
+    </div>
+
+    <div class="filter-pills" id="cs-filters">
+      <button class="filter-pill active" data-cat="all">All</button>
+      <button class="filter-pill" data-cat="messages">Messages</button>
+      <button class="filter-pill" data-cat="streaming">Streaming</button>
+      <button class="filter-pill" data-cat="tools">Tool Use</button>
+      <button class="filter-pill" data-cat="vision">Vision</button>
+      <button class="filter-pill" data-cat="system">System Prompts</button>
+      <button class="filter-pill" data-cat="errors">Error Handling</button>
+      <button class="filter-pill" data-cat="advanced">Advanced</button>
+    </div>
+
+    <div class="snippet-count" id="cs-count"></div>
+    <div id="cs-list"></div>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What This Library Provides</h2>
+
+    <p>The Claude Code Snippets Library is a curated collection of copy-paste code patterns that cover every major feature of the Anthropic Messages API. Each snippet is a self-contained, production-ready example that you can drop directly into your Python or JavaScript application. Rather than searching through documentation pages and piecing together code from different sections, this library gives you the complete pattern in one place, including imports, client setup, API call, and response handling.</p>
+
+    <p>Every snippet in this library has been tested against the live Anthropic API and updated to use the latest SDK version and model identifiers. The examples use claude-sonnet-4-20250514 as the default model, which provides an excellent balance of capability and speed for most use cases. You can substitute any model identifier based on your requirements. The Python snippets use the official <code>anthropic</code> package, and the JavaScript snippets use the official <code>@anthropic-ai/sdk</code> package.</p>
+
+    <h2>How to Use the Snippets</h2>
+
+    <p>Start by typing a keyword in the search box to filter snippets instantly. The search matches against snippet titles, descriptions, and code content, so you can search for specific function names, parameters, or concepts. Use the category pills to narrow results to a specific API feature area. The language toggle switches all visible snippets between Python and JavaScript simultaneously, so you can find the pattern in your preferred language without scrolling.</p>
+
+    <p>Click any snippet header to expand it and reveal the full code. The copy button in the top-right corner of each code block copies the entire snippet to your clipboard. Every snippet includes inline comments explaining the key parts of the pattern, so you understand what each line does and can modify it for your specific use case. For more complex patterns, the description above the code block explains the concept, when to use it, and any important caveats.</p>
+
+    <h2>Core Message Patterns</h2>
+
+    <p>The foundation of every Claude integration is the messages endpoint. The basic message pattern sends a single user message and receives a text response. From there, you build up to multi-turn conversations by maintaining a messages array with alternating user and assistant roles. Each message in the conversation must include the role and content fields. The content can be a simple string or an array of content blocks for richer inputs that combine text, images, and tool results.</p>
+
+    <p>Multi-turn conversations require you to include the full conversation history in every API call. Claude does not maintain server-side state between requests. This means your application is responsible for storing and sending the complete message history. For long conversations, you need to manage the context window by truncating older messages or summarizing previous exchanges. The max_tokens parameter controls the maximum length of Claude's response, not the total conversation length.</p>
+
+    <h2>Streaming Patterns</h2>
+
+    <p>Streaming delivers Claude's response as a series of server-sent events instead of waiting for the complete response. This dramatically reduces perceived latency because the user sees the first words within milliseconds instead of waiting seconds for the full response. The streaming API uses the same parameters as the non-streaming API, but returns events instead of a complete response object. The Python SDK provides a convenient <code>stream()</code> method that handles the event parsing for you.</p>
+
+    <p>The streaming event types include message_start (initial metadata), content_block_start (beginning of a text or tool_use block), content_block_delta (incremental text chunks), content_block_stop (end of a block), and message_stop (end of the response). For most applications, you only need to handle the text_delta events to display streaming text. The SDK's text_stream iterator simplifies this to a single for loop. For tool use with streaming, you also need to handle input_json_delta events to accumulate the tool input JSON.</p>
+
+    <h2>Tool Use Patterns</h2>
+
+    <p>Tool use allows Claude to call functions defined in your application. You provide tool definitions with a name, description, and JSON Schema for the input parameters. Claude decides when to call a tool based on the user's message and the tool descriptions. The response includes a tool_use content block with the function name and arguments. Your application executes the function and returns the result in a tool_result content block, then Claude generates the final response incorporating the tool output.</p>
+
+    <p>Advanced tool use patterns include parallel tool calls (Claude calling multiple tools in a single response), forced tool use (requiring Claude to use a specific tool), and multi-step tool chains where Claude calls tools iteratively to solve complex problems. The tool_choice parameter controls whether Claude can choose to use tools, must use tools, or must use a specific tool. For building tool definitions visually, the <a href="/tools/tool-use-builder.html">ClaudKit Tool Builder</a> generates the JSON schema for you.</p>
+
+    <h2>Vision and Image Patterns</h2>
+
+    <p>Claude's vision capabilities allow you to send images alongside text prompts. Images can be provided as base64-encoded data or as URLs. The content array can contain multiple image blocks and text blocks in any order, allowing you to send multiple images with instructions about each one. Claude can analyze, describe, compare, extract text from, and reason about image contents. Supported formats include JPEG, PNG, GIF, and WebP with a maximum file size of 20MB per image.</p>
+
+    <p>For base64 encoding, read the image file and encode it to a base64 string, then include it in the content array with the correct media_type. For URL-based images, Claude fetches the image at request time, so the URL must be publicly accessible. When sending multiple images, place them before your text prompt to give Claude the visual context before reading your instructions. Vision is particularly useful for document analysis, chart reading, screenshot debugging, and any task that requires understanding visual content.</p>
+
+    <h2>Error Handling and Retry Patterns</h2>
+
+    <p>Production applications must handle API errors gracefully. The most common errors are 429 (rate limited), 529 (API overloaded), and 400 (bad request). Rate limit errors should be retried with exponential backoff, starting with a 1-second delay and doubling up to a maximum of 60 seconds. Overloaded errors indicate temporary capacity issues and should be retried with a longer initial delay of 5 to 10 seconds. Bad request errors indicate a problem with your request parameters and should not be retried. Instead, log the error details and fix the request.</p>
+
+    <p>The official SDKs provide built-in retry logic with configurable max retries, but you may want custom retry behavior for specific error types. Implement a wrapper function that catches exceptions, classifies the error type, and applies the appropriate retry strategy. Always set a maximum retry count to avoid infinite loops. For monitoring API errors across your application, <a href="https://kickllm.com">KickLLM</a> provides error tracking dashboards that categorize failures by type and frequency.</p>
+
+    <h2>Advanced Patterns</h2>
+
+    <p>Advanced patterns include prompt caching (reducing costs for repeated system prompts), batch processing (sending multiple requests efficiently), conversation branching (exploring different response paths), and JSON mode (forcing structured output). Prompt caching uses cache_control blocks to tell the API to cache specific parts of your request, reducing processing time and cost for subsequent requests that share the same cached content. This is particularly effective for long system prompts used across many requests.</p>
+
+    <p>Batch processing allows you to submit up to 10,000 requests at once with a 50% cost reduction. The batch API accepts JSONL files with individual requests and returns results asynchronously. Use this for bulk classification, content generation, and data processing tasks where latency is not critical. JSON mode uses response_format with type "json_object" to ensure Claude returns valid JSON, which is essential for applications that parse structured output programmatically. For testing these advanced patterns, use the <a href="/tools/api-request-builder.html">API Request Builder</a>.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How do I send a basic message to the Claude API in Python?</summary>
+      <p>Install the SDK with pip install anthropic, then create a client with anthropic.Anthropic(). Call client.messages.create() with model, max_tokens, and a messages array containing a dict with role "user" and your content string. The response object has a content array where the first element's text property contains Claude's reply. Set your ANTHROPIC_API_KEY environment variable before running.</p>
+    </details>
+
+    <details>
+      <summary>How do I stream responses from the Claude API?</summary>
+      <p>Use client.messages.stream() in Python with a with block, then iterate over stream.text_stream to get text chunks as they arrive. In JavaScript, use client.messages.stream() and listen for "text" events or use the async iterator. Streaming reduces time-to-first-token and improves perceived latency for long responses.</p>
+    </details>
+
+    <details>
+      <summary>How do I use Claude's vision capabilities to analyze images?</summary>
+      <p>Send images in the content array as objects with type "image" and a source object. For base64, set source.type to "base64", include the media_type (image/png, image/jpeg, etc.), and the base64-encoded data string. For URLs, set source.type to "url" and provide the url. Place image blocks before your text prompt in the content array.</p>
+    </details>
+
+    <details>
+      <summary>How do I handle Claude API errors and implement retries?</summary>
+      <p>Catch anthropic.APIError and check the status_code. 429 means rate limited — wait and retry with exponential backoff. 529 means the API is overloaded — retry after a longer delay. 400 is a bad request that should not be retried. 401 means invalid API key. The SDK provides specific exception classes like RateLimitError and APIStatusError for granular handling.</p>
+    </details>
+
+    <details>
+      <summary>How do I use system prompts with the Claude API?</summary>
+      <p>Pass a system parameter as a string or array of content blocks in your messages.create() call. System prompts set Claude's behavior, persona, and instructions. They are separate from the messages array and are placed before the conversation. System prompts support text and cache_control blocks for prompt caching. Keep system prompts concise but specific for best results.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting and cost estimation.</p>
+      </a>
+      <a href="/tools/tool-use-builder.html" class="related-card">
+        <h3>Tool/Function Builder</h3>
+        <p>Visual tool definition builder with JSON schema generation.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Guide</h3>
+        <p>Interactive streaming demo with code in Python, JS, and curl.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes and code examples.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across all major providers.</p>
+      </a>
+      <a href="https://claudhq.com" class="related-card">
+        <h3>ClaudHQ</h3>
+        <p>Prompt library with 30+ tested templates optimized for Claude.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let activeLang = "python";
+  let activeCat = "all";
+
+  const snippets = [
+    {
+      id: "basic-message",
+      title: "Basic Message",
+      cat: "messages",
+      tags: ["messages", "basics"],
+      desc: "Send a single user message and get a text response. The simplest possible Claude API call.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "What is the capital of France?"}
+    ]
+)
+
+# Access the response text
+print(response.content[0].text)
+# "The capital of France is Paris."
+
+# Response metadata
+print(f"Model: {response.model}")
+print(f"Input tokens: {response.usage.input_tokens}")
+print(f"Output tokens: {response.usage.output_tokens}")
+print(f"Stop reason: {response.stop_reason}")`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+        { role: "user", content: "What is the capital of France?" }
+    ],
+});
+
+// Access the response text
+console.log(response.content[0].text);
+// "The capital of France is Paris."
+
+// Response metadata
+console.log("Model:", response.model);
+console.log("Input tokens:", response.usage.input_tokens);
+console.log("Output tokens:", response.usage.output_tokens);
+console.log("Stop reason:", response.stop_reason);`
+    },
+    {
+      id: "multi-turn",
+      title: "Multi-Turn Conversation",
+      cat: "messages",
+      tags: ["messages", "conversation", "multi-turn"],
+      desc: "Maintain a conversation by sending the full message history with alternating user/assistant roles.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+# Build conversation history
+conversation = [
+    {"role": "user", "content": "My name is Alice. I'm building a chatbot."},
+    {"role": "assistant", "content": "Hi Alice! That sounds like a great project. What kind of chatbot are you building?"},
+    {"role": "user", "content": "A customer support bot. What's my name again?"}
+]
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=conversation
+)
+
+print(response.content[0].text)
+# Claude remembers: "Your name is Alice!"
+
+# Append to continue the conversation
+conversation.append({"role": "assistant", "content": response.content[0].text})
+conversation.append({"role": "user", "content": "What framework should I use?"})
+
+response2 = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=conversation
+)
+print(response2.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Build conversation history
+const conversation = [
+    { role: "user", content: "My name is Alice. I'm building a chatbot." },
+    { role: "assistant", content: "Hi Alice! That sounds like a great project. What kind of chatbot are you building?" },
+    { role: "user", content: "A customer support bot. What's my name again?" }
+];
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: conversation,
+});
+
+console.log(response.content[0].text);
+// Claude remembers: "Your name is Alice!"
+
+// Append to continue the conversation
+conversation.push({ role: "assistant", content: response.content[0].text });
+conversation.push({ role: "user", content: "What framework should I use?" });
+
+const response2 = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: conversation,
+});
+console.log(response2.content[0].text);`
+    },
+    {
+      id: "streaming-basic",
+      title: "Basic Streaming",
+      cat: "streaming",
+      tags: ["streaming", "real-time"],
+      desc: "Stream Claude's response token by token for real-time display. Reduces time-to-first-token dramatically.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+# Stream response using context manager
+with client.messages.stream(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "Write a haiku about programming."}
+    ]
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="", flush=True)
+
+# Get the final message after streaming
+print()  # newline
+final = stream.get_final_message()
+print(f"\\nTokens used: {final.usage.input_tokens} in, {final.usage.output_tokens} out")`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Stream response using async iterator
+const stream = client.messages.stream({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+        { role: "user", content: "Write a haiku about programming." }
+    ],
+});
+
+// Option 1: Event-based
+stream.on("text", (text) => {
+    process.stdout.write(text);
+});
+
+const finalMessage = await stream.finalMessage();
+console.log("\\nTokens:", finalMessage.usage.input_tokens, "in,", finalMessage.usage.output_tokens, "out");
+
+// Option 2: Async iterator (alternative)
+// for await (const event of stream) {
+//     if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+//         process.stdout.write(event.delta.text);
+//     }
+// }`
+    },
+    {
+      id: "tool-use-basic",
+      title: "Basic Tool Use",
+      cat: "tools",
+      tags: ["tools", "function-calling", "tool_use"],
+      desc: "Define a tool, let Claude call it, execute it, and return the result for a final response.",
+      python: `import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+# Step 1: Define tools and send initial request
+tools = [{
+    "name": "get_weather",
+    "description": "Get current weather for a city. Use when the user asks about weather.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "description": "City name, e.g. 'London, UK'"},
+            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"], "description": "Temperature unit"}
+        },
+        "required": ["location"]
+    }
+}]
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "What's the weather in Tokyo?"}]
+)
+
+# Step 2: Check if Claude wants to use a tool
+if response.stop_reason == "tool_use":
+    tool_block = next(b for b in response.content if b.type == "tool_use")
+    print(f"Tool: {tool_block.name}, Input: {json.dumps(tool_block.input)}")
+
+    # Step 3: Execute tool and return result
+    weather_result = {"temp": 22, "condition": "Partly cloudy", "humidity": 65}
+
+    final = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        tools=tools,
+        messages=[
+            {"role": "user", "content": "What's the weather in Tokyo?"},
+            {"role": "assistant", "content": response.content},
+            {"role": "user", "content": [
+                {"type": "tool_result", "tool_use_id": tool_block.id, "content": json.dumps(weather_result)}
+            ]}
+        ]
+    )
+    print(final.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Step 1: Define tools and send initial request
+const tools = [{
+    name: "get_weather",
+    description: "Get current weather for a city. Use when the user asks about weather.",
+    input_schema: {
+        type: "object",
+        properties: {
+            location: { type: "string", description: "City name, e.g. 'London, UK'" },
+            unit: { type: "string", enum: ["celsius", "fahrenheit"], description: "Temperature unit" }
+        },
+        required: ["location"]
+    }
+}];
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    tools,
+    messages: [{ role: "user", content: "What's the weather in Tokyo?" }],
+});
+
+// Step 2: Check if Claude wants to use a tool
+if (response.stop_reason === "tool_use") {
+    const toolBlock = response.content.find(b => b.type === "tool_use");
+    console.log("Tool:", toolBlock.name, "Input:", JSON.stringify(toolBlock.input));
+
+    // Step 3: Execute tool and return result
+    const weatherResult = { temp: 22, condition: "Partly cloudy", humidity: 65 };
+
+    const final = await client.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        tools,
+        messages: [
+            { role: "user", content: "What's the weather in Tokyo?" },
+            { role: "assistant", content: response.content },
+            { role: "user", content: [
+                { type: "tool_result", tool_use_id: toolBlock.id, content: JSON.stringify(weatherResult) }
+            ]}
+        ],
+    });
+    console.log(final.content[0].text);
+}`
+    },
+    {
+      id: "vision-base64",
+      title: "Vision — Base64 Image",
+      cat: "vision",
+      tags: ["vision", "image", "base64", "multimodal"],
+      desc: "Send a base64-encoded image to Claude for analysis. Supports JPEG, PNG, GIF, and WebP.",
+      python: `import anthropic
+import base64
+from pathlib import Path
+
+client = anthropic.Anthropic()
+
+# Read and encode image
+image_path = Path("screenshot.png")
+image_data = base64.standard_b64encode(image_path.read_bytes()).decode("utf-8")
+media_type = "image/png"  # or image/jpeg, image/gif, image/webp
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": media_type,
+                    "data": image_data
+                }
+            },
+            {
+                "type": "text",
+                "text": "Describe this image in detail. What do you see?"
+            }
+        ]
+    }]
+)
+
+print(response.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+import fs from "fs";
+
+const client = new Anthropic();
+
+// Read and encode image
+const imageData = fs.readFileSync("screenshot.png").toString("base64");
+const mediaType = "image/png"; // or image/jpeg, image/gif, image/webp
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{
+        role: "user",
+        content: [
+            {
+                type: "image",
+                source: {
+                    type: "base64",
+                    media_type: mediaType,
+                    data: imageData,
+                },
+            },
+            {
+                type: "text",
+                text: "Describe this image in detail. What do you see?",
+            }
+        ],
+    }],
+});
+
+console.log(response.content[0].text);`
+    },
+    {
+      id: "system-prompt",
+      title: "System Prompt",
+      cat: "system",
+      tags: ["system", "prompt", "persona", "instructions"],
+      desc: "Set Claude's behavior and persona with a system prompt. System prompts are separate from the messages array.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system="You are a senior Python developer who gives concise, practical advice. "
+           "Always include code examples. Use type hints. Prefer modern Python 3.12+ syntax. "
+           "If the user's approach has issues, point them out constructively.",
+    messages=[
+        {"role": "user", "content": "How should I structure a FastAPI project?"}
+    ]
+)
+
+print(response.content[0].text)
+
+# System prompt with cache_control for prompt caching
+response_cached = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": "You are a senior Python developer...",  # long system prompt
+            "cache_control": {"type": "ephemeral"}
+        }
+    ],
+    messages=[
+        {"role": "user", "content": "How should I handle errors in FastAPI?"}
+    ]
+)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: "You are a senior Python developer who gives concise, practical advice. " +
+            "Always include code examples. Use type hints. Prefer modern Python 3.12+ syntax. " +
+            "If the user's approach has issues, point them out constructively.",
+    messages: [
+        { role: "user", content: "How should I structure a FastAPI project?" }
+    ],
+});
+
+console.log(response.content[0].text);
+
+// System prompt with cache_control for prompt caching
+const responseCached = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: [
+        {
+            type: "text",
+            text: "You are a senior Python developer...", // long system prompt
+            cache_control: { type: "ephemeral" },
+        }
+    ],
+    messages: [
+        { role: "user", content: "How should I handle errors in FastAPI?" }
+    ],
+});`
+    },
+    {
+      id: "error-retry",
+      title: "Error Handling with Retries",
+      cat: "errors",
+      tags: ["errors", "retry", "rate-limit", "429", "production"],
+      desc: "Robust error handling with exponential backoff for rate limits and overloaded errors. Production-ready pattern.",
+      python: `import anthropic
+import time
+
+client = anthropic.Anthropic()
+
+def call_claude_with_retry(messages, max_retries=5, base_delay=1.0):
+    """Call Claude API with exponential backoff retry logic."""
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1024,
+                messages=messages
+            )
+            return response
+
+        except anthropic.RateLimitError as e:
+            # 429: Rate limited — retry with backoff
+            delay = base_delay * (2 ** attempt)
+            print(f"Rate limited. Retry {attempt + 1}/{max_retries} in {delay:.1f}s")
+            time.sleep(delay)
+
+        except anthropic.APIStatusError as e:
+            if e.status_code == 529:
+                # Overloaded — retry with longer delay
+                delay = base_delay * (2 ** attempt) * 2
+                print(f"API overloaded. Retry {attempt + 1}/{max_retries} in {delay:.1f}s")
+                time.sleep(delay)
+            elif e.status_code == 400:
+                # Bad request — do not retry
+                print(f"Bad request: {e.message}")
+                raise
+            else:
+                print(f"API error {e.status_code}: {e.message}")
+                raise
+
+        except anthropic.APIConnectionError as e:
+            # Network error — retry
+            delay = base_delay * (2 ** attempt)
+            print(f"Connection error. Retry {attempt + 1}/{max_retries} in {delay:.1f}s")
+            time.sleep(delay)
+
+    raise Exception(f"Failed after {max_retries} retries")
+
+# Usage
+result = call_claude_with_retry([{"role": "user", "content": "Hello!"}])
+print(result.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+async function callClaudeWithRetry(messages, maxRetries = 5, baseDelay = 1000) {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const response = await client.messages.create({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                messages,
+            });
+            return response;
+
+        } catch (error) {
+            if (error instanceof Anthropic.RateLimitError) {
+                // 429: Rate limited
+                const delay = baseDelay * Math.pow(2, attempt);
+                console.log(\`Rate limited. Retry \${attempt + 1}/\${maxRetries} in \${delay}ms\`);
+                await new Promise(r => setTimeout(r, delay));
+
+            } else if (error instanceof Anthropic.APIError && error.status === 529) {
+                // Overloaded
+                const delay = baseDelay * Math.pow(2, attempt) * 2;
+                console.log(\`API overloaded. Retry \${attempt + 1}/\${maxRetries} in \${delay}ms\`);
+                await new Promise(r => setTimeout(r, delay));
+
+            } else if (error instanceof Anthropic.BadRequestError) {
+                // 400: Bad request — do not retry
+                console.error("Bad request:", error.message);
+                throw error;
+
+            } else {
+                console.error("API error:", error.message);
+                throw error;
+            }
+        }
+    }
+    throw new Error(\`Failed after \${maxRetries} retries\`);
+}
+
+// Usage
+const result = await callClaudeWithRetry([{ role: "user", content: "Hello!" }]);
+console.log(result.content[0].text);`
+    },
+    {
+      id: "json-mode",
+      title: "JSON Output Mode",
+      cat: "advanced",
+      tags: ["json", "structured", "output", "parsing"],
+      desc: "Force Claude to return valid JSON using system prompts and response parsing. Essential for structured data extraction.",
+      python: `import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+# Method 1: System prompt + JSON instruction
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system="You are a data extraction assistant. Always respond with valid JSON only, no markdown.",
+    messages=[{
+        "role": "user",
+        "content": """Extract structured data from this text:
+"John Smith, age 34, works at Acme Corp as a Senior Engineer in San Francisco.
+He has 8 years of experience and specializes in distributed systems."
+
+Return JSON with keys: name, age, company, title, location, experience_years, specialization"""
+    }]
+)
+
+data = json.loads(response.content[0].text)
+print(json.dumps(data, indent=2))
+# {"name": "John Smith", "age": 34, "company": "Acme Corp", ...}
+
+# Method 2: Tool use for guaranteed structured output
+response2 = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    tools=[{
+        "name": "extract_person",
+        "description": "Extract person data from text",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "age": {"type": "integer"},
+                "company": {"type": "string"},
+                "title": {"type": "string"}
+            },
+            "required": ["name", "age", "company", "title"]
+        }
+    }],
+    tool_choice={"type": "tool", "name": "extract_person"},
+    messages=[{"role": "user", "content": "John Smith, 34, Senior Engineer at Acme Corp"}]
+)
+
+tool_input = next(b for b in response2.content if b.type == "tool_use").input
+print(json.dumps(tool_input, indent=2))`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Method 1: System prompt + JSON instruction
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: "You are a data extraction assistant. Always respond with valid JSON only, no markdown.",
+    messages: [{
+        role: "user",
+        content: \`Extract structured data from this text:
+"John Smith, age 34, works at Acme Corp as a Senior Engineer in San Francisco.
+He has 8 years of experience and specializes in distributed systems."
+
+Return JSON with keys: name, age, company, title, location, experience_years, specialization\`
+    }],
+});
+
+const data = JSON.parse(response.content[0].text);
+console.log(JSON.stringify(data, null, 2));
+
+// Method 2: Tool use for guaranteed structured output
+const response2 = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    tools: [{
+        name: "extract_person",
+        description: "Extract person data from text",
+        input_schema: {
+            type: "object",
+            properties: {
+                name: { type: "string" },
+                age: { type: "integer" },
+                company: { type: "string" },
+                title: { type: "string" },
+            },
+            required: ["name", "age", "company", "title"],
+        },
+    }],
+    tool_choice: { type: "tool", name: "extract_person" },
+    messages: [{ role: "user", content: "John Smith, 34, Senior Engineer at Acme Corp" }],
+});
+
+const toolInput = response2.content.find(b => b.type === "tool_use").input;
+console.log(JSON.stringify(toolInput, null, 2));`
+    },
+    {
+      id: "prompt-caching",
+      title: "Prompt Caching",
+      cat: "advanced",
+      tags: ["caching", "cost", "optimization", "cache_control"],
+      desc: "Cache long system prompts or repeated context to reduce costs by up to 90% on subsequent requests.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+# Long reference document to cache (must be > 1024 tokens for caching)
+long_document = "..." * 500  # Your long reference document here
+
+# First request: Establishes cache (cache_creation_input_tokens charged)
+response1 = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": f"You are a legal assistant. Reference document:\\n\\n{long_document}",
+            "cache_control": {"type": "ephemeral"}  # Mark for caching
+        }
+    ],
+    messages=[{"role": "user", "content": "Summarize section 3 of the document."}]
+)
+
+print(f"Cache creation tokens: {response1.usage.cache_creation_input_tokens}")
+print(f"Cache read tokens: {response1.usage.cache_read_input_tokens}")
+print(response1.content[0].text)
+
+# Second request: Reads from cache (90% cheaper, 85% faster)
+response2 = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    system=[
+        {
+            "type": "text",
+            "text": f"You are a legal assistant. Reference document:\\n\\n{long_document}",
+            "cache_control": {"type": "ephemeral"}
+        }
+    ],
+    messages=[{"role": "user", "content": "What are the key obligations in section 5?"}]
+)
+
+print(f"Cache read tokens: {response2.usage.cache_read_input_tokens}")  # Should be > 0`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Long reference document to cache (must be > 1024 tokens)
+const longDocument = "...".repeat(500); // Your long reference document here
+
+// First request: Establishes cache
+const response1 = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: [
+        {
+            type: "text",
+            text: \`You are a legal assistant. Reference document:\\n\\n\${longDocument}\`,
+            cache_control: { type: "ephemeral" }, // Mark for caching
+        }
+    ],
+    messages: [{ role: "user", content: "Summarize section 3 of the document." }],
+});
+
+console.log("Cache creation tokens:", response1.usage.cache_creation_input_tokens);
+console.log("Cache read tokens:", response1.usage.cache_read_input_tokens);
+
+// Second request: Reads from cache (90% cheaper, 85% faster)
+const response2 = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: [
+        {
+            type: "text",
+            text: \`You are a legal assistant. Reference document:\\n\\n\${longDocument}\`,
+            cache_control: { type: "ephemeral" },
+        }
+    ],
+    messages: [{ role: "user", content: "What are the key obligations in section 5?" }],
+});
+
+console.log("Cache read tokens:", response2.usage.cache_read_input_tokens); // Should be > 0`
+    },
+    {
+      id: "vision-url",
+      title: "Vision — URL Image",
+      cat: "vision",
+      tags: ["vision", "image", "url", "multimodal"],
+      desc: "Analyze an image from a URL. Claude fetches the image at request time — the URL must be publicly accessible.",
+      python: `import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "url",
+                    "url": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Camponotus_flavomarginatus_ant.jpg"
+                }
+            },
+            {
+                "type": "text",
+                "text": "What species of ant is this? Describe its physical characteristics."
+            }
+        ]
+    }]
+)
+
+print(response.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [{
+        role: "user",
+        content: [
+            {
+                type: "image",
+                source: {
+                    type: "url",
+                    url: "https://upload.wikimedia.org/wikipedia/commons/a/a7/Camponotus_flavomarginatus_ant.jpg",
+                },
+            },
+            {
+                type: "text",
+                text: "What species of ant is this? Describe its physical characteristics.",
+            }
+        ],
+    }],
+});
+
+console.log(response.content[0].text);`
+    },
+    {
+      id: "parallel-tools",
+      title: "Parallel Tool Calls",
+      cat: "tools",
+      tags: ["tools", "parallel", "multiple", "function-calling"],
+      desc: "Handle Claude calling multiple tools in a single response. Execute all tool calls and return results together.",
+      python: `import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+tools = [
+    {
+        "name": "get_weather",
+        "description": "Get weather for a location",
+        "input_schema": {
+            "type": "object",
+            "properties": {"location": {"type": "string"}},
+            "required": ["location"]
+        }
+    },
+    {
+        "name": "get_time",
+        "description": "Get current time in a timezone",
+        "input_schema": {
+            "type": "object",
+            "properties": {"timezone": {"type": "string"}},
+            "required": ["timezone"]
+        }
+    }
+]
+
+response = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "What's the weather and time in Tokyo?"}]
+)
+
+# Collect all tool_use blocks
+tool_calls = [b for b in response.content if b.type == "tool_use"]
+print(f"Claude wants to call {len(tool_calls)} tools")
+
+# Execute all tools and build results
+tool_results = []
+for tc in tool_calls:
+    if tc.name == "get_weather":
+        result = {"temp": 22, "condition": "Sunny"}
+    elif tc.name == "get_time":
+        result = {"time": "14:30 JST"}
+    else:
+        result = {"error": "Unknown tool"}
+
+    tool_results.append({
+        "type": "tool_result",
+        "tool_use_id": tc.id,
+        "content": json.dumps(result)
+    })
+
+# Send all results back at once
+final = client.messages.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    tools=tools,
+    messages=[
+        {"role": "user", "content": "What's the weather and time in Tokyo?"},
+        {"role": "assistant", "content": response.content},
+        {"role": "user", "content": tool_results}
+    ]
+)
+print(final.content[0].text)`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const tools = [
+    {
+        name: "get_weather",
+        description: "Get weather for a location",
+        input_schema: { type: "object", properties: { location: { type: "string" } }, required: ["location"] }
+    },
+    {
+        name: "get_time",
+        description: "Get current time in a timezone",
+        input_schema: { type: "object", properties: { timezone: { type: "string" } }, required: ["timezone"] }
+    }
+];
+
+const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    tools,
+    messages: [{ role: "user", content: "What's the weather and time in Tokyo?" }],
+});
+
+const toolCalls = response.content.filter(b => b.type === "tool_use");
+console.log(\`Claude wants to call \${toolCalls.length} tools\`);
+
+const toolResults = toolCalls.map(tc => {
+    let result;
+    if (tc.name === "get_weather") result = { temp: 22, condition: "Sunny" };
+    else if (tc.name === "get_time") result = { time: "14:30 JST" };
+    else result = { error: "Unknown tool" };
+
+    return { type: "tool_result", tool_use_id: tc.id, content: JSON.stringify(result) };
+});
+
+const final = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    tools,
+    messages: [
+        { role: "user", content: "What's the weather and time in Tokyo?" },
+        { role: "assistant", content: response.content },
+        { role: "user", content: toolResults },
+    ],
+});
+console.log(final.content[0].text);`
+    },
+    {
+      id: "batch-api",
+      title: "Batch Processing API",
+      cat: "advanced",
+      tags: ["batch", "bulk", "async", "cost-saving"],
+      desc: "Submit thousands of requests at once for 50% cost reduction. Ideal for bulk classification and content generation.",
+      python: `import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+# Prepare batch requests (JSONL format)
+requests = []
+texts = ["The food was amazing!", "Terrible service.", "It was okay, nothing special."]
+for i, text in enumerate(texts):
+    requests.append({
+        "custom_id": f"review-{i}",
+        "params": {
+            "model": "claude-sonnet-4-20250514",
+            "max_tokens": 100,
+            "messages": [{"role": "user", "content": f"Classify sentiment (positive/negative/neutral): {text}"}]
+        }
+    })
+
+# Write JSONL file
+with open("batch_input.jsonl", "w") as f:
+    for req in requests:
+        f.write(json.dumps(req) + "\\n")
+
+# Submit batch
+batch = client.batches.create(
+    requests=requests
+)
+print(f"Batch ID: {batch.id}")
+print(f"Status: {batch.processing_status}")
+
+# Poll for completion
+import time
+while True:
+    batch = client.batches.retrieve(batch.id)
+    if batch.processing_status == "ended":
+        break
+    print(f"Status: {batch.processing_status} ({batch.request_counts.succeeded}/{batch.request_counts.processing})")
+    time.sleep(10)
+
+# Retrieve results
+for result in client.batches.results(batch.id):
+    print(f"{result.custom_id}: {result.result.message.content[0].text}")`,
+      javascript: `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+// Prepare batch requests
+const texts = ["The food was amazing!", "Terrible service.", "It was okay, nothing special."];
+const requests = texts.map((text, i) => ({
+    custom_id: \`review-\${i}\`,
+    params: {
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 100,
+        messages: [{ role: "user", content: \`Classify sentiment (positive/negative/neutral): \${text}\` }],
+    },
+}));
+
+// Submit batch
+const batch = await client.batches.create({ requests });
+console.log("Batch ID:", batch.id);
+console.log("Status:", batch.processing_status);
+
+// Poll for completion
+let status = batch;
+while (status.processing_status !== "ended") {
+    await new Promise(r => setTimeout(r, 10000));
+    status = await client.batches.retrieve(batch.id);
+    console.log(\`Status: \${status.processing_status}\`);
+}
+
+// Retrieve results
+for await (const result of client.batches.results(batch.id)) {
+    console.log(\`\${result.custom_id}: \${result.result.message.content[0].text}\`);
+}`
+    }
+  ];
+
+  function render() {
+    const query = $("cs-search").value.toLowerCase().trim();
+    const list = $("cs-list");
+    list.innerHTML = "";
+
+    const filtered = snippets.filter(s => {
+      if (activeCat !== "all" && s.cat !== activeCat) return false;
+      if (query) {
+        const haystack = (s.title + " " + s.desc + " " + s.tags.join(" ") + " " + s[activeLang]).toLowerCase();
+        return haystack.includes(query);
+      }
+      return true;
+    });
+
+    $("cs-count").textContent = `${filtered.length} snippet${filtered.length !== 1 ? "s" : ""} found`;
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="no-results">No snippets match your search. Try a different keyword or category.</div>';
+      return;
+    }
+
+    filtered.forEach(s => {
+      const card = document.createElement("div");
+      card.className = "snippet-card";
+      card.innerHTML = `
+        <div class="snippet-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <h3>${s.title}</h3>
+          <div class="snippet-tags">${s.tags.map(t => `<span class="snippet-tag">${t}</span>`).join("")}</div>
+        </div>
+        <div class="snippet-body">
+          <div class="snippet-desc">${s.desc}</div>
+          <div class="snippet-code"><button class="snippet-copy" onclick="copySnippet(this)">Copy</button>${escHtml(s[activeLang])}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  window.copySnippet = function(btn) {
+    const code = btn.parentElement.textContent.replace("Copy", "").trim();
+    navigator.clipboard.writeText(code).then(() => {
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  $("cs-search").addEventListener("input", render);
+
+  document.querySelectorAll(".filter-pill").forEach(pill => {
+    pill.addEventListener("click", function() {
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      this.classList.add("active");
+      activeCat = this.dataset.cat;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".lang-btn").forEach(btn => {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Vision API Tester — Image Upload &amp; Response Preview | ClaudKit</title>
+<meta name="description" content="Test Claude's vision capabilities by uploading images and previewing API responses. Generate Python, JavaScript, and curl code for image analysis with base64 encoding, media type detection, and multi-image support.">
+<link rel="canonical" href="https://claudkit.com/tools/vision-api-tester.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/tools/vision-api-tester.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/tools/vision-api-tester.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Vision API Tester — Image Upload & Response Preview">
+<meta property="og:description" content="Test Claude's vision capabilities by uploading images and previewing API responses. Generate code for image analysis with base64 encoding and multi-image support.">
+<meta property="og:url" content="https://claudkit.com/tools/vision-api-tester.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Vision API Tester — Image Upload & Response Preview">
+<meta name="twitter:description" content="Test Claude's vision capabilities by uploading images and previewing API responses. Generate code for image analysis with base64 encoding and multi-image support.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Vision API Tester",
+  "description": "Upload images and test Claude's vision API. Preview base64 encoding, estimate token costs, generate production-ready code in Python, JavaScript, and curl. Supports JPEG, PNG, GIF, WebP, multi-image requests, and custom prompts with response simulation.",
+  "url": "https://claudkit.com/tools/vision-api-tester.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Drag-and-drop image upload with preview",
+    "Automatic base64 encoding and media type detection",
+    "Multi-image support for comparison requests",
+    "Token cost estimation based on image dimensions",
+    "Code generation in Python, JavaScript, and curl",
+    "Custom prompt input for image analysis",
+    "Image dimension and file size display",
+    "One-click copy of generated code"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does Claude's vision API process images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude processes images by converting them into tokens. Images are sent in the content array as base64-encoded data or URLs. Claude analyzes the image content and can describe, extract text, compare images, and reason about visual information. Image tokens are counted separately from text tokens and vary based on image dimensions. Larger images use more tokens but provide more detail for analysis."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What image formats does the Claude API support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Claude API supports JPEG, PNG, GIF (including animated), and WebP image formats. The maximum file size is 20MB per image. For best results, use JPEG for photographs and PNG for screenshots or images with text. The media_type field in the API request must match the actual format: image/jpeg, image/png, image/gif, or image/webp."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many tokens does an image use in the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Image token usage depends on the dimensions. A small image (up to 384x384) uses approximately 170 tokens. Larger images are scaled and tiled, with each tile using approximately 170 tokens. A typical 1024x1024 image uses about 1,600 tokens. Very large images are automatically resized to fit within the maximum dimension of 1568 pixels on the longest side. Use smaller images when detail is not critical to reduce costs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Claude analyze multiple images in a single request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, you can include multiple image blocks in the content array of a single message. Claude can compare, contrast, and reason across all images. Place image blocks before or between text blocks to provide context. There is no hard limit on the number of images, but the total token count of all images plus text must fit within the model's context window. Multi-image requests are useful for comparison tasks, document processing, and visual workflows."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I use base64 or URL for sending images to Claude?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use base64 when you have local files, need guaranteed availability, or are processing sensitive images that should not be hosted publicly. Use URLs when images are already hosted publicly and you want to avoid the base64 encoding overhead. Base64 increases the request payload size by approximately 33% compared to the original file. URLs require that the image be accessible at request time; Claude fetches the image when processing the request."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://claudkit.com/tools/"},{"@type":"ListItem","position":3,"name":"Vision API Tester"}]}</script>
+
+<style>
+  .tester-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1200px; margin:0 auto 2rem; padding:0 2rem; }
+  .tester-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .tester-panel h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .drop-zone { border:2px dashed var(--border); border-radius:var(--radius); padding:2.5rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--bg); margin-bottom:1rem; }
+  .drop-zone:hover, .drop-zone.dragover { border-color:var(--accent); background:rgba(139,92,246,0.05); }
+  .drop-zone p { color:var(--text-muted); font-size:0.85rem; margin:0; }
+  .drop-zone .drop-icon { font-size:2rem; margin-bottom:0.5rem; display:block; }
+  .image-list { display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem; }
+  .image-thumb { position:relative; width:100px; height:100px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .image-thumb img { width:100%; height:100%; object-fit:cover; }
+  .image-thumb .remove-img { position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); color:#fff; border:none; cursor:pointer; font-size:0.7rem; display:flex; align-items:center; justify-content:center; }
+  .image-info { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.75rem; line-height:1.5; }
+  .image-info strong { color:var(--text); }
+  .prompt-area textarea { min-height:80px; }
+  .token-estimate { display:flex; gap:1rem; padding:0.75rem; background:var(--bg); border-radius:var(--radius); margin-bottom:1rem; font-size:0.8rem; }
+  .token-estimate div { flex:1; }
+  .token-estimate .label { color:var(--text-muted); font-size:0.7rem; display:block; }
+  .token-estimate .value { font-family:var(--font-display); font-size:1rem; color:var(--accent); font-weight:700; }
+  .output-tabs { display:flex; gap:0; margin-bottom:0.75rem; border-bottom:1px solid var(--border); }
+  .output-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .output-tab:hover { color:var(--text); }
+  .output-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-floating { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-floating:hover { border-color:var(--accent); }
+  .response-preview { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.5; overflow-x:auto; white-space:pre-wrap; max-height:200px; overflow-y:auto; margin-top:1rem; color:var(--text-muted); }
+  .model-select { display:flex; gap:0.75rem; align-items:center; margin-bottom:0.75rem; }
+  .model-select label { font-size:0.8rem; color:var(--text-muted); }
+  .model-select select { font-size:0.85rem; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .tester-grid { grid-template-columns:1fr; padding:0 1rem; } .token-estimate { flex-direction:column; gap:0.5rem; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/tools/" style="color:var(--accent);text-decoration:none;">Tools</a> <span>/</span> <span>Vision API Tester</span></nav>
+    <h1>Claude Vision API Tester</h1>
+    <p>Upload images and generate production-ready code for Claude's vision capabilities. Preview base64 encoding, estimate token costs, and get code in Python, JavaScript, and curl with automatic media type detection.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="tester-grid">
+    <div class="tester-panel">
+      <h2>Image Input</h2>
+
+      <div class="drop-zone" id="vt-dropzone">
+        <span class="drop-icon">&#128444;</span>
+        <p>Drop images here or click to upload</p>
+        <p style="font-size:0.75rem;margin-top:0.3rem;">JPEG, PNG, GIF, WebP &mdash; max 20MB each</p>
+        <input type="file" id="vt-file-input" multiple accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+      </div>
+
+      <div class="image-list" id="vt-image-list"></div>
+      <div class="image-info" id="vt-image-info"></div>
+
+      <div class="token-estimate" id="vt-tokens" style="display:none;">
+        <div><span class="label">Image Tokens</span><span class="value" id="vt-img-tokens">0</span></div>
+        <div><span class="label">Prompt Tokens (est.)</span><span class="value" id="vt-prompt-tokens">0</span></div>
+        <div><span class="label">Estimated Cost</span><span class="value" id="vt-cost">$0.000</span></div>
+      </div>
+
+      <div class="form-group prompt-area">
+        <label>Prompt</label>
+        <textarea id="vt-prompt" rows="3" placeholder="Describe what you want Claude to do with the image...">Describe this image in detail. What objects, text, colors, and layout do you see?</textarea>
+      </div>
+
+      <div class="model-select">
+        <label>Model:</label>
+        <select id="vt-model">
+          <option value="claude-sonnet-4-20250514" selected>Claude Sonnet 4</option>
+          <option value="claude-opus-4-20250514">Claude Opus 4</option>
+          <option value="claude-haiku-3-5-20241022">Claude Haiku 3.5</option>
+        </select>
+      </div>
+
+      <div class="model-select">
+        <label>Max tokens:</label>
+        <input type="number" id="vt-max-tokens" value="1024" min="1" max="8192" style="width:100px;font-size:0.85rem;">
+      </div>
+    </div>
+
+    <div class="tester-panel">
+      <h2>Generated Code</h2>
+
+      <div class="output-tabs">
+        <button class="output-tab active" data-lang="python">Python</button>
+        <button class="output-tab" data-lang="javascript">JavaScript</button>
+        <button class="output-tab" data-lang="curl">curl</button>
+      </div>
+
+      <div style="position:relative;">
+        <div class="code-out" id="vt-code-output">Upload an image to generate code...</div>
+        <button class="copy-floating" id="vt-copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+
+      <h3 style="font-size:0.85rem;color:var(--accent);margin-top:1.25rem;font-family:var(--font-display);">Sample API Response</h3>
+      <div class="response-preview" id="vt-response-preview">{
+  "id": "msg_...",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "Upload an image to see a simulated response..."
+    }
+  ],
+  "model": "claude-sonnet-4-20250514",
+  "stop_reason": "end_turn",
+  "usage": { "input_tokens": 0, "output_tokens": 0 }
+}</div>
+    </div>
+  </div>
+
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What This Tool Does</h2>
+
+    <p>The Claude Vision API Tester lets you upload images and instantly generate the API request code needed to send those images to Claude for analysis. Instead of manually base64-encoding files, calculating media types, and constructing the content array, this tool handles everything in the browser. Drop an image, write your prompt, and get production-ready code in Python, JavaScript, or curl that you can copy directly into your application.</p>
+
+    <p>The tester runs entirely client-side. Your images never leave your browser. The base64 encoding happens in JavaScript using the FileReader API, and the generated code includes the encoded data ready to send to the Anthropic API. The token estimator calculates approximate image token usage based on the image dimensions, helping you understand the cost impact before making actual API calls.</p>
+
+    <h2>Understanding Claude's Vision System</h2>
+
+    <p>Claude's vision capabilities allow it to understand and reason about image content with remarkable accuracy. The model can describe scenes, read text in images (OCR), analyze charts and graphs, compare multiple images, identify objects and people in context, debug UI screenshots, and extract structured data from documents. Vision works with all Claude models — Opus, Sonnet, and Haiku — with varying levels of detail and accuracy. Sonnet provides the best balance of quality and cost for most vision tasks.</p>
+
+    <p>Images are processed as tokens, similar to text. The token count depends on the image dimensions. Claude resizes large images to fit within a 1568-pixel maximum on the longest side, then divides the image into tiles of approximately 384x384 pixels. Each tile costs about 170 tokens. A small thumbnail might use only 170 tokens, while a large screenshot could use 1,600 or more tokens. The tester displays these estimates automatically when you upload an image, so you can assess the cost before writing any code.</p>
+
+    <h2>Sending Images via Base64</h2>
+
+    <p>Base64 encoding converts binary image data into a text string that can be embedded directly in JSON requests. The encoding increases the data size by approximately 33%, so a 1MB image becomes about 1.33MB of base64 text. Despite this overhead, base64 is the most reliable method for sending images because it does not depend on external URL availability. The image data travels with the request and is guaranteed to be received by the API exactly as you encoded it.</p>
+
+    <p>To use base64 in the API, include an image content block with <code>source.type</code> set to <code>"base64"</code>, the <code>media_type</code> matching the image format (e.g., <code>"image/png"</code>), and the <code>data</code> field containing the base64 string without any data URI prefix. The tester generates this structure automatically and detects the correct media type from the uploaded file. For comparing how different providers handle image APIs, <a href="https://lockml.com">LockML</a> provides cross-provider comparison tools.</p>
+
+    <h2>Multi-Image Requests</h2>
+
+    <p>Claude can process multiple images in a single request by including multiple image blocks in the content array. This is powerful for comparison tasks ("which design looks better?"), document processing (multiple pages of a PDF as images), visual workflows (before/after screenshots), and any task that requires reasoning across multiple images. Each image adds its own token cost, so the total cost is the sum of all image tokens plus the text prompt tokens.</p>
+
+    <p>When sending multiple images, order matters. Place images before your text prompt so Claude has the visual context before reading your instructions. You can also interleave images and text to reference specific images: "Image 1 shows the homepage. Image 2 shows the checkout. Compare the design consistency." The tester supports uploading multiple images and generates the correct multi-image content array in the output code.</p>
+
+    <h2>Token Cost Estimation</h2>
+
+    <p>Understanding image token costs is essential for budgeting API usage. The tester estimates tokens using the same algorithm Claude applies: images up to 384x384 pixels use a single tile of approximately 170 tokens. Larger images are scaled to fit within 1568 pixels on the longest side, then divided into tiles. The formula is approximately <code>ceil(width/384) * ceil(height/384) * 170</code> after resizing. This estimate is close to the actual token count reported by the API.</p>
+
+    <p>The cost estimate uses current Anthropic pricing for the selected model. Sonnet processes image tokens at the same rate as input text tokens ($3 per million input tokens as of the current pricing). For high-volume vision applications, consider using Haiku for initial classification and only sending complex images to Sonnet or Opus. Prompt caching does not apply to image tokens, so repeated analysis of the same image costs the same each time. For tracking vision API costs at scale, <a href="https://kickllm.com">KickLLM</a> provides cost monitoring dashboards.</p>
+
+    <h2>Best Practices for Vision Requests</h2>
+
+    <p>Write clear, specific prompts that tell Claude exactly what to look for in the image. "Describe this image" works but produces generic descriptions. "Extract all text visible in this screenshot and return it as a JSON object with field labels as keys" produces structured, actionable output. For OCR tasks, mention that you want exact text extraction. For analysis tasks, specify the format you want (bullet points, JSON, table). For comparison tasks, list the specific dimensions you want compared.</p>
+
+    <p>Optimize image size for your use case. If you need Claude to read small text in a screenshot, send the full resolution. If you just need object identification or scene description, resize to 768x768 or smaller to save tokens. For documents, crop to the relevant section rather than sending the entire page. Remove unnecessary whitespace and borders. These optimizations can reduce token costs by 50-80% without affecting output quality for most tasks.</p>
+
+    <p>Test with representative images before deploying to production. Vision performance varies with image quality, lighting, text size, and complexity. Screenshots of code or text are processed very accurately. Photographs in low light or with heavy compression may produce less reliable results. Charts and graphs are well understood, but highly stylized infographics may need more detailed prompts. Use the generated code from this tester as your starting point, then iterate on the prompt based on real results from the API. For building complete API request flows including vision, use the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a>.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How does Claude's vision API process images?</summary>
+      <p>Claude processes images by converting them into tokens. Images are sent in the content array as base64-encoded data or URLs. Claude analyzes the image content and can describe, extract text, compare images, and reason about visual information. Image tokens are counted separately from text tokens and vary based on image dimensions. Larger images use more tokens but provide more detail for analysis.</p>
+    </details>
+
+    <details>
+      <summary>What image formats does the Claude API support?</summary>
+      <p>The Claude API supports JPEG, PNG, GIF (including animated), and WebP image formats. The maximum file size is 20MB per image. For best results, use JPEG for photographs and PNG for screenshots or images with text. The media_type field in the API request must match the actual format: image/jpeg, image/png, image/gif, or image/webp.</p>
+    </details>
+
+    <details>
+      <summary>How many tokens does an image use in the Claude API?</summary>
+      <p>Image token usage depends on the dimensions. A small image (up to 384x384) uses approximately 170 tokens. Larger images are scaled and tiled, with each tile using approximately 170 tokens. A typical 1024x1024 image uses about 1,600 tokens. Very large images are automatically resized to fit within the maximum dimension of 1568 pixels on the longest side. Use smaller images when detail is not critical to reduce costs.</p>
+    </details>
+
+    <details>
+      <summary>Can Claude analyze multiple images in a single request?</summary>
+      <p>Yes, you can include multiple image blocks in the content array of a single message. Claude can compare, contrast, and reason across all images. Place image blocks before or between text blocks to provide context. There is no hard limit on the number of images, but the total token count of all images plus text must fit within the model's context window.</p>
+    </details>
+
+    <details>
+      <summary>Should I use base64 or URL for sending images to Claude?</summary>
+      <p>Use base64 when you have local files, need guaranteed availability, or are processing sensitive images that should not be hosted publicly. Use URLs when images are already hosted publicly and you want to avoid the base64 encoding overhead. Base64 increases the request payload size by approximately 33% compared to the original file. URLs require that the image be accessible at request time.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting and cost estimation.</p>
+      </a>
+      <a href="/tools/tool-use-builder.html" class="related-card">
+        <h3>Tool/Function Builder</h3>
+        <p>Visual tool definition builder with JSON schema generation.</p>
+      </a>
+      <a href="/answers/claude-code-snippets.html" class="related-card">
+        <h3>Code Snippets Library</h3>
+        <p>Searchable Claude API patterns in Python and JavaScript.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes.</p>
+      </a>
+      <a href="https://krzen.com" class="related-card">
+        <h3>Krzen</h3>
+        <p>Image compression and optimization tools for web.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across providers.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let images = [];
+  let activeLang = "python";
+
+  const dropZone = $("vt-dropzone");
+  const fileInput = $("vt-file-input");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("dragover"); });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("dragover");
+    handleFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener("change", e => handleFiles(e.target.files));
+
+  function handleFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.type.match(/^image\/(jpeg|png|gif|webp)$/)) return;
+      if (file.size > 20 * 1024 * 1024) { alert("File too large. Max 20MB."); return; }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          images.push({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            width: img.width,
+            height: img.height,
+            dataUrl: e.target.result,
+            base64: e.target.result.split(",")[1]
+          });
+          renderImages();
+          updateOutput();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  window.removeImage = function(idx) {
+    images.splice(idx, 1);
+    renderImages();
+    updateOutput();
+  };
+
+  function renderImages() {
+    const list = $("vt-image-list");
+    const info = $("vt-image-info");
+    list.innerHTML = "";
+    info.innerHTML = "";
+
+    if (images.length === 0) {
+      $("vt-tokens").style.display = "none";
+      return;
+    }
+
+    images.forEach((img, i) => {
+      const thumb = document.createElement("div");
+      thumb.className = "image-thumb";
+      thumb.innerHTML = `<img src="${img.dataUrl}" alt="${img.name}"><button class="remove-img" onclick="removeImage(${i})">&#10005;</button>`;
+      list.appendChild(thumb);
+    });
+
+    const lines = images.map((img, i) =>
+      `<strong>Image ${i+1}:</strong> ${img.name} &mdash; ${img.width}x${img.height}px, ${(img.size/1024).toFixed(1)}KB, ${img.type}`
+    );
+    info.innerHTML = lines.join("<br>");
+
+    let totalTokens = 0;
+    images.forEach(img => { totalTokens += estimateTokens(img.width, img.height); });
+
+    const promptTokens = Math.ceil(($("vt-prompt").value.length || 50) / 4);
+    const totalInput = totalTokens + promptTokens;
+    const model = $("vt-model").value;
+    let costPerMil = 3; // sonnet default
+    if (model.includes("opus")) costPerMil = 15;
+    else if (model.includes("haiku")) costPerMil = 0.80;
+    const cost = (totalInput / 1000000) * costPerMil;
+
+    $("vt-tokens").style.display = "flex";
+    $("vt-img-tokens").textContent = totalTokens.toLocaleString();
+    $("vt-prompt-tokens").textContent = "~" + promptTokens.toLocaleString();
+    $("vt-cost").textContent = "$" + cost.toFixed(4);
+  }
+
+  function estimateTokens(w, h) {
+    const maxDim = 1568;
+    if (w > maxDim || h > maxDim) {
+      const scale = maxDim / Math.max(w, h);
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+    }
+    const tilesX = Math.max(1, Math.ceil(w / 384));
+    const tilesY = Math.max(1, Math.ceil(h / 384));
+    return tilesX * tilesY * 170;
+  }
+
+  function buildContentArray() {
+    const blocks = [];
+    images.forEach(img => {
+      blocks.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: img.type,
+          data: "<BASE64_DATA>"
+        }
+      });
+    });
+    blocks.push({ type: "text", text: $("vt-prompt").value || "Describe this image." });
+    return blocks;
+  }
+
+  function genPython() {
+    const model = $("vt-model").value;
+    const maxTokens = $("vt-max-tokens").value || 1024;
+    const prompt = $("vt-prompt").value || "Describe this image.";
+
+    if (images.length === 0) return "# Upload an image to generate code";
+
+    let code = `import anthropic\nimport base64\nfrom pathlib import Path\n\nclient = anthropic.Anthropic()\n\n`;
+
+    images.forEach((img, i) => {
+      code += `# Read image ${i+1}: ${img.name}\nimage_data_${i} = base64.standard_b64encode(Path("${img.name}").read_bytes()).decode("utf-8")\n\n`;
+    });
+
+    code += `response = client.messages.create(\n    model="${model}",\n    max_tokens=${maxTokens},\n    messages=[{\n        "role": "user",\n        "content": [\n`;
+
+    images.forEach((img, i) => {
+      code += `            {\n                "type": "image",\n                "source": {\n                    "type": "base64",\n                    "media_type": "${img.type}",\n                    "data": image_data_${i}\n                }\n            },\n`;
+    });
+
+    code += `            {\n                "type": "text",\n                "text": ${JSON.stringify(prompt)}\n            }\n        ]\n    }]\n)\n\nprint(response.content[0].text)\nprint(f"Tokens: {response.usage.input_tokens} in, {response.usage.output_tokens} out")`;
+    return code;
+  }
+
+  function genJS() {
+    const model = $("vt-model").value;
+    const maxTokens = $("vt-max-tokens").value || 1024;
+    const prompt = $("vt-prompt").value || "Describe this image.";
+
+    if (images.length === 0) return "// Upload an image to generate code";
+
+    let code = `import Anthropic from "@anthropic-ai/sdk";\nimport fs from "fs";\n\nconst client = new Anthropic();\n\n`;
+
+    images.forEach((img, i) => {
+      code += `// Read image ${i+1}: ${img.name}\nconst imageData${i} = fs.readFileSync("${img.name}").toString("base64");\n\n`;
+    });
+
+    code += `const response = await client.messages.create({\n    model: "${model}",\n    max_tokens: ${maxTokens},\n    messages: [{\n        role: "user",\n        content: [\n`;
+
+    images.forEach((img, i) => {
+      code += `            {\n                type: "image",\n                source: {\n                    type: "base64",\n                    media_type: "${img.type}",\n                    data: imageData${i},\n                },\n            },\n`;
+    });
+
+    code += `            {\n                type: "text",\n                text: ${JSON.stringify(prompt)},\n            }\n        ],\n    }],\n});\n\nconsole.log(response.content[0].text);\nconsole.log("Tokens:", response.usage.input_tokens, "in,", response.usage.output_tokens, "out");`;
+    return code;
+  }
+
+  function genCurl() {
+    const model = $("vt-model").value;
+    const maxTokens = $("vt-max-tokens").value || 1024;
+    const prompt = $("vt-prompt").value || "Describe this image.";
+
+    if (images.length === 0) return "# Upload an image to generate code";
+
+    const content = [];
+    images.forEach(img => {
+      content.push({
+        type: "image",
+        source: { type: "base64", media_type: img.type, data: "<BASE64_DATA_HERE>" }
+      });
+    });
+    content.push({ type: "text", text: prompt });
+
+    const body = {
+      model: model,
+      max_tokens: parseInt(maxTokens),
+      messages: [{ role: "user", content: content }]
+    };
+
+    return `curl https://api.anthropic.com/v1/messages \\\n  -H "content-type: application/json" \\\n  -H "x-api-key: $ANTHROPIC_API_KEY" \\\n  -H "anthropic-version: 2023-06-01" \\\n  -d '${JSON.stringify(body, null, 2)}'`;
+  }
+
+  function updateOutput() {
+    let code;
+    switch (activeLang) {
+      case "python": code = genPython(); break;
+      case "javascript": code = genJS(); break;
+      case "curl": code = genCurl(); break;
+    }
+    $("vt-code-output").textContent = code;
+
+    // Update response preview
+    if (images.length > 0) {
+      let totalTokens = 0;
+      images.forEach(img => { totalTokens += estimateTokens(img.width, img.height); });
+      const promptTokens = Math.ceil(($("vt-prompt").value.length || 50) / 4);
+
+      const sampleResponse = {
+        id: "msg_01XFDUDYJgAACzvnptvVoYEL",
+        type: "message",
+        role: "assistant",
+        content: [{
+          type: "text",
+          text: images.length === 1
+            ? `The image shows "${images[0].name}" (${images[0].width}x${images[0].height}px). [Claude would provide a detailed analysis based on your prompt: "${($("vt-prompt").value || "Describe this image.").substring(0, 60)}..."]`
+            : `I can see ${images.length} images. [Claude would analyze and compare all ${images.length} images based on your prompt.]`
+        }],
+        model: $("vt-model").value,
+        stop_reason: "end_turn",
+        usage: { input_tokens: totalTokens + promptTokens, output_tokens: 150 }
+      };
+      $("vt-response-preview").textContent = JSON.stringify(sampleResponse, null, 2);
+    }
+  }
+
+  window.copyCode = function() {
+    const text = $("vt-code-output").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("vt-copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  document.querySelectorAll(".output-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".output-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      updateOutput();
+    });
+  });
+
+  ["vt-prompt", "vt-model", "vt-max-tokens"].forEach(id => {
+    $(id).addEventListener("input", () => { renderImages(); updateOutput(); });
+    $(id).addEventListener("change", () => { renderImages(); updateOutput(); });
+  });
+})();
+</script>
+</body>
+</html>

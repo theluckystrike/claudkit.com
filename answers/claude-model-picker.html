@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Model Picker — Find the Right Claude Model for Your Use Case | ClaudKit</title>
+<meta name="description" content="Interactive model selection wizard for Claude API. Answer 4 questions about your use case, speed needs, budget, and context length to get a personalized recommendation with cost comparison and capability matrix.">
+<link rel="canonical" href="https://claudkit.com/answers/claude-model-picker.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/answers/claude-model-picker.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/answers/claude-model-picker.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Model Picker — Find the Right Claude Model for Your Use Case">
+<meta property="og:description" content="Interactive wizard to choose between Claude Opus, Sonnet, and Haiku. Get a personalized recommendation based on your use case, speed, budget, and context needs.">
+<meta property="og:url" content="https://claudkit.com/answers/claude-model-picker.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Model Picker — Find the Right Claude Model for Your Use Case">
+<meta name="twitter:description" content="Interactive wizard to choose between Claude Opus, Sonnet, and Haiku based on your requirements.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Model Picker",
+  "description": "Interactive model selection wizard for the Claude API. Answer questions about your use case, speed requirements, budget, and context length to receive a personalized model recommendation with cost comparison and capability matrix.",
+  "url": "https://claudkit.com/answers/claude-model-picker.html",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
+  "publisher": { "@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com" },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Step-by-step model selection questionnaire",
+    "Use case matching: coding, analysis, creative, general",
+    "Speed and budget optimization",
+    "Context length recommendations",
+    "Side-by-side model comparison matrix",
+    "Per-request and monthly cost estimates",
+    "Personalized reasoning for each recommendation"
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Claude Model Picker — Find the Right Claude Model for Your Use Case",
+  "description": "Interactive model selection wizard that helps developers choose between Claude Opus 4, Sonnet 4, and Haiku 3.5 based on use case, speed, budget, and context requirements.",
+  "url": "https://claudkit.com/answers/claude-model-picker.html",
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "mainEntityOfPage": "https://claudkit.com/answers/claude-model-picker.html",
+  "keywords": ["claude model comparison", "claude opus vs sonnet vs haiku", "which claude model to use", "claude api model selection", "anthropic model picker", "claude pricing comparison"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the difference between Claude Opus, Sonnet, and Haiku?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Opus 4 is the most intelligent model, best for complex reasoning, research synthesis, multi-step analysis, and agentic tasks. Claude Sonnet 4 balances capability and speed, ideal for most production workloads including code generation, content creation, and chat. Claude Haiku 3.5 is the fastest and cheapest model, optimized for high-volume tasks like classification, extraction, and real-time applications. All three share a 200K-token context window."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which Claude model is best for coding?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Sonnet 4 is the best default for coding tasks. It excels at code generation, debugging, refactoring, and code review with a strong balance of quality and speed. For complex architectural decisions, multi-file refactoring, or novel algorithm design, Claude Opus 4 provides deeper reasoning. For simple code completion, syntax fixing, or boilerplate generation at high volume, Claude Haiku 3.5 is fast and cost-effective."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does each Claude model cost per request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A typical request with 500 input tokens and 1,000 output tokens costs: Haiku 3.5 — $0.0044, Sonnet 4 — $0.0165, Opus 4 — $0.0825. Monthly costs at 100 requests/day: Haiku — $13.20, Sonnet — $49.50, Opus — $247.50. Haiku is 20x cheaper than Opus per request. Exact costs depend on your input and output token counts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which Claude model is fastest?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Haiku 3.5 is the fastest model with the lowest latency. It typically delivers the first token in under 200ms and generates output at roughly 100+ tokens per second. Sonnet 4 is moderately fast with first-token latency around 300-500ms. Opus 4 is the slowest, with first-token latency of 500ms-2s depending on prompt complexity. For real-time applications like chat or autocomplete, Haiku is the clear choice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I switch between Claude models without changing my code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. All Claude models share the same API format. The only change required is the model parameter: 'claude-opus-4-20250514', 'claude-sonnet-4-20250514', or 'claude-haiku-3.5-20241022'. System prompts, message format, temperature, max_tokens, and all other parameters work identically across models. This makes A/B testing and model switching trivial — just change the model string."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Answers","item":"https://claudkit.com/answers/"},{"@type":"ListItem","position":3,"name":"Claude Model Picker"}]}</script>
+
+<style>
+  .wizard-container { max-width:800px; margin:0 auto 2rem; padding:0 2rem; }
+  .wizard-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.5rem; }
+  .wizard-box h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .wizard-step { display:none; }
+  .wizard-step.active { display:block; }
+  .step-indicator { display:flex; gap:0.5rem; margin-bottom:1.5rem; justify-content:center; }
+  .step-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:background 0.3s; }
+  .step-dot.active { background:var(--accent); }
+  .step-dot.done { background:var(--accent); opacity:0.5; }
+  .step-question { font-size:1.1rem; font-weight:600; margin-bottom:1rem; text-align:center; }
+  .step-subtitle { font-size:0.85rem; color:var(--text-muted); text-align:center; margin-bottom:1.25rem; }
+  .option-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+  .option-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .option-card:hover { border-color:var(--accent); }
+  .option-card.selected { border-color:var(--accent); background:rgba(139,92,246,0.08); }
+  .option-card h3 { font-size:0.95rem; margin-bottom:0.25rem; font-family:var(--font-display); }
+  .option-card p { font-size:0.8rem; color:var(--text-muted); }
+  .wizard-nav { display:flex; justify-content:space-between; margin-top:1.25rem; }
+  .wizard-nav .btn { padding:0.5rem 1.5rem; }
+  .result-hidden { display:none; }
+  .result-visible { display:block; }
+  .result-card { background:var(--bg); border:2px solid var(--accent); border-radius:var(--radius); padding:1.5rem; margin-bottom:1.5rem; }
+  .result-card h3 { font-size:1.2rem; font-family:var(--font-display); color:var(--accent); margin-bottom:0.5rem; }
+  .result-card .model-id { font-family:var(--font-display); font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem; }
+  .result-reasoning { font-size:0.9rem; line-height:1.6; color:var(--text); margin-bottom:1rem; }
+  .cost-comparison { width:100%; border-collapse:collapse; font-size:0.85rem; margin:1rem 0; }
+  .cost-comparison th { text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; border-bottom:2px solid var(--border); }
+  .cost-comparison td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); }
+  .cost-comparison tr.recommended td { background:rgba(139,92,246,0.08); font-weight:600; }
+  .cost-val { font-family:var(--font-display); color:var(--accent); font-weight:700; }
+  .capability-matrix { width:100%; border-collapse:collapse; font-size:0.85rem; margin:1rem 0; }
+  .capability-matrix th { text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; border-bottom:2px solid var(--border); }
+  .capability-matrix td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); text-align:center; }
+  .capability-matrix td:first-child { text-align:left; }
+  .bar-fill { display:inline-block; height:8px; border-radius:4px; background:var(--accent); vertical-align:middle; }
+  .bar-bg { display:inline-block; width:60px; height:8px; border-radius:4px; background:var(--border); vertical-align:middle; }
+  .restart-btn { display:block; margin:1rem auto 0; padding:0.5rem 2rem; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem 2rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); }
+  .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-name a { color:var(--accent); text-decoration:none; }
+  .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .option-grid { grid-template-columns:1fr; } .cost-comparison, .capability-matrix { font-size:0.78rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/answers/" style="color:var(--accent);text-decoration:none;">Answers</a> <span>/</span> <span>Claude Model Picker</span></nav>
+    <h1>Claude Model Picker</h1>
+    <p>Answer 4 quick questions and get a personalized model recommendation with reasoning, cost comparison, and a side-by-side capability matrix for all three Claude models.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <!-- Wizard -->
+  <div class="wizard-container">
+    <div class="wizard-box">
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-0"></div>
+        <div class="step-dot" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+      </div>
+
+      <!-- Step 1: Use Case -->
+      <div class="wizard-step active" id="step-0">
+        <div class="step-question">What is your primary use case?</div>
+        <div class="step-subtitle">Select the category that best describes what you are building.</div>
+        <div class="option-grid">
+          <div class="option-card" data-step="0" data-value="coding" onclick="selectOption(this)">
+            <h3>Coding</h3>
+            <p>Code generation, debugging, refactoring, code review, architecture design</p>
+          </div>
+          <div class="option-card" data-step="0" data-value="analysis" onclick="selectOption(this)">
+            <h3>Analysis</h3>
+            <p>Data analysis, research synthesis, document review, summarization</p>
+          </div>
+          <div class="option-card" data-step="0" data-value="creative" onclick="selectOption(this)">
+            <h3>Creative</h3>
+            <p>Writing, brainstorming, content creation, marketing copy, storytelling</p>
+          </div>
+          <div class="option-card" data-step="0" data-value="general" onclick="selectOption(this)">
+            <h3>General</h3>
+            <p>Chat, Q&A, classification, extraction, customer support, translation</p>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <div></div>
+          <button class="btn btn-accent" id="next-0" onclick="nextStep()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Speed -->
+      <div class="wizard-step" id="step-1">
+        <div class="step-question">How important is response speed?</div>
+        <div class="step-subtitle">Consider your user experience requirements and latency tolerance.</div>
+        <div class="option-grid">
+          <div class="option-card" data-step="1" data-value="fast" onclick="selectOption(this)">
+            <h3>Fast</h3>
+            <p>Real-time or near-instant. Under 1 second first token. Chat, autocomplete, live UI.</p>
+          </div>
+          <div class="option-card" data-step="1" data-value="balanced" onclick="selectOption(this)">
+            <h3>Balanced</h3>
+            <p>A few seconds is fine. Interactive apps where quality matters more than speed.</p>
+          </div>
+          <div class="option-card" data-step="1" data-value="thorough" onclick="selectOption(this)">
+            <h3>Thorough</h3>
+            <p>Speed is not a priority. Batch processing, offline jobs, complex analysis.</p>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn" onclick="prevStep()">Back</button>
+          <button class="btn btn-accent" id="next-1" onclick="nextStep()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Budget -->
+      <div class="wizard-step" id="step-2">
+        <div class="step-question">What is your budget for API costs?</div>
+        <div class="step-subtitle">Monthly budget at your expected request volume.</div>
+        <div class="option-grid">
+          <div class="option-card" data-step="2" data-value="low" onclick="selectOption(this)">
+            <h3>Low</h3>
+            <p>Minimize costs. High-volume or price-sensitive application. Under $50/month.</p>
+          </div>
+          <div class="option-card" data-step="2" data-value="medium" onclick="selectOption(this)">
+            <h3>Medium</h3>
+            <p>Reasonable budget. Willing to pay for quality. $50-500/month.</p>
+          </div>
+          <div class="option-card" data-step="2" data-value="high" onclick="selectOption(this)">
+            <h3>High</h3>
+            <p>Quality is the priority. Enterprise or critical application. $500+/month.</p>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn" onclick="prevStep()">Back</button>
+          <button class="btn btn-accent" id="next-2" onclick="nextStep()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Context Length -->
+      <div class="wizard-step" id="step-3">
+        <div class="step-question">How much context do your requests need?</div>
+        <div class="step-subtitle">Consider the size of your input prompts and any documents you process.</div>
+        <div class="option-grid">
+          <div class="option-card" data-step="3" data-value="short" onclick="selectOption(this)">
+            <h3>Short</h3>
+            <p>Simple prompts under 1,000 tokens. Single questions, classifications, short messages.</p>
+          </div>
+          <div class="option-card" data-step="3" data-value="medium" onclick="selectOption(this)">
+            <h3>Medium</h3>
+            <p>Moderate prompts 1,000-20,000 tokens. Document summaries, code files, conversations.</p>
+          </div>
+          <div class="option-card" data-step="3" data-value="long" onclick="selectOption(this)">
+            <h3>Long</h3>
+            <p>Large contexts 20,000-200,000 tokens. Full codebases, research papers, book-length documents.</p>
+          </div>
+        </div>
+        <div class="wizard-nav">
+          <button class="btn" onclick="prevStep()">Back</button>
+          <button class="btn btn-accent" id="next-3" onclick="getResult()">Get Recommendation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result Panel -->
+    <div id="result-panel" class="result-hidden">
+      <div class="wizard-box">
+        <h2>Your Recommendation</h2>
+        <div class="result-card" id="result-card">
+          <h3 id="result-model-name"></h3>
+          <div class="model-id" id="result-model-id"></div>
+          <div class="result-reasoning" id="result-reasoning"></div>
+        </div>
+
+        <h2 style="margin-top:1.5rem;">Cost Comparison</h2>
+        <table class="cost-comparison">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Input (per 1M)</th>
+              <th>Output (per 1M)</th>
+              <th>Per Request*</th>
+              <th>Monthly (100/day)*</th>
+            </tr>
+          </thead>
+          <tbody id="cost-table-body"></tbody>
+        </table>
+        <p style="font-size:0.75rem;color:var(--text-muted);">*Estimated for 500 input tokens + 1,000 output tokens per request.</p>
+
+        <h2 style="margin-top:1.5rem;">Capability Matrix</h2>
+        <table class="capability-matrix">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Opus 4</th>
+              <th>Sonnet 4</th>
+              <th>Haiku 3.5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Complex Reasoning</td><td id="cap-reason-opus"></td><td id="cap-reason-sonnet"></td><td id="cap-reason-haiku"></td></tr>
+            <tr><td>Code Generation</td><td id="cap-code-opus"></td><td id="cap-code-sonnet"></td><td id="cap-code-haiku"></td></tr>
+            <tr><td>Creative Writing</td><td id="cap-creative-opus"></td><td id="cap-creative-sonnet"></td><td id="cap-creative-haiku"></td></tr>
+            <tr><td>Speed / Latency</td><td id="cap-speed-opus"></td><td id="cap-speed-sonnet"></td><td id="cap-speed-haiku"></td></tr>
+            <tr><td>Cost Efficiency</td><td id="cap-cost-opus"></td><td id="cap-cost-sonnet"></td><td id="cap-cost-haiku"></td></tr>
+            <tr><td>Long Context</td><td id="cap-context-opus"></td><td id="cap-context-sonnet"></td><td id="cap-context-haiku"></td></tr>
+            <tr><td>Instruction Following</td><td id="cap-instruct-opus"></td><td id="cap-instruct-sonnet"></td><td id="cap-instruct-haiku"></td></tr>
+            <tr><td>Tool Use / Agents</td><td id="cap-tools-opus"></td><td id="cap-tools-sonnet"></td><td id="cap-tools-haiku"></td></tr>
+          </tbody>
+        </table>
+
+        <button class="btn btn-accent restart-btn" onclick="restart()">Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Long-form article content -->
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>How the Model Picker Works</h2>
+
+    <p>The Claude Model Picker is an interactive wizard that guides you through four decision factors to recommend the best Claude model for your specific use case. Rather than reading through comparison tables and trying to map features to your requirements, the wizard asks targeted questions about what you are building and produces a personalized recommendation with clear reasoning.</p>
+
+    <p>The four factors are: primary use case (coding, analysis, creative, or general), speed requirements (fast, balanced, or thorough), budget (low, medium, or high), and context length needs (short, medium, or long). Each combination produces a weighted score across the three available Claude models. The recommendation is not a simple lookup table but a scored calculation that considers how each factor interacts with model capabilities.</p>
+
+    <h2>Understanding the Three Claude Models</h2>
+
+    <p><strong>Claude Opus 4</strong> is the flagship model designed for the most demanding tasks. It excels at complex multi-step reasoning, research synthesis, nuanced analysis, and agentic workflows where the model needs to make decisions and take actions autonomously. Opus is the best choice when the quality and depth of the response is the top priority and you are willing to pay a premium for it. Typical use cases include: architectural design decisions, legal document analysis, scientific research review, complex debugging of multi-file codebases, and strategic planning tasks. The model ID is <code>claude-opus-4-20250514</code>.</p>
+
+    <p><strong>Claude Sonnet 4</strong> is the general-purpose workhorse. It balances capability, speed, and cost in a way that makes it the default choice for most production applications. Sonnet handles code generation, content creation, document summarization, conversational AI, and data extraction with high quality and reasonable latency. It is noticeably faster than Opus while retaining strong reasoning capabilities. For the majority of API integrations, Sonnet is the correct starting point. You should only switch to Opus if you find Sonnet's quality insufficient for your specific task, or to Haiku if Sonnet's latency or cost is too high for your volume. The model ID is <code>claude-sonnet-4-20250514</code>. To experiment with Sonnet in an interactive environment, try the <a href="/">ClaudKit API playground</a>.</p>
+
+    <p><strong>Claude Haiku 3.5</strong> is the speed and cost champion. It delivers responses with the lowest latency and the lowest per-token cost of any Claude model. Haiku is the right choice for high-volume applications where you are making hundreds or thousands of API calls per minute and need fast, affordable responses. Typical use cases include: text classification, named entity extraction, short-form Q&A, real-time chat, content moderation, and any task where a concise, correct answer matters more than nuanced reasoning. The model ID is <code>claude-haiku-3.5-20241022</code>.</p>
+
+    <h2>Cost Analysis Deep Dive</h2>
+
+    <p>The cost difference between models is substantial and scales linearly with usage. At 100 requests per day with a typical 500-token input and 1,000-token output, monthly costs are approximately $13 for Haiku, $50 for Sonnet, and $248 for Opus. At 1,000 requests per day, those numbers become $132, $495, and $2,475. For high-volume applications, the model choice is often the single biggest factor in your API budget.</p>
+
+    <p>A common pattern is to use different models for different tasks within the same application. For example, a coding assistant might use Haiku for autocompletion suggestions (fast, cheap, high volume), Sonnet for code review and generation (balanced quality and speed), and Opus for architectural analysis of entire codebases (maximum quality, lower volume). The Claude API makes this straightforward because all models share the same request format, so switching is as simple as changing the model parameter string. For building these kinds of multi-model workflows visually, <a href="https://claudflow.com">ClaudFlow</a> provides a workflow designer that routes requests to different models based on task type.</p>
+
+    <p>Prompt caching can significantly reduce costs for any model. When you send the same system prompt repeatedly (which is common in production), Anthropic caches the tokenized version and charges reduced rates for cached input tokens. This is especially valuable for applications with long system prompts that include detailed instructions, few-shot examples, or reference data. The savings compound with higher request volumes. For detailed cost projections that factor in caching, see the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a>.</p>
+
+    <h2>Speed and Latency Characteristics</h2>
+
+    <p>Latency has two components: time-to-first-token (TTFT) and tokens-per-second (TPS) throughput. Haiku leads on both metrics, with TTFT typically under 200 milliseconds and throughput exceeding 100 tokens per second. Sonnet sits in the middle with TTFT of 300 to 500 milliseconds and throughput of 50 to 80 tokens per second. Opus is the slowest with TTFT of 500 milliseconds to 2 seconds and throughput of 30 to 50 tokens per second, though these numbers vary with prompt complexity.</p>
+
+    <p>For user-facing applications, TTFT is usually more important than total generation time because streaming delivers tokens incrementally. A 500ms TTFT with streaming feels responsive, while a 3-second wait before any content appears feels sluggish. If your application uses streaming (and it should for user-facing features), Sonnet's TTFT is fast enough for most interactive applications. Haiku is necessary only when you need sub-200ms TTFT for real-time features like autocomplete or live suggestions. To see streaming in action and learn how to implement it, try the <a href="/guides/streaming-responses-guide.html">Streaming Responses Guide</a>.</p>
+
+    <h2>Context Length Considerations</h2>
+
+    <p>All three Claude models support a 200,000-token context window, which is approximately 150,000 words or 500 pages of text. However, the models differ in how effectively they utilize long contexts. Opus has the strongest performance on long-context tasks, maintaining accuracy and recall even when relevant information is buried deep in a 200K-token prompt. Sonnet performs well up to about 100K tokens with graceful degradation beyond that. Haiku is best suited for shorter contexts under 20K tokens where it can leverage its speed advantage without sacrificing quality.</p>
+
+    <p>Cost is an important consideration for long-context requests. A 100K-token input on Opus costs $1.50 per request (input only), while the same input on Haiku costs $0.08. If you are processing many documents through long-context prompts, the model choice has a massive impact on total cost. Consider whether you can preprocess or chunk documents to use a cheaper model, or whether the task genuinely requires the full document in context. For formatting and processing JSON data before sending it to the API, <a href="https://kappafy.com">Kappafy</a> provides JSON formatting and validation tools.</p>
+
+    <h2>Decision Framework for Teams</h2>
+
+    <p>For teams evaluating Claude models for a new project, start with Sonnet. It provides the best balance of quality, speed, and cost for the widest range of tasks. Run your test suite or evaluation prompts against Sonnet first and establish a quality baseline. Then test the same prompts against Haiku: if the quality difference is negligible for your use case, switch to Haiku and save 80% on API costs. If Sonnet's quality is insufficient, test against Opus: if Opus produces meaningfully better results, the premium may be justified for your application.</p>
+
+    <p>This bottom-up evaluation approach prevents the common mistake of defaulting to the most expensive model and never testing cheaper alternatives. In many production applications, Haiku performs surprisingly well on tasks that developers assume require a more capable model. Classification, extraction, translation, and short-form Q&A are areas where Haiku typically matches Sonnet's quality while being dramatically faster and cheaper. For A/B testing different models in production, <a href="https://abwex.com">ABWex</a> provides experimentation tools that can help you measure the quality-cost tradeoff empirically.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>What is the difference between Claude Opus, Sonnet, and Haiku?</summary>
+      <p>Claude Opus 4 is the most intelligent model, best for complex reasoning, research synthesis, multi-step analysis, and agentic tasks. Claude Sonnet 4 balances capability and speed, ideal for most production workloads including code generation, content creation, and chat. Claude Haiku 3.5 is the fastest and cheapest model, optimized for high-volume tasks like classification, extraction, and real-time applications. All three share a 200K-token context window.</p>
+    </details>
+
+    <details>
+      <summary>Which Claude model is best for coding?</summary>
+      <p>Claude Sonnet 4 is the best default for coding tasks. It excels at code generation, debugging, refactoring, and code review with a strong balance of quality and speed. For complex architectural decisions or multi-file refactoring, Claude Opus 4 provides deeper reasoning. For simple code completion or boilerplate generation at high volume, Claude Haiku 3.5 is fast and cost-effective.</p>
+    </details>
+
+    <details>
+      <summary>How much does each Claude model cost per request?</summary>
+      <p>A typical request with 500 input tokens and 1,000 output tokens costs: Haiku 3.5 is $0.0044, Sonnet 4 is $0.0165, and Opus 4 is $0.0825. Monthly costs at 100 requests per day: Haiku is approximately $13, Sonnet approximately $50, and Opus approximately $248. Haiku is 20x cheaper than Opus per request.</p>
+    </details>
+
+    <details>
+      <summary>Which Claude model is fastest?</summary>
+      <p>Claude Haiku 3.5 is the fastest model with the lowest latency. It typically delivers the first token in under 200ms and generates output at over 100 tokens per second. Sonnet 4 has first-token latency around 300-500ms. Opus 4 is the slowest with 500ms-2s first-token latency depending on prompt complexity.</p>
+    </details>
+
+    <details>
+      <summary>Can I switch between Claude models without changing my code?</summary>
+      <p>Yes. All Claude models share the same API format. The only change required is the model parameter string. System prompts, message format, temperature, max_tokens, and all other parameters work identically across models. This makes A/B testing and model switching trivial.</p>
+    </details>
+  </section>
+
+  <div class="author-box">
+    <div>
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/" class="related-card">
+        <h3>ClaudKit Playground</h3>
+        <p>Full API playground with live testing using your own API key.</p>
+      </a>
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Visual request builder with code generation in curl, Python, and JS.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Responses Guide</h3>
+        <p>Interactive streaming demo with code generation and configuration builder.</p>
+      </a>
+      <a href="/research/api-rate-limit-comparison.html" class="related-card">
+        <h3>API Rate Limit Comparison</h3>
+        <p>Compare rate limits across Claude models and account tiers.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across all major providers.</p>
+      </a>
+      <a href="https://lockml.com" class="related-card">
+        <h3>LockML</h3>
+        <p>Side-by-side ML model comparison and evaluation tools.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const MODELS = {
+    opus: {
+      name: "Claude Opus 4",
+      id: "claude-opus-4-20250514",
+      inputPer1M: 15, outputPer1M: 75,
+      scores: { coding: 10, analysis: 10, creative: 9, general: 8, fast: 3, balanced: 6, thorough: 10, low: 2, medium: 5, high: 10, short: 7, "medium": 9, long: 10 },
+      caps: { reason: 98, code: 95, creative: 92, speed: 30, cost: 15, context: 98, instruct: 95, tools: 97 }
+    },
+    sonnet: {
+      name: "Claude Sonnet 4",
+      id: "claude-sonnet-4-20250514",
+      inputPer1M: 3, outputPer1M: 15,
+      scores: { coding: 9, analysis: 8, creative: 8, general: 9, fast: 7, balanced: 10, thorough: 7, low: 6, medium: 10, high: 7, short: 9, "medium": 9, long: 8 },
+      caps: { reason: 82, code: 90, creative: 85, speed: 70, cost: 60, context: 85, instruct: 88, tools: 85 }
+    },
+    haiku: {
+      name: "Claude Haiku 3.5",
+      id: "claude-haiku-3.5-20241022",
+      inputPer1M: 0.80, outputPer1M: 4,
+      scores: { coding: 6, analysis: 5, creative: 6, general: 8, fast: 10, balanced: 7, thorough: 3, low: 10, medium: 7, high: 4, short: 10, "medium": 7, long: 5 },
+      caps: { reason: 55, code: 65, creative: 60, speed: 98, cost: 98, context: 65, instruct: 70, tools: 60 }
+    }
+  };
+
+  let currentStep = 0;
+  const answers = [null, null, null, null];
+
+  window.selectOption = function(el) {
+    const step = parseInt(el.dataset.step);
+    const value = el.dataset.value;
+    answers[step] = value;
+
+    // Clear other selections in this step
+    document.querySelectorAll(`[data-step="${step}"]`).forEach(c => c.classList.remove("selected"));
+    el.classList.add("selected");
+
+    // Enable next button
+    const nextBtn = document.getElementById("next-" + step);
+    if (nextBtn) nextBtn.disabled = false;
+  };
+
+  window.nextStep = function() {
+    if (currentStep >= 3) return;
+    document.getElementById("step-" + currentStep).classList.remove("active");
+    document.getElementById("dot-" + currentStep).classList.remove("active");
+    document.getElementById("dot-" + currentStep).classList.add("done");
+    currentStep++;
+    document.getElementById("step-" + currentStep).classList.add("active");
+    document.getElementById("dot-" + currentStep).classList.add("active");
+  };
+
+  window.prevStep = function() {
+    if (currentStep <= 0) return;
+    document.getElementById("step-" + currentStep).classList.remove("active");
+    document.getElementById("dot-" + currentStep).classList.remove("active");
+    currentStep--;
+    document.getElementById("step-" + currentStep).classList.add("active");
+    document.getElementById("dot-" + currentStep).classList.remove("done");
+    document.getElementById("dot-" + currentStep).classList.add("active");
+  };
+
+  window.getResult = function() {
+    if (!answers[3]) return;
+
+    // Calculate scores
+    const useCase = answers[0];
+    const speed = answers[1];
+    const budget = answers[2];
+    const context = answers[3];
+
+    const results = {};
+    for (const [key, model] of Object.entries(MODELS)) {
+      const s = model.scores;
+      // Weighted scoring: use case 35%, speed 25%, budget 25%, context 15%
+      results[key] = (s[useCase] * 0.35) + (s[speed] * 0.25) + (s[budget] * 0.25) + (s[context] * 0.15);
+    }
+
+    // Find winner
+    const sorted = Object.entries(results).sort((a, b) => b[1] - a[1]);
+    const winner = sorted[0][0];
+    const rec = MODELS[winner];
+
+    // Build reasoning
+    const reasons = [];
+    if (useCase === "coding") {
+      if (winner === "opus") reasons.push("Opus provides the deepest reasoning for complex code architecture, multi-file refactoring, and novel algorithm design.");
+      else if (winner === "sonnet") reasons.push("Sonnet excels at code generation, debugging, and review with a strong balance of quality and speed.");
+      else reasons.push("Haiku handles code completion and boilerplate generation at high speed and low cost.");
+    } else if (useCase === "analysis") {
+      if (winner === "opus") reasons.push("Opus is unmatched for complex analysis, research synthesis, and multi-document reasoning.");
+      else if (winner === "sonnet") reasons.push("Sonnet provides strong analytical capabilities at a fraction of Opus's cost.");
+      else reasons.push("Haiku can handle straightforward classification and extraction tasks efficiently.");
+    } else if (useCase === "creative") {
+      if (winner === "opus") reasons.push("Opus produces the most nuanced and sophisticated creative output.");
+      else if (winner === "sonnet") reasons.push("Sonnet delivers high-quality creative writing with good speed for iterative drafting.");
+      else reasons.push("Haiku generates creative content quickly and affordably for high-volume use cases.");
+    } else {
+      if (winner === "opus") reasons.push("Opus handles general tasks with the highest accuracy and reliability.");
+      else if (winner === "sonnet") reasons.push("Sonnet is the ideal general-purpose model, handling chat, Q&A, and extraction well.");
+      else reasons.push("Haiku is optimized for high-throughput general tasks like classification, chat, and translation.");
+    }
+
+    if (speed === "fast") reasons.push("Your need for fast responses " + (winner === "haiku" ? "makes Haiku the natural fit with sub-200ms first-token latency." : winner === "sonnet" ? "is well-served by Sonnet's 300-500ms first-token latency." : "is a tradeoff — Opus is slower but your other requirements favor its capabilities."));
+    else if (speed === "thorough") reasons.push("Since speed is not a priority, " + (winner === "opus" ? "Opus can take the time it needs to produce the highest quality output." : "you have headroom to prioritize quality while keeping costs reasonable."));
+
+    if (budget === "low") reasons.push("With a low budget, " + (winner === "haiku" ? "Haiku's pricing at $0.80/$4 per 1M tokens keeps costs minimal." : "consider starting with Haiku for simple tasks and using " + rec.name + " selectively for complex ones."));
+    else if (budget === "high") reasons.push("Your budget allows for " + (winner === "opus" ? "Opus's premium pricing, which is justified for maximum quality." : rec.name + "'s pricing with room to upgrade to Opus for specific high-value tasks."));
+
+    document.getElementById("result-model-name").textContent = rec.name;
+    document.getElementById("result-model-id").textContent = rec.id;
+    document.getElementById("result-reasoning").textContent = reasons.join(" ");
+
+    // Cost comparison table
+    const PER_REQ_IN = 500;
+    const PER_REQ_OUT = 1000;
+    let costHtml = "";
+    for (const [key, model] of Object.entries(MODELS)) {
+      const perReq = (PER_REQ_IN / 1e6) * model.inputPer1M + (PER_REQ_OUT / 1e6) * model.outputPer1M;
+      const monthly = perReq * 100 * 30;
+      const isRec = key === winner;
+      costHtml += `<tr${isRec ? ' class="recommended"' : ""}>
+        <td>${model.name}${isRec ? " *" : ""}</td>
+        <td>$${model.inputPer1M.toFixed(2)}</td>
+        <td>$${model.outputPer1M.toFixed(2)}</td>
+        <td class="cost-val">$${perReq.toFixed(4)}</td>
+        <td class="cost-val">$${monthly.toFixed(2)}</td>
+      </tr>`;
+    }
+    document.getElementById("cost-table-body").innerHTML = costHtml;
+
+    // Capability matrix
+    const capKeys = ["reason", "code", "creative", "speed", "cost", "context", "instruct", "tools"];
+    const capNames = { reason: "cap-reason", code: "cap-code", creative: "cap-creative", speed: "cap-speed", cost: "cap-cost", context: "cap-context", instruct: "cap-instruct", tools: "cap-tools" };
+    for (const cap of capKeys) {
+      for (const [mKey, model] of Object.entries(MODELS)) {
+        const suffix = mKey === "opus" ? "opus" : mKey === "sonnet" ? "sonnet" : "haiku";
+        const val = model.caps[cap];
+        const width = Math.round(val * 0.6);
+        document.getElementById(`${capNames[cap]}-${suffix}`).innerHTML =
+          `<span class="bar-bg"><span class="bar-fill" style="width:${width}px"></span></span> <span style="font-size:0.75rem;color:var(--text-muted);">${val}%</span>`;
+      }
+    }
+
+    // Show result, hide wizard
+    document.querySelector(".wizard-box").style.display = "none";
+    document.getElementById("result-panel").className = "result-visible";
+  };
+
+  window.restart = function() {
+    currentStep = 0;
+    answers.fill(null);
+    document.querySelectorAll(".option-card").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".wizard-step").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".step-dot").forEach(d => { d.classList.remove("active", "done"); });
+    document.getElementById("step-0").classList.add("active");
+    document.getElementById("dot-0").classList.add("active");
+    ["next-0", "next-1", "next-2", "next-3"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
+    document.querySelector(".wizard-box").style.display = "block";
+    document.getElementById("result-panel").className = "result-hidden";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+})();
+</script>
+</body>
+</html>

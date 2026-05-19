@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batch API Throughput Planner — Queue Management &amp; Code Generator | ClaudKit</title>
+<meta name="description" content="Plan Claude Batch API workloads with queue visualization. Calculate optimal batch sizes, estimate completion times, configure retry strategies, and generate production-ready Python and JavaScript code.">
+<link rel="canonical" href="https://claudkit.com/guides/batch-api-guide.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/guides/batch-api-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/guides/batch-api-guide.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Batch API Throughput Planner — Queue Management & Code Generator">
+<meta property="og:description" content="Plan Claude Batch API workloads with queue visualization. Calculate optimal batch sizes, estimate completion times, and generate production-ready code.">
+<meta property="og:url" content="https://claudkit.com/guides/batch-api-guide.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Batch API Throughput Planner — Queue Management & Code Generator">
+<meta name="twitter:description" content="Plan Claude Batch API workloads with queue visualization. Calculate optimal batch sizes, estimate completion times, and generate production-ready code.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Batch API Throughput Planner — Queue Management & Code Generator",
+  "description": "Interactive planner for Claude Batch API workloads. Input total requests, rate limits, and processing times to calculate optimal batch sizes, estimated completion times, and concurrency levels. Includes queue visualization and code generation for Python and JavaScript.",
+  "url": "https://claudkit.com/guides/batch-api-guide.html",
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "mainEntityOfPage": "https://claudkit.com/guides/batch-api-guide.html",
+  "keywords": ["claude batch api", "batch api throughput", "claude batch processing", "anthropic batch api guide", "batch api code generator", "claude queue management"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does the Claude Batch API work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Claude Batch API allows you to send up to 100,000 requests in a single batch for asynchronous processing. You create a batch by uploading a JSONL file where each line is a request object with a custom_id and the standard messages API parameters. The API returns a batch ID which you poll for status. Processing typically completes within 24 hours and costs 50% less than real-time API calls. Results are available as a JSONL file download once the batch reaches 'ended' status."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does the Claude Batch API cost compared to real-time?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Batch API costs exactly 50% of standard real-time pricing for both input and output tokens. For Claude Sonnet 4, this means $1.50 per million input tokens (vs $3.00) and $7.50 per million output tokens (vs $15.00). For Opus 4, it is $7.50 input and $37.50 output. For Haiku 3.5, it is $0.40 input and $2.00 output. This 50% discount applies to all token types. Prompt caching discounts can be combined with batch pricing for additional savings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the maximum batch size for the Claude Batch API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Each batch can contain up to 100,000 individual requests. The JSONL upload file has no specific size limit beyond the 100,000 request cap. Each individual request within the batch follows the same limits as real-time API calls: the same max_tokens limits and context window sizes apply per request. You can run multiple batches concurrently if you need to process more than 100,000 requests, though total throughput is subject to your account's rate limits."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does Claude Batch API processing take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anthropic guarantees batch processing completes within 24 hours, but most batches finish much sooner. Small batches (under 1,000 requests) typically complete in 10-30 minutes. Medium batches (1,000-10,000 requests) usually take 1-4 hours. Large batches (10,000-100,000 requests) may take 4-12 hours. Processing time depends on current system load, model complexity, and individual request sizes. You can poll the batch status endpoint or use webhooks for completion notifications."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I handle failed requests in a Claude batch?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When a batch completes, the results JSONL file includes both successful and failed requests. Each result has a custom_id matching your input, a result type of 'succeeded' or 'errored', and either the response or error details. Common failures include invalid parameters, content policy violations, or token limit exceeded errors. Best practice is to parse the results, collect failed custom_ids, build a retry batch with only the failed requests, and submit it as a new batch. Implement exponential backoff between retry batches."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://claudkit.com/guides/"},{"@type":"ListItem","position":3,"name":"Batch API Throughput Planner"}]}</script>
+
+<style>
+  .builder-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; max-width:1200px; margin:0 auto 2rem; padding:0 2rem; }
+  .builder-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .builder-panel h2 { font-size:0.95rem; font-family:var(--font-display); margin-bottom:1rem; color:var(--accent); }
+  .output-tabs { display:flex; gap:0; margin-bottom:0.75rem; border-bottom:1px solid var(--border); }
+  .output-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .output-tab:hover { color:var(--text); }
+  .output-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-out { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.8rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-floating { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-floating:hover { border-color:var(--accent); }
+  .json-preview { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.5; overflow-x:auto; white-space:pre-wrap; max-height:300px; overflow-y:auto; margin-top:1rem; color:var(--text-muted); }
+  .estimate-row { display:flex; gap:1.5rem; margin-top:1rem; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); }
+  .estimate-item { text-align:center; flex:1; }
+  .estimate-label { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
+  .estimate-value { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--accent); margin-top:0.25rem; }
+  .slider-row { display:flex; align-items:center; gap:0.75rem; }
+  .slider-row input[type="range"] { flex:1; accent-color:var(--accent); }
+  .slider-val { font-family:var(--font-display); font-size:0.85rem; min-width:50px; text-align:right; }
+  .queue-viz { margin-top:1.25rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; }
+  .queue-viz h3 { font-size:0.85rem; font-family:var(--font-display); color:var(--accent); margin-bottom:0.75rem; }
+  .queue-timeline { display:flex; flex-direction:column; gap:0.35rem; max-height:250px; overflow-y:auto; }
+  .queue-batch { display:flex; align-items:center; gap:0.5rem; padding:0.35rem 0.5rem; border-radius:4px; font-size:0.75rem; font-family:var(--font-display); }
+  .queue-batch .batch-label { min-width:65px; color:var(--text-muted); }
+  .queue-batch .batch-bar { flex:1; height:18px; border-radius:3px; position:relative; overflow:hidden; }
+  .queue-batch .batch-fill { height:100%; border-radius:3px; transition:width 0.3s ease; }
+  .queue-batch .batch-info { min-width:100px; text-align:right; font-size:0.72rem; color:var(--text-muted); }
+  .batch-fill.processing { background:var(--accent); }
+  .batch-fill.queued { background:var(--border); }
+  .batch-fill.complete { background:#10b981; }
+  .retry-config { margin-top:1rem; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); }
+  .retry-config h3 { font-size:0.85rem; font-family:var(--font-display); color:var(--accent); margin-bottom:0.5rem; }
+  .retry-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+  .retry-grid label { font-size:0.8rem; color:var(--text-muted); }
+  .retry-grid input, .retry-grid select { font-size:0.85rem; }
+  .savings-bar { margin-top:1rem; padding:1rem; background:rgba(139,92,246,0.1); border:1px solid var(--accent); border-radius:var(--radius); text-align:center; }
+  .savings-bar .big-number { font-size:1.8rem; font-weight:700; color:var(--accent); font-family:var(--font-display); }
+  .savings-bar .savings-sub { font-size:0.85rem; color:var(--text-muted); margin-top:0.25rem; }
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); display:flex; gap:1rem; align-items:flex-start; }
+  .author-box .author-info { flex:1; }
+  .author-box .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-box .author-name a { color:var(--accent); text-decoration:none; }
+  .author-box .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+  @media (max-width:768px) { .builder-grid { grid-template-columns:1fr; padding:0 1rem; } .estimate-row { flex-direction:column; gap:0.75rem; } .retry-grid { grid-template-columns:1fr; } .author-box { flex-direction:column; margin:2rem 1rem; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/guides/" style="color:var(--accent);text-decoration:none;">Guides</a> <span>/</span> <span>Batch API Throughput Planner</span></nav>
+    <h1>Batch API Throughput Planner</h1>
+    <p>Plan your Claude Batch API workloads with queue visualization, completion time estimation, and production-ready code generation. Configure batch sizes, concurrency, and retry strategies for optimal throughput.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> · May 25, 2026</p>
+  </div>
+
+  <div class="builder-grid">
+    <!-- Left: Configuration Panel -->
+    <div class="builder-panel">
+      <h2>Batch Configuration</h2>
+
+      <div class="form-group">
+        <label>Model</label>
+        <select id="ba-model">
+          <option value="opus">Claude Opus 4 ($7.50 / $37.50 batch)</option>
+          <option value="sonnet" selected>Claude Sonnet 4 ($1.50 / $7.50 batch)</option>
+          <option value="haiku">Claude Haiku 3.5 ($0.40 / $2.00 batch)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Total Requests</label>
+        <input type="text" id="ba-total" value="10000" placeholder="10000">
+      </div>
+
+      <div class="form-group">
+        <label>Avg Input Tokens per Request</label>
+        <input type="text" id="ba-input-tokens" value="500" placeholder="500">
+      </div>
+
+      <div class="form-group">
+        <label>Avg Output Tokens per Request</label>
+        <input type="text" id="ba-output-tokens" value="1000" placeholder="1000">
+      </div>
+
+      <div class="form-group">
+        <label>Requests per Batch</label>
+        <div class="slider-row">
+          <input type="range" id="ba-batch-size" min="100" max="100000" step="100" value="10000">
+          <span class="slider-val" id="ba-batch-size-val">10,000</span>
+        </div>
+        <span style="font-size:0.75rem;color:var(--text-muted);">Max 100,000 per batch. Smaller batches complete faster.</span>
+      </div>
+
+      <div class="form-group">
+        <label>Avg Processing Time per Request (seconds)</label>
+        <div class="slider-row">
+          <input type="range" id="ba-proc-time" min="1" max="60" step="1" value="5">
+          <span class="slider-val" id="ba-proc-time-val">5s</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Concurrent Batches</label>
+        <div class="slider-row">
+          <input type="range" id="ba-concurrency" min="1" max="10" step="1" value="1">
+          <span class="slider-val" id="ba-concurrency-val">1</span>
+        </div>
+      </div>
+
+      <div class="retry-config">
+        <h3>Retry Strategy</h3>
+        <div class="retry-grid">
+          <div>
+            <label>Max Retries</label>
+            <select id="ba-max-retries">
+              <option value="0">0 (no retry)</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div>
+            <label>Backoff Strategy</label>
+            <select id="ba-backoff">
+              <option value="exponential" selected>Exponential</option>
+              <option value="linear">Linear</option>
+              <option value="fixed">Fixed delay</option>
+            </select>
+          </div>
+          <div>
+            <label>Base Delay (seconds)</label>
+            <input type="text" id="ba-base-delay" value="60" placeholder="60">
+          </div>
+          <div>
+            <label>Expected Failure Rate</label>
+            <select id="ba-failure-rate">
+              <option value="0.001">0.1%</option>
+              <option value="0.005">0.5%</option>
+              <option value="0.01" selected>1%</option>
+              <option value="0.02">2%</option>
+              <option value="0.05">5%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="estimate-row">
+        <div class="estimate-item">
+          <div class="estimate-label">Total Batches</div>
+          <div class="estimate-value" id="ba-total-batches">1</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Est. Time</div>
+          <div class="estimate-value" id="ba-est-time">2h</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Total Cost</div>
+          <div class="estimate-value" id="ba-est-cost">$90</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Output Panel -->
+    <div class="builder-panel">
+      <h2>Generated Code</h2>
+
+      <div class="output-tabs">
+        <button class="output-tab active" data-lang="python">Python</button>
+        <button class="output-tab" data-lang="javascript">JavaScript</button>
+        <button class="output-tab" data-lang="jsonl">JSONL Sample</button>
+      </div>
+
+      <div style="position:relative;">
+        <div class="code-out" id="ba-code-output"></div>
+        <button class="copy-floating" id="ba-copy-btn" onclick="copyCode()">Copy</button>
+      </div>
+
+      <div class="queue-viz">
+        <h3>Queue Visualization</h3>
+        <div class="queue-timeline" id="ba-queue"></div>
+      </div>
+
+      <div class="savings-bar">
+        <div class="big-number" id="ba-savings">$90.00</div>
+        <div class="savings-sub">Saved vs real-time API (50% batch discount)</div>
+      </div>
+
+      <div class="estimate-row" style="margin-top:1rem;">
+        <div class="estimate-item">
+          <div class="estimate-label">Batch Cost</div>
+          <div class="estimate-value" id="ba-batch-cost">$90</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Real-time Cost</div>
+          <div class="estimate-value" id="ba-realtime-cost">$180</div>
+        </div>
+        <div class="estimate-item">
+          <div class="estimate-label">Failed Reqs</div>
+          <div class="estimate-value" id="ba-failed-reqs">100</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Long-form article content -->
+  <section style="max-width:800px;margin:2rem auto;padding:0 2rem;line-height:1.7;">
+    <h2>What This Planner Does</h2>
+
+    <p>The Batch API Throughput Planner helps you design and optimize batch processing workloads for the Claude Batch API. Instead of guessing at batch sizes, completion times, and costs, you configure your workload parameters and the planner calculates the optimal configuration. It shows you how many batches you need, how long processing will take, what it will cost, and how much you save compared to real-time API calls. The queue visualization displays batch progression so you can understand the processing timeline.</p>
+
+    <p>The planner also generates production-ready code in Python and JavaScript that handles the complete batch lifecycle: creating the JSONL input file, uploading the batch, polling for completion, downloading results, parsing successes and failures, and retrying failed requests with configurable backoff strategies. The generated code is not a simple example but a complete implementation you can adapt to your production pipeline with minimal changes.</p>
+
+    <h2>Understanding the Claude Batch API</h2>
+
+    <p>The Claude Batch API is an asynchronous processing service designed for workloads that do not require real-time responses. You submit a batch of requests as a JSONL file, Anthropic processes them in the background, and you retrieve the results when processing is complete. The primary advantages over real-time API calls are cost (50% discount on all token prices) and throughput (no per-minute rate limits within a batch). The trade-off is latency: batches can take up to 24 hours to complete, though most finish much sooner.</p>
+
+    <p>Each line in the JSONL input file is a JSON object with a <code>custom_id</code> field (your unique identifier for the request) and a <code>params</code> object containing the standard Messages API parameters: model, max_tokens, messages, and optional fields like system, temperature, and tools. The custom_id is essential for matching results to requests, so use meaningful identifiers like database row IDs or document names rather than sequential numbers.</p>
+
+    <p>After uploading the JSONL file, you receive a batch ID and can poll the <code>/v1/messages/batches/{batch_id}</code> endpoint for status updates. The status transitions from <code>in_progress</code> to <code>ended</code> when all requests are processed. At that point, you download the results JSONL file where each line contains the custom_id, a result type (succeeded or errored), and either the complete response or error details. For monitoring batch costs alongside real-time usage, <a href="https://kickllm.com">KickLLM</a> provides comprehensive LLM cost dashboards.</p>
+
+    <h2>Batch Size Optimization</h2>
+
+    <p>The maximum batch size is 100,000 requests, but bigger is not always better. Smaller batches complete faster because Anthropic can parallelize processing more efficiently. A batch of 1,000 requests typically finishes in 10 to 30 minutes, while a batch of 100,000 requests may take 4 to 12 hours. If you need results as fast as possible, split your workload into smaller batches and submit them concurrently.</p>
+
+    <p>The optimal batch size depends on your latency requirements and workload characteristics. For time-sensitive workloads where you need all results within a few hours, use batches of 1,000 to 5,000 requests submitted concurrently. For overnight processing jobs where results can wait until morning, single large batches of 50,000 to 100,000 requests minimize management overhead. For continuous pipelines that process data throughout the day, use fixed-size batches of 5,000 to 10,000 requests submitted on a schedule.</p>
+
+    <p>The planner calculates how many batches you need based on your total request count and batch size setting. It also estimates completion time by modeling the processing pipeline: each batch has a startup overhead (typically 1 to 5 minutes), a processing phase proportional to the number and complexity of requests, and a finalization phase. Concurrent batches run in parallel, reducing total wall-clock time linearly with concurrency level.</p>
+
+    <h2>Retry Strategy Design</h2>
+
+    <p>Even well-formed batch requests can fail. Common failure modes include individual requests that violate content policy, requests with invalid parameters that pass client-side validation but fail server-side, transient infrastructure errors, and requests that exceed model-specific context window limits. The planner models your expected failure rate and calculates the number of retry batches needed to achieve full completion.</p>
+
+    <p>The <strong>exponential backoff</strong> strategy doubles the delay between retry batches: 60 seconds after the first failure, 120 seconds after the second, 240 after the third. This prevents overwhelming the API during outages and gives transient issues time to resolve. The <strong>linear backoff</strong> strategy increases delay by a fixed increment: 60, 120, 180 seconds. The <strong>fixed delay</strong> strategy uses the same wait time between every retry. Exponential backoff is the recommended default for production systems.</p>
+
+    <p>The generated code implements the complete retry loop: parse the results file, collect custom_ids of failed requests, build a new JSONL file with only those requests, wait according to the backoff strategy, and submit the retry batch. After exhausting the maximum retry count, remaining failures are logged with full error details for manual review. For applications where batch failures trigger alerts or automated remediation, <a href="https://invokebot.com">InvokeBot</a> provides webhook management tools.</p>
+
+    <h2>Cost Analysis and Savings</h2>
+
+    <p>The Batch API provides a flat 50% discount on all token prices. This discount applies to both input and output tokens and stacks with prompt caching discounts. If you use prompt caching within batch requests, you get the cache read discount (90% off input) combined with the batch discount (50% off the remaining cost), resulting in a 95% total discount on cached input tokens compared to standard real-time pricing.</p>
+
+    <p>The planner calculates three cost figures. The <strong>batch cost</strong> is what you actually pay using the Batch API at 50% discount pricing. The <strong>real-time cost</strong> is what the same workload would cost using standard synchronous API calls at full pricing. The <strong>savings</strong> is the difference, representing the exact dollar value of using batch processing instead of real-time. For a workload of 10,000 requests with 500 input tokens and 1,000 output tokens each on Sonnet 4, the batch cost is approximately $90 versus $180 real-time, saving $90.</p>
+
+    <p>The failure rate setting adjusts the cost estimate to account for retry overhead. With a 1% failure rate and 3 retries, you process approximately 1% extra requests across retry batches. The cost of retries is factored into the total estimate so the number you see reflects the realistic total cost including error handling. For tracking actual batch costs over time and comparing them to your estimates, use the <a href="/research/prompt-caching-calculator.html">Prompt Caching Calculator</a> for cache optimization and <a href="https://kickllm.com">KickLLM</a> for overall cost monitoring.</p>
+
+    <h2>Queue Visualization Explained</h2>
+
+    <p>The queue visualization shows each batch as a row with a progress bar representing its lifecycle. Green bars indicate completed batches, purple bars indicate currently processing batches, and gray bars indicate queued batches waiting to start. The timeline shows the estimated start and end time for each batch based on your configuration parameters.</p>
+
+    <p>For concurrent batch configurations, multiple batches process simultaneously and the visualization reflects this parallelism. The estimated completion time accounts for concurrency: two concurrent batches each taking 2 hours complete in 2 hours total, not 4. The visualization helps you understand whether your configuration will meet your time requirements and where bottlenecks might occur.</p>
+
+    <h2>Generated Code Architecture</h2>
+
+    <p>The Python code uses the official <code>anthropic</code> SDK with async support for concurrent batch management. It creates a JSONL file from your request data, uploads it using the batch creation endpoint, polls for completion with exponential backoff, downloads and parses results, and handles retries automatically. The code is structured as a reusable class with configurable parameters matching the planner settings.</p>
+
+    <p>The JavaScript code uses the official <code>@anthropic-ai/sdk</code> package with async/await patterns. It follows the same architecture as the Python version: file creation, batch submission, status polling, result processing, and retry handling. Both implementations include proper error handling, progress logging, and graceful shutdown support. For API debugging during batch development, use the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a> to test individual requests before including them in batches, and consult the <a href="/research/claude-api-error-guide.html">API Error Guide</a> for troubleshooting specific error codes.</p>
+  </section>
+
+  <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0 2rem;">
+    <h2>Frequently Asked Questions</h2>
+
+    <details>
+      <summary>How does the Claude Batch API work?</summary>
+      <p>The Claude Batch API allows you to send up to 100,000 requests in a single batch for asynchronous processing. You create a batch by uploading a JSONL file where each line is a request object with a custom_id and the standard messages API parameters. The API returns a batch ID which you poll for status. Processing typically completes within 24 hours and costs 50% less than real-time API calls. Results are available as a JSONL file download once the batch reaches "ended" status.</p>
+    </details>
+
+    <details>
+      <summary>How much does the Claude Batch API cost compared to real-time?</summary>
+      <p>The Batch API costs exactly 50% of standard real-time pricing for both input and output tokens. For Claude Sonnet 4, this means $1.50 per million input tokens (vs $3.00) and $7.50 per million output tokens (vs $15.00). For Opus 4, it is $7.50 input and $37.50 output. For Haiku 3.5, it is $0.40 input and $2.00 output. Prompt caching discounts can be combined with batch pricing for additional savings.</p>
+    </details>
+
+    <details>
+      <summary>What is the maximum batch size for the Claude Batch API?</summary>
+      <p>Each batch can contain up to 100,000 individual requests. Each individual request within the batch follows the same limits as real-time API calls. You can run multiple batches concurrently if you need to process more than 100,000 requests, though total throughput is subject to your account's rate limits.</p>
+    </details>
+
+    <details>
+      <summary>How long does Claude Batch API processing take?</summary>
+      <p>Anthropic guarantees batch processing completes within 24 hours, but most batches finish much sooner. Small batches (under 1,000 requests) typically complete in 10 to 30 minutes. Medium batches (1,000-10,000) usually take 1 to 4 hours. Large batches (10,000-100,000) may take 4 to 12 hours. Processing time depends on current system load, model complexity, and individual request sizes.</p>
+    </details>
+
+    <details>
+      <summary>How do I handle failed requests in a Claude batch?</summary>
+      <p>When a batch completes, the results file includes both successful and failed requests. Each result has a custom_id matching your input, a result type of "succeeded" or "errored", and either the response or error details. Best practice is to parse results, collect failed custom_ids, build a retry batch with only those requests, and submit as a new batch with exponential backoff between retries.</p>
+    </details>
+  </section>
+
+  <div class="author-box" style="max-width:800px;margin:2rem auto;padding:1.5rem 2rem;">
+    <div class="author-info">
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Build Claude API requests visually with token counting and cost estimation.</p>
+      </a>
+      <a href="/research/prompt-caching-calculator.html" class="related-card">
+        <h3>Prompt Caching Calculator</h3>
+        <p>Estimate cache hit rates and monthly cost savings for prompt caching.</p>
+      </a>
+      <a href="/research/api-rate-limit-comparison.html" class="related-card">
+        <h3>Rate Limit Comparison</h3>
+        <p>Compare rate limits and throughput across Claude models and tiers.</p>
+      </a>
+      <a href="/research/claude-api-error-guide.html" class="related-card">
+        <h3>API Error Guide</h3>
+        <p>Every Claude API error code explained with fixes and code examples.</p>
+      </a>
+      <a href="https://kickllm.com" class="related-card">
+        <h3>KickLLM</h3>
+        <p>LLM cost calculator and comparison tool across all major providers.</p>
+      </a>
+      <a href="https://claudhq.com" class="related-card">
+        <h3>ClaudHQ</h3>
+        <p>Prompt library with 30+ tested templates optimized for Claude.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let activeLang = "python";
+
+  const PRICING = {
+    opus:   { input: 7.50,  output: 37.50, rtInput: 15.00, rtOutput: 75.00, label: "Opus 4" },
+    sonnet: { input: 1.50,  output: 7.50,  rtInput: 3.00,  rtOutput: 15.00, label: "Sonnet 4" },
+    haiku:  { input: 0.40,  output: 2.00,  rtInput: 0.80,  rtOutput: 4.00,  label: "Haiku 3.5" }
+  };
+
+  const MODEL_MAP = {
+    opus: "claude-opus-4-20250514",
+    sonnet: "claude-sonnet-4-20250514",
+    haiku: "claude-haiku-3-5-20241022"
+  };
+
+  function getConfig() {
+    return {
+      model: $("ba-model").value,
+      total: parseInt($("ba-total").value) || 10000,
+      inputTokens: parseInt($("ba-input-tokens").value) || 500,
+      outputTokens: parseInt($("ba-output-tokens").value) || 1000,
+      batchSize: parseInt($("ba-batch-size").value) || 10000,
+      procTime: parseInt($("ba-proc-time").value) || 5,
+      concurrency: parseInt($("ba-concurrency").value) || 1,
+      maxRetries: parseInt($("ba-max-retries").value),
+      backoff: $("ba-backoff").value,
+      baseDelay: parseInt($("ba-base-delay").value) || 60,
+      failureRate: parseFloat($("ba-failure-rate").value)
+    };
+  }
+
+  function fmtMoney(n) {
+    if (n >= 1000) return "$" + n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    if (n >= 10) return "$" + n.toFixed(0);
+    if (n >= 1) return "$" + n.toFixed(2);
+    return "$" + n.toFixed(4);
+  }
+
+  function fmtTime(minutes) {
+    if (minutes < 1) return "<1 min";
+    if (minutes < 60) return Math.round(minutes) + " min";
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    if (m === 0) return h + "h";
+    return h + "h " + m + "m";
+  }
+
+  function calcResults(cfg) {
+    const p = PRICING[cfg.model];
+    const totalBatches = Math.ceil(cfg.total / cfg.batchSize);
+    const concurrentWaves = Math.ceil(totalBatches / cfg.concurrency);
+
+    // Time estimate: startup + processing per batch
+    const startupMin = 2;
+    const processingMin = (cfg.batchSize * cfg.procTime) / 60 / 50; // ~50 concurrent slots
+    const batchTimeMin = startupMin + processingMin;
+    const totalTimeMin = concurrentWaves * batchTimeMin;
+
+    // Cost
+    const totalInputTokens = cfg.total * cfg.inputTokens;
+    const totalOutputTokens = cfg.total * cfg.outputTokens;
+    const batchCost = (totalInputTokens / 1e6) * p.input + (totalOutputTokens / 1e6) * p.output;
+    const realtimeCost = (totalInputTokens / 1e6) * p.rtInput + (totalOutputTokens / 1e6) * p.rtOutput;
+    const savings = realtimeCost - batchCost;
+
+    // Failures
+    const expectedFailures = Math.round(cfg.total * cfg.failureRate);
+    const retryReqs = expectedFailures;
+
+    return {
+      totalBatches, concurrentWaves, totalTimeMin, batchCost, realtimeCost, savings, expectedFailures, retryReqs, batchTimeMin
+    };
+  }
+
+  function renderQueue(cfg, results) {
+    const queue = $("ba-queue");
+    const batches = [];
+    let timeOffset = 0;
+
+    for (let wave = 0; wave < results.concurrentWaves; wave++) {
+      const batchesInWave = Math.min(cfg.concurrency, results.totalBatches - wave * cfg.concurrency);
+      for (let b = 0; b < batchesInWave; b++) {
+        const batchNum = wave * cfg.concurrency + b + 1;
+        const reqsInBatch = Math.min(cfg.batchSize, cfg.total - (batchNum - 1) * cfg.batchSize);
+        const startTime = timeOffset;
+        const endTime = timeOffset + results.batchTimeMin;
+        const status = wave === 0 ? "processing" : (wave === 1 ? "queued" : "queued");
+        batches.push({ num: batchNum, reqs: reqsInBatch, start: startTime, end: endTime, status: wave < 1 ? "complete" : (wave < 2 ? "processing" : "queued") });
+      }
+      timeOffset += results.batchTimeMin;
+    }
+
+    // Add retry batch if failures expected
+    if (results.expectedFailures > 0 && cfg.maxRetries > 0) {
+      batches.push({ num: "R1", reqs: results.expectedFailures, start: timeOffset, end: timeOffset + 5, status: "queued" });
+    }
+
+    const maxTime = timeOffset + 5;
+    queue.innerHTML = batches.slice(0, 15).map(b => {
+      const widthPct = Math.max(5, ((b.end - b.start) / maxTime) * 100);
+      const leftPct = (b.start / maxTime) * 100;
+      const cls = b.status;
+      return `<div class="queue-batch">
+        <div class="batch-label">Batch ${b.num}</div>
+        <div class="batch-bar" style="background:var(--bg-card);">
+          <div class="batch-fill ${cls}" style="width:${widthPct}%;margin-left:${leftPct}%"></div>
+        </div>
+        <div class="batch-info">${b.reqs.toLocaleString()} reqs / ${fmtTime(b.end - b.start)}</div>
+      </div>`;
+    }).join("") + (batches.length > 15 ? `<div style="text-align:center;font-size:0.75rem;color:var(--text-muted);padding:0.5rem;">... and ${batches.length - 15} more batches</div>` : "");
+  }
+
+  function genPython(cfg) {
+    const modelId = MODEL_MAP[cfg.model];
+    const backoffCode = cfg.backoff === "exponential" ? `${cfg.baseDelay} * (2 ** attempt)` : cfg.backoff === "linear" ? `${cfg.baseDelay} * (attempt + 1)` : `${cfg.baseDelay}`;
+    return `import anthropic
+import json
+import time
+
+client = anthropic.Anthropic()
+
+# Configuration
+MODEL = "${modelId}"
+BATCH_SIZE = ${cfg.batchSize}
+MAX_TOKENS = ${cfg.outputTokens}
+MAX_RETRIES = ${cfg.maxRetries}
+BASE_DELAY = ${cfg.baseDelay}
+
+def create_jsonl(requests, filename="batch_input.jsonl"):
+    """Create JSONL input file for batch processing."""
+    with open(filename, "w") as f:
+        for req in requests:
+            line = {
+                "custom_id": req["id"],
+                "params": {
+                    "model": MODEL,
+                    "max_tokens": MAX_TOKENS,
+                    "messages": [{"role": "user", "content": req["prompt"]}]
+                }
+            }
+            f.write(json.dumps(line) + "\\n")
+    return filename
+
+def submit_batch(filename):
+    """Submit a batch and return the batch ID."""
+    with open(filename, "rb") as f:
+        batch = client.messages.batches.create(requests=f)
+    print(f"Batch created: {batch.id} ({batch.request_counts.total} requests)")
+    return batch.id
+
+def poll_batch(batch_id):
+    """Poll until batch completes. Returns the batch object."""
+    while True:
+        batch = client.messages.batches.retrieve(batch_id)
+        status = batch.processing_status
+        succeeded = batch.request_counts.succeeded
+        errored = batch.request_counts.errored
+        total = batch.request_counts.total
+        print(f"  Status: {status} | {succeeded}/{total} done, {errored} errors")
+        if status == "ended":
+            return batch
+        time.sleep(30)
+
+def process_results(batch_id):
+    """Download and parse batch results."""
+    results = {"succeeded": [], "failed": []}
+    for result in client.messages.batches.results(batch_id):
+        if result.result.type == "succeeded":
+            text = result.result.message.content[0].text
+            results["succeeded"].append({
+                "id": result.custom_id,
+                "text": text,
+                "usage": {
+                    "input": result.result.message.usage.input_tokens,
+                    "output": result.result.message.usage.output_tokens
+                }
+            })
+        else:
+            results["failed"].append({
+                "id": result.custom_id,
+                "error": str(result.result)
+            })
+    return results
+
+def run_batch_pipeline(requests):
+    """Run the complete batch pipeline with retries."""
+    all_results = []
+    pending = requests[:]
+    attempt = 0
+
+    while pending and attempt <= MAX_RETRIES:
+        if attempt > 0:
+            delay = ${backoffCode}
+            print(f"Retry {attempt}/{MAX_RETRIES} — waiting {delay}s...")
+            time.sleep(delay)
+
+        # Split into batch-sized chunks
+        for i in range(0, len(pending), BATCH_SIZE):
+            chunk = pending[i:i + BATCH_SIZE]
+            filename = create_jsonl(chunk, f"batch_{attempt}_{i}.jsonl")
+            batch_id = submit_batch(filename)
+            poll_batch(batch_id)
+            results = process_results(batch_id)
+
+            all_results.extend(results["succeeded"])
+            print(f"  Completed: {len(results['succeeded'])} ok, {len(results['failed'])} failed")
+
+        # Collect failures for retry
+        pending = [r for r in requests if r["id"] in
+                   {f["id"] for f in results.get("failed", [])}]
+        attempt += 1
+
+    print(f"Pipeline complete: {len(all_results)} succeeded, {len(pending)} final failures")
+    return all_results
+
+# Example usage
+requests = [{"id": f"req_{i}", "prompt": f"Process item {i}"} for i in range(${cfg.total})]
+results = run_batch_pipeline(requests)`;
+  }
+
+  function genJS(cfg) {
+    const modelId = MODEL_MAP[cfg.model];
+    const backoffCode = cfg.backoff === "exponential" ? `${cfg.baseDelay} * Math.pow(2, attempt)` : cfg.backoff === "linear" ? `${cfg.baseDelay} * (attempt + 1)` : `${cfg.baseDelay}`;
+    return `import Anthropic from "@anthropic-ai/sdk";
+import { writeFileSync, createReadStream } from "fs";
+
+const client = new Anthropic();
+
+// Configuration
+const MODEL = "${modelId}";
+const BATCH_SIZE = ${cfg.batchSize};
+const MAX_TOKENS = ${cfg.outputTokens};
+const MAX_RETRIES = ${cfg.maxRetries};
+const BASE_DELAY = ${cfg.baseDelay};
+
+function createJsonl(requests, filename = "batch_input.jsonl") {
+    const lines = requests.map(req => JSON.stringify({
+        custom_id: req.id,
+        params: {
+            model: MODEL,
+            max_tokens: MAX_TOKENS,
+            messages: [{ role: "user", content: req.prompt }]
+        }
+    }));
+    writeFileSync(filename, lines.join("\\n") + "\\n");
+    return filename;
+}
+
+async function submitBatch(filename) {
+    const batch = await client.messages.batches.create({
+        requests: createReadStream(filename)
+    });
+    console.log(\`Batch created: \${batch.id} (\${batch.request_counts.total} requests)\`);
+    return batch.id;
+}
+
+async function pollBatch(batchId) {
+    while (true) {
+        const batch = await client.messages.batches.retrieve(batchId);
+        const { processing_status, request_counts } = batch;
+        console.log(\`  Status: \${processing_status} | \${request_counts.succeeded}/\${request_counts.total} done\`);
+        if (processing_status === "ended") return batch;
+        await new Promise(r => setTimeout(r, 30000));
+    }
+}
+
+async function processResults(batchId) {
+    const results = { succeeded: [], failed: [] };
+    for await (const result of client.messages.batches.results(batchId)) {
+        if (result.result.type === "succeeded") {
+            results.succeeded.push({
+                id: result.custom_id,
+                text: result.result.message.content[0].text,
+                usage: result.result.message.usage
+            });
+        } else {
+            results.failed.push({
+                id: result.custom_id,
+                error: JSON.stringify(result.result)
+            });
+        }
+    }
+    return results;
+}
+
+async function runBatchPipeline(requests) {
+    const allResults = [];
+    let pending = [...requests];
+    let attempt = 0;
+
+    while (pending.length > 0 && attempt <= MAX_RETRIES) {
+        if (attempt > 0) {
+            const delay = ${backoffCode};
+            console.log(\`Retry \${attempt}/\${MAX_RETRIES} — waiting \${delay}s...\`);
+            await new Promise(r => setTimeout(r, delay * 1000));
+        }
+
+        for (let i = 0; i < pending.length; i += BATCH_SIZE) {
+            const chunk = pending.slice(i, i + BATCH_SIZE);
+            const filename = createJsonl(chunk, \`batch_\${attempt}_\${i}.jsonl\`);
+            const batchId = await submitBatch(filename);
+            await pollBatch(batchId);
+            const results = await processResults(batchId);
+
+            allResults.push(...results.succeeded);
+            console.log(\`  Completed: \${results.succeeded.length} ok, \${results.failed.length} failed\`);
+
+            const failedIds = new Set(results.failed.map(f => f.id));
+            pending = pending.filter(r => failedIds.has(r.id));
+        }
+        attempt++;
+    }
+
+    console.log(\`Pipeline complete: \${allResults.length} succeeded, \${pending.length} failures\`);
+    return allResults;
+}
+
+// Example usage
+const requests = Array.from({ length: ${cfg.total} }, (_, i) => ({
+    id: \`req_\${i}\`,
+    prompt: \`Process item \${i}\`
+}));
+const results = await runBatchPipeline(requests);`;
+  }
+
+  function genJSONL(cfg) {
+    const modelId = MODEL_MAP[cfg.model];
+    const lines = [];
+    for (let i = 0; i < Math.min(5, cfg.total); i++) {
+      lines.push(JSON.stringify({
+        custom_id: `req_${i}`,
+        params: {
+          model: modelId,
+          max_tokens: cfg.outputTokens,
+          messages: [{ role: "user", content: `Process item ${i}` }]
+        }
+      }));
+    }
+    if (cfg.total > 5) {
+      lines.push(`... (${(cfg.total - 5).toLocaleString()} more lines)`);
+    }
+    return lines.join("\n");
+  }
+
+  function update() {
+    const cfg = getConfig();
+    const results = calcResults(cfg);
+
+    $("ba-total-batches").textContent = results.totalBatches.toLocaleString();
+    $("ba-est-time").textContent = fmtTime(results.totalTimeMin);
+    $("ba-est-cost").textContent = fmtMoney(results.batchCost);
+    $("ba-batch-cost").textContent = fmtMoney(results.batchCost);
+    $("ba-realtime-cost").textContent = fmtMoney(results.realtimeCost);
+    $("ba-savings").textContent = fmtMoney(results.savings);
+    $("ba-failed-reqs").textContent = results.expectedFailures.toLocaleString();
+
+    renderQueue(cfg, results);
+
+    let code;
+    switch (activeLang) {
+      case "python": code = genPython(cfg); break;
+      case "javascript": code = genJS(cfg); break;
+      case "jsonl": code = genJSONL(cfg); break;
+    }
+    $("ba-code-output").textContent = code;
+  }
+
+  // Tab switching
+  document.querySelectorAll(".output-tab").forEach(tab => {
+    tab.addEventListener("click", function() {
+      document.querySelectorAll(".output-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      activeLang = this.dataset.lang;
+      update();
+    });
+  });
+
+  // Copy button
+  window.copyCode = function() {
+    const text = $("ba-code-output").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $("ba-copy-btn");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
+  };
+
+  // Slider displays
+  $("ba-batch-size").addEventListener("input", function() {
+    $("ba-batch-size-val").textContent = parseInt(this.value).toLocaleString();
+    update();
+  });
+  $("ba-proc-time").addEventListener("input", function() {
+    $("ba-proc-time-val").textContent = this.value + "s";
+    update();
+  });
+  $("ba-concurrency").addEventListener("input", function() {
+    $("ba-concurrency-val").textContent = this.value;
+    update();
+  });
+
+  // All inputs trigger update
+  ["ba-model", "ba-total", "ba-input-tokens", "ba-output-tokens", "ba-max-retries", "ba-backoff", "ba-base-delay", "ba-failure-rate"].forEach(id => {
+    $(id).addEventListener("input", update);
+    $(id).addEventListener("change", update);
+  });
+
+  // Initial render
+  update();
+})();
+</script>
+</body>
+</html>
