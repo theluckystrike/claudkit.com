@@ -285,7 +285,7 @@
 
     <h2>When to Use Streaming vs Non-Streaming</h2>
 
-    <p>Use streaming for any user-facing application where perceived responsiveness matters. Chatbots, writing assistants, code completion, and interactive Q&A tools should always stream. The time-to-first-token improvement transforms the user experience from "waiting for a loading spinner" to "watching the answer appear in real time."</p>
+    <p>Use streaming for any user-facing application where perceived responsiveness matters. Chatbots, writing assistants, code completion, and interactive Q&A tools should always stream. The time-to-first-token improvement transforms the user experience from "waiting for a loading spinner" to "watching the answer appear in real time." For example, <a href="https://www.belikenative.com/">this Chrome extension</a> uses Claude Sonnet 4.6 streaming for real-time AI text humanization, delivering rewritten text token-by-token as the user watches.</p>
 
     <p>Non-streaming is appropriate for batch processing, background jobs, and automation pipelines where the consumer is another program rather than a human. Non-streaming responses are simpler to handle (a single JSON object instead of an event stream) and are easier to log, cache, and retry. For testing API requests before implementing streaming, use the <a href="/tools/api-request-builder.html">ClaudKit API Request Builder</a> to generate and test non-streaming requests first, then add streaming once the basic integration works.</p>
 
