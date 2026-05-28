@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Vision API Playground — Test Image Analysis | ClaudKit</title>
+<meta name="description" content="Test Claude Vision API image analysis in the browser. Drag-and-drop images, write prompts, and see simulated responses for charts, documents, photos, and screenshots. Generate Python, Node.js, and curl code snippets.">
+<link rel="canonical" href="https://claudkit.com/tools/vision-api-playground.html">
+<link rel="alternate" hreflang="en" href="https://claudkit.com/tools/vision-api-playground.html">
+<link rel="alternate" hreflang="x-default" href="https://claudkit.com/tools/vision-api-playground.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Claude Vision API Playground — Test Image Analysis">
+<meta property="og:description" content="Test Claude Vision API image analysis with drag-and-drop uploads. See example analyses for charts, documents, and photos. Generate production code in Python, Node.js, and curl.">
+<meta property="og:url" content="https://claudkit.com/tools/vision-api-playground.html">
+<meta property="og:site_name" content="Zovo Tools">
+<meta property="og:image" content="https://claudkit.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Claude Vision API Playground — Test Image Analysis">
+<meta name="twitter:description" content="Test Claude Vision API with drag-and-drop image uploads. Generate code snippets in Python, Node.js, and curl.">
+<meta name="twitter:image" content="https://claudkit.com/assets/og-image.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Vision API Playground",
+  "description": "Interactive tool to test Claude Vision API image analysis. Upload images via drag-and-drop, write analysis prompts, see simulated responses for different image types, and generate production code in Python, Node.js, and curl.",
+  "url": "https://claudkit.com/tools/vision-api-playground.html",
+  "datePublished": "2026-05-28",
+  "dateModified": "2026-05-28",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
+  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
+  "keywords": ["claude vision api", "claude image analysis", "anthropic vision", "claude multimodal", "image analysis tool", "claude vision playground"]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I send images to the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can send images to the Claude API in two ways: as a base64-encoded string with the media type, or as a URL. For base64, include a content block with type 'image', source type 'base64', the media_type (e.g. 'image/jpeg'), and the base64-encoded data string. For URLs, use source type 'url' and provide the image URL directly. Both formats are included in the messages array alongside text content blocks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What image formats does Claude Vision support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Vision supports JPEG, PNG, GIF, and WebP image formats. The maximum image size is 5MB per image. Images can be sent as base64-encoded data or via URL. Claude can process multiple images in a single request — include multiple image content blocks in the messages array. The model performs best with images that are clear and well-lit. Very small text in images (under 8pt equivalent) may not be reliably extracted."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What can Claude Vision analyze in images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude Vision can analyze a wide range of image content: read and transcribe text (OCR), describe scene content and objects, interpret charts and graphs (extract values, trends, labels), analyze documents and forms, describe user interfaces and screenshots, identify products and landmarks, describe medical or scientific imagery, and answer specific questions about image content. Performance is highest for clear, well-lit images with sufficient resolution."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does Claude Vision cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Images are counted as tokens for billing purposes. A 1024x1024 image costs approximately 1,600 input tokens with Claude Sonnet. Smaller images use fewer tokens. The exact token count depends on image dimensions: Claude resizes images to fit within a 1568x1568 pixel bounding box and bills based on the resulting size. For high-volume image processing, calculate costs using the token formula: (width * height) / 750 for images within the size limits."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Claude Vision extract data from charts?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Claude Vision can extract data from bar charts, line charts, pie charts, scatter plots, and other visualizations. Provide a specific prompt asking for the data values, axis labels, and legend. For best results, ask Claude to produce the extracted data as a structured format like JSON or a table. Accuracy is high for clearly labeled charts with legible text. Very small axis labels or dense data points may reduce extraction accuracy."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://claudkit.com/"},{"@type":"ListItem","position":2,"name":"Tools","item":"https://claudkit.com/tools/"},{"@type":"ListItem","position":3,"name":"Vision API Playground"}]}</script>
+
+<style>
+  .tool-wrap { max-width:1040px; margin:0 auto; padding:0 1.5rem 2rem; }
+
+  /* Upload area */
+  .upload-zone { border:2px dashed var(--border); border-radius:var(--radius); background:var(--bg-card); padding:2.5rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.2s; position:relative; min-height:160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.75rem; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color:var(--accent); background:rgba(139,92,246,0.05); }
+  .upload-zone .upload-icon { font-size:2.5rem; line-height:1; }
+  .upload-zone .upload-label { font-family:var(--font-display); font-size:0.95rem; color:var(--text); }
+  .upload-zone .upload-sub { font-size:0.8rem; color:var(--text-muted); }
+  .upload-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .preview-wrap { position:relative; display:inline-block; max-width:100%; }
+  .preview-img { max-width:100%; max-height:300px; border-radius:var(--radius); border:1px solid var(--border); display:block; }
+  .remove-btn { position:absolute; top:0.4rem; right:0.4rem; background:rgba(0,0,0,0.7); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:0.2rem 0.5rem; font-size:0.75rem; cursor:pointer; }
+  .remove-btn:hover { border-color:var(--accent); }
+
+  /* Image type examples */
+  .example-types { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .example-type { padding:0.35rem 0.75rem; border:1px solid var(--border); border-radius:20px; font-size:0.8rem; color:var(--text-muted); cursor:pointer; font-family:var(--font-display); transition:all 0.15s; background:var(--bg); }
+  .example-type:hover { border-color:var(--accent); color:var(--text); }
+  .example-type.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  /* Main layout */
+  .playground-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.5rem; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .panel-title { font-size:0.9rem; font-family:var(--font-display); color:var(--accent); margin-bottom:1rem; }
+  .field-label { font-size:0.78rem; color:var(--text-muted); margin-bottom:0.3rem; font-family:var(--font-display); }
+  .prompt-input { width:100%; min-height:90px; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font-body); font-size:0.85rem; resize:vertical; line-height:1.5; }
+  .prompt-input:focus { outline:none; border-color:var(--accent); }
+  .model-select { width:100%; padding:0.5rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font-body); font-size:0.85rem; margin-bottom:0.75rem; cursor:pointer; }
+  .model-select:focus { outline:none; border-color:var(--accent); }
+  .run-btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.55rem 1.5rem; border-radius:var(--radius); border:none; background:var(--accent); color:#fff; font-family:var(--font-body); font-size:0.9rem; cursor:pointer; transition:opacity 0.2s; }
+  .run-btn:hover { opacity:0.85; }
+  .run-btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-row { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; margin-top:0.75rem; }
+  .btn { display:inline-flex; align-items:center; padding:0.45rem 1rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); font-family:var(--font-body); font-size:0.82rem; cursor:pointer; transition:all 0.2s; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* Response area */
+  .response-area { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-body); font-size:0.85rem; line-height:1.7; min-height:220px; max-height:400px; overflow-y:auto; white-space:pre-wrap; word-break:break-word; color:var(--text); }
+  .response-meta { display:flex; gap:1.5rem; margin-top:0.6rem; font-size:0.78rem; color:var(--text-muted); }
+  .response-meta span { font-family:var(--font-display); color:var(--accent); }
+
+  /* Prompt suggestions */
+  .prompt-chips { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+  .prompt-chip { padding:0.3rem 0.65rem; border:1px solid var(--border); border-radius:20px; font-size:0.78rem; color:var(--text-muted); cursor:pointer; background:var(--bg); transition:all 0.15s; }
+  .prompt-chip:hover { border-color:var(--accent); color:var(--text); }
+
+  /* Code snippet area */
+  .code-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1.5rem; }
+  .code-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:0.75rem; }
+  .code-tab { padding:0.5rem 1rem; font-size:0.85rem; color:var(--text-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; font-family:var(--font-body); transition:all 0.2s; }
+  .code-tab:hover { color:var(--text); }
+  .code-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .code-display { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; font-family:var(--font-display); font-size:0.78rem; line-height:1.6; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; position:relative; }
+  .copy-btn-float { position:absolute; top:0.5rem; right:0.5rem; z-index:2; padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; }
+  .copy-btn-float:hover { border-color:var(--accent); }
+
+  /* Upload mode toggle */
+  .input-mode { display:flex; gap:0; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:0.75rem; width:fit-content; }
+  .mode-btn { padding:0.4rem 0.9rem; font-size:0.82rem; border:none; background:var(--bg); color:var(--text-muted); cursor:pointer; font-family:var(--font-body); transition:all 0.15s; }
+  .mode-btn.active { background:var(--accent); color:#fff; }
+
+  .url-input { width:100%; padding:0.5rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font-body); font-size:0.85rem; margin-bottom:0.75rem; }
+  .url-input:focus { outline:none; border-color:var(--accent); }
+
+  /* Spinner */
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .author-box { max-width:800px; margin:2rem auto; padding:1.5rem 2rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); }
+  .author-name { font-family:var(--font-display); font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; }
+  .author-name a { color:var(--accent); text-decoration:none; }
+  .author-bio { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+  .related-tools { max-width:800px; margin:2rem auto; padding:0 2rem; }
+  .related-tools h2 { font-size:1.1rem; margin-bottom:1rem; text-align:center; }
+  .related-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; }
+  .related-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; text-decoration:none; transition:border-color 0.2s; }
+  .related-card:hover { border-color:var(--accent); }
+  .related-card h3 { font-size:0.9rem; color:var(--text); margin-bottom:0.3rem; }
+  .related-card p { font-size:0.8rem; color:var(--text-muted); }
+
+  @media (max-width:768px) { .playground-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">ClaudKit</a>
+    <ul class="nav-links">
+      <li><a href="/guides/">Guides</a></li>
+      <li><a href="/research/">Research</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+    <div class="nav-right">
+      <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=nav-link" class="nav-pro" target="_blank">Go Pro ✦</a>
+      <a href="https://zovo.one/tools" class="nav-zovo">Zovo Tools</a>
+    </div>
+  </nav>
+
+<main>
+  <div class="hero">
+    <nav class="breadcrumb" aria-label="Breadcrumb" style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;"><a href="/" style="color:var(--accent);text-decoration:none;">Home</a> <span>/</span> <a href="/tools/" style="color:var(--accent);text-decoration:none;">Tools</a> <span>/</span> <span>Vision API Playground</span></nav>
+    <h1>Claude Vision API Playground</h1>
+    <p>Upload an image or paste a URL, write an analysis prompt, and see a simulated Claude Vision response. Explore examples for charts, documents, screenshots, and photos. Generate ready-to-use Python, Node.js, and curl code.</p>
+    <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> &middot; May 28, 2026</p>
+  </div>
+
+  <div class="tool-wrap">
+
+    <!-- Image Type Examples -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;">
+      <div class="panel-title" style="margin-bottom:0.75rem;">Try an example image type</div>
+      <div class="example-types" id="example-types">
+        <button class="example-type active" data-type="chart" onclick="loadExample('chart')">Bar Chart</button>
+        <button class="example-type" data-type="linechart" onclick="loadExample('linechart')">Line Chart</button>
+        <button class="example-type" data-type="document" onclick="loadExample('document')">Document / PDF</button>
+        <button class="example-type" data-type="screenshot" onclick="loadExample('screenshot')">UI Screenshot</button>
+        <button class="example-type" data-type="photo" onclick="loadExample('photo')">Photo / Scene</button>
+        <button class="example-type" data-type="receipt" onclick="loadExample('receipt')">Receipt / Invoice</button>
+        <button class="example-type" data-type="code" onclick="loadExample('code')">Code Screenshot</button>
+        <button class="example-type" data-type="diagram" onclick="loadExample('diagram')">Architecture Diagram</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-muted);" id="example-desc">A bar chart showing quarterly revenue across four product lines. Simulated response demonstrates Claude's chart data extraction capability.</p>
+    </div>
+
+    <!-- Main Playground -->
+    <div class="playground-grid">
+      <!-- Left: Input -->
+      <div class="panel">
+        <div class="panel-title">Image Input</div>
+
+        <div class="input-mode" style="margin-bottom:0.75rem;">
+          <button class="mode-btn active" id="mode-upload" onclick="switchMode('upload')">Upload</button>
+          <button class="mode-btn" id="mode-url" onclick="switchMode('url')">URL</button>
+        </div>
+
+        <!-- Upload mode -->
+        <div id="upload-section">
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept="image/jpeg,image/png,image/gif,image/webp" onchange="handleFileSelect(event)">
+            <div class="upload-icon">&#x1F5BC;</div>
+            <div class="upload-label">Drop image here or click to browse</div>
+            <div class="upload-sub">JPEG, PNG, GIF, WebP &mdash; max 5MB</div>
+          </div>
+          <div id="preview-container" style="display:none;margin-top:0.75rem;text-align:center;">
+            <div class="preview-wrap">
+              <img id="preview-img" class="preview-img" src="" alt="Uploaded image preview">
+              <button class="remove-btn" onclick="removeImage()">Remove</button>
+            </div>
+            <div id="file-meta" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;"></div>
+          </div>
+        </div>
+
+        <!-- URL mode -->
+        <div id="url-section" style="display:none;">
+          <div class="field-label">Image URL</div>
+          <input type="url" class="url-input" id="url-input" placeholder="https://example.com/image.jpg" oninput="updateCodeFromUrl()">
+          <p style="font-size:0.78rem;color:var(--text-muted);">Paste a direct image URL. The image will be fetched by the Claude API at request time.</p>
+        </div>
+
+        <div style="margin-top:1rem;">
+          <div class="field-label">Model</div>
+          <select class="model-select" id="model-select" onchange="updateCode()">
+            <option value="claude-opus-4-20250514">claude-opus-4 (most capable)</option>
+            <option value="claude-sonnet-4-20250514" selected>claude-sonnet-4 (recommended)</option>
+            <option value="claude-haiku-3-5-20241022">claude-haiku-3-5 (fastest)</option>
+          </select>
+        </div>
+
+        <div class="field-label">Analysis Prompt</div>
+
+        <div class="prompt-chips" id="prompt-chips"></div>
+
+        <textarea class="prompt-input" id="prompt-input" placeholder="Describe what you want Claude to analyze in this image..."></textarea>
+
+        <div class="btn-row">
+          <button class="run-btn" id="run-btn" onclick="runAnalysis()">
+            <span id="btn-label">Analyze Image</span>
+          </button>
+          <button class="btn" onclick="clearAll()">Clear</button>
+          <button class="btn" onclick="copyResponse()">Copy Response</button>
+        </div>
+      </div>
+
+      <!-- Right: Response -->
+      <div class="panel">
+        <div class="panel-title">Simulated Claude Response</div>
+        <div class="response-area" id="response-area">Select an example type above or upload an image and click Analyze Image to see a simulated Claude Vision response here.
+
+This playground demonstrates how Claude analyzes different types of images. In production, responses use your actual API key and real Claude Vision processing.</div>
+        <div class="response-meta">
+          <div>Est. input tokens: <span id="meta-tokens">—</span></div>
+          <div>Image: <span id="meta-size">—</span></div>
+          <div>Model: <span id="meta-model">—</span></div>
+        </div>
+
+        <div style="margin-top:1rem;">
+          <div class="panel-title" style="font-size:0.82rem;">Vision Capability Notes</div>
+          <ul id="capability-notes" style="list-style:disc;padding-left:1.25rem;font-size:0.8rem;color:var(--text-muted);line-height:1.8;">
+            <li>Extracts numeric data values from bar and line charts</li>
+            <li>Reads axis labels, legends, and chart titles</li>
+            <li>Returns data as structured JSON when requested</li>
+            <li>Works best with high-contrast, legible chart text</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Snippet Generator -->
+    <div class="code-panel">
+      <div class="panel-title">Code Snippet Generator</div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Production-ready code for the current prompt and model. Switch between base64 upload and URL modes.</p>
+
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:0.75rem;">
+        <div>
+          <label style="font-size:0.78rem;color:var(--text-muted);margin-right:0.5rem;">Image source:</label>
+          <select id="code-source" onchange="updateCode()" style="padding:0.35rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.82rem;">
+            <option value="base64">Base64 Upload</option>
+            <option value="url">URL</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="code-tabs">
+        <button class="code-tab active" data-lang="python" onclick="switchCodeTab('python')">Python</button>
+        <button class="code-tab" data-lang="node" onclick="switchCodeTab('node')">Node.js</button>
+        <button class="code-tab" data-lang="curl" onclick="switchCodeTab('curl')">curl</button>
+      </div>
+      <div style="position:relative;">
+        <div class="code-display" id="code-display"></div>
+        <button class="copy-btn-float" onclick="copyCode()">Copy</button>
+      </div>
+    </div>
+
+    <!-- Article content -->
+    <section style="max-width:800px;margin:2rem auto;padding:0;line-height:1.7;">
+      <h2>How Claude Vision Works</h2>
+
+      <p>Claude Vision allows you to include images alongside text in your API requests. The model processes images natively, without a separate OCR step — it understands the visual content directly and responds to questions about it in the same conversational format as text-only requests. Images are included as content blocks in the <code>messages</code> array, with a <code>type: "image"</code> block followed by (or preceding) the text prompt.</p>
+
+      <p>Images can be provided in two ways. For locally generated or user-uploaded images, encode the raw bytes as base64 and include the <code>media_type</code> (e.g., <code>image/jpeg</code>) and the encoded string. For publicly accessible images, provide the URL directly using <code>source.type: "url"</code>. The URL approach is simpler in code but requires the image to be publicly reachable by Anthropic's servers at request time. For sensitive images (user data, internal documents), always use base64 to avoid transmitting URLs to external services.</p>
+
+      <h2>Image Format and Size Requirements</h2>
+
+      <p>Claude Vision supports JPEG, PNG, GIF, and WebP. The maximum file size per image is 5MB. There is no hard pixel dimension limit, but images are resized internally to fit within a 1568x1568 bounding box before processing. Higher resolution images provide better OCR accuracy for small text but use more input tokens. For chart and document analysis, 1024x1024 or higher is recommended. For general scene description, smaller images work well.</p>
+
+      <p>Token billing for images is based on the processed dimensions: approximately (width * height) / 750 tokens, with a minimum of 1,600 tokens for a 1024x1024 image. A 512x512 image uses approximately 400 tokens. Include this in cost calculations for image-heavy pipelines. For high-volume document processing, batch multiple images in a single request (up to 20 images) to amortize per-request overhead. For batch document analysis at scale, the <a href="/guides/batch-api-guide.html">Batch API Guide</a> explains how to process thousands of images at 50% cost.</p>
+
+      <h2>Chart and Data Extraction</h2>
+
+      <p>Claude Vision excels at extracting structured data from charts and visualizations. Provide a specific extraction prompt: "List all data points in this bar chart as JSON with keys for category and value." The model will identify axis labels, data series, legend entries, and approximate numeric values. Accuracy is high for charts with legible labels and clear color differentiation between series.</p>
+
+      <p>For line charts with many data points, ask Claude to describe the trend and identify key inflection points rather than requesting every individual value — the model will produce more accurate results when the task matches its visual reasoning capability. For pie charts, Claude returns approximate percentages that sum to 100. For scatter plots, Claude identifies clusters and outliers rather than reading individual coordinates, unless the axes are clearly labeled with numeric scales.</p>
+
+      <h2>Document and OCR Use Cases</h2>
+
+      <p>Claude Vision performs high-quality OCR on typed documents, forms, invoices, and receipts. It understands document structure: headings, paragraphs, tables, and form fields are recognized and can be extracted with layout context. For invoices, ask Claude to extract line items, amounts, dates, and vendor information as JSON. For forms, ask it to return all field labels and their filled values as a key-value object.</p>
+
+      <p>Handwritten text is supported with reasonable accuracy for clear, printed-style handwriting. Cursive handwriting has lower reliability. For multilingual documents, Claude Vision handles Latin-script languages well; results for non-Latin scripts vary by the proportion of that script in Claude's training data. For medical documents, legal forms, and financial records, always validate extracted data against the original image before using it in automated pipelines.</p>
+
+      <h2>UI Screenshot Analysis</h2>
+
+      <p>Claude Vision can describe and analyze user interface screenshots with high accuracy. This is useful for automated QA testing (describe what is visible on screen), accessibility analysis (identify missing alt text or contrast issues), documentation generation (describe UI components for user manuals), and bug reporting (describe the visual state when a bug occurs). Provide screenshots at 1x or 2x (Retina) resolution for best text legibility.</p>
+
+      <p>For automated screenshot analysis in CI/CD pipelines, combine Claude Vision with the tool use API: define a tool that returns structured QA results (pass/fail per test assertion) and force Claude to call it for each screenshot. This gives you machine-readable test output that integrates with existing test frameworks. For multi-step UI testing workflows, <a href="https://claudflow.com">ClaudFlow</a> provides a visual pipeline designer for chaining screenshot captures with Vision analysis steps.</p>
+
+      <h2>Multi-Image Requests</h2>
+
+      <p>A single Claude API request can include up to 20 images. Include multiple <code>type: "image"</code> blocks in the content array, separated by text blocks that reference each image. For example: "Image 1 shows the before state. Image 2 shows the after state. Describe what changed between them." Claude maintains context across all images in the request and can reason about relationships between them.</p>
+
+      <p>Multi-image requests are useful for: change detection (before/after comparisons), slide deck analysis (present multiple slides and ask for a summary), product comparison (show multiple product images side by side), and document series (multiple pages of a multi-page document). Token costs add up for large image sets, so calculate total image tokens plus text tokens before estimating request cost. For cost analysis across vision workloads, <a href="https://kickllm.com">KickLLM</a> offers per-request cost tracking with image token breakdowns.</p>
+    </section>
+
+    <section class="faq-section" style="max-width:800px;margin:2rem auto;padding:0;">
+      <h2>Frequently Asked Questions</h2>
+
+      <details>
+        <summary>How do I send images to the Claude API?</summary>
+        <p>Include a content block with <code>type: "image"</code>, <code>source.type: "base64"</code>, the <code>media_type</code>, and the base64-encoded image data. Alternatively, use <code>source.type: "url"</code> with a direct image URL. Both approaches are shown in the code snippets above.</p>
+      </details>
+
+      <details>
+        <summary>What image formats does Claude Vision support?</summary>
+        <p>Claude Vision supports JPEG, PNG, GIF, and WebP. Maximum 5MB per image. Up to 20 images per request. Images are resized internally to fit within a 1568x1568 bounding box for processing.</p>
+      </details>
+
+      <details>
+        <summary>What can Claude Vision analyze in images?</summary>
+        <p>Claude Vision can read and transcribe text (OCR), describe scenes and objects, extract data from charts and graphs, analyze documents and forms, describe UI screenshots, identify products, and answer specific questions about any visible content in the image.</p>
+      </details>
+
+      <details>
+        <summary>How much does Claude Vision cost?</summary>
+        <p>Images are billed as input tokens. A 1024x1024 image costs approximately 1,600 input tokens with Claude Sonnet. Smaller images use fewer tokens. Calculate cost as approximately (width * height) / 750 tokens for images within size limits.</p>
+      </details>
+
+      <details>
+        <summary>Can Claude Vision extract data from charts?</summary>
+        <p>Yes. Claude Vision extracts axis labels, data series, legend entries, and numeric values from bar charts, line charts, pie charts, and scatter plots. For best results, prompt Claude to return extracted data as JSON. Accuracy is highest for charts with legible text and clear color differentiation.</p>
+      </details>
+    </section>
+  </div>
+
+  <div class="author-box">
+    <div>
+      <div class="author-name"><a href="/about.html">Michael Lip</a></div>
+      <div class="author-bio">Developer and creator of the Zovo Tools network. Building free, privacy-first developer tools that run entirely in the browser. No tracking, no sign-ups, no server-side processing. Open source on <a href="https://github.com/theluckystrike/claudkit.com" style="color:var(--accent);">GitHub</a>.</div>
+    </div>
+  </div>
+
+  <section class="related-tools">
+    <h2>Related Tools</h2>
+    <div class="related-grid">
+      <a href="/" class="related-card">
+        <h3>ClaudKit Playground</h3>
+        <p>Full API playground with live testing using your own API key.</p>
+      </a>
+      <a href="/tools/api-request-builder.html" class="related-card">
+        <h3>API Request Builder</h3>
+        <p>Visual request builder for text and vision API calls with instant code output.</p>
+      </a>
+      <a href="/guides/structured-outputs-guide.html" class="related-card">
+        <h3>Structured Outputs Guide</h3>
+        <p>Get JSON, XML, and tool-use structured data from Claude, including from images.</p>
+      </a>
+      <a href="/guides/streaming-responses-guide.html" class="related-card">
+        <h3>Streaming Guide</h3>
+        <p>Stream Vision API responses as they generate using Server-Sent Events.</p>
+      </a>
+      <a href="/tools/tool-use-builder.html" class="related-card">
+        <h3>Tool Use Builder</h3>
+        <p>Build JSON schemas for structured vision extraction with forced tool calls.</p>
+      </a>
+      <a href="https://krzen.com" class="related-card">
+        <h3>Krzen</h3>
+        <p>Image processing and optimization tools to prepare images for Vision API.</p>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Zovo Tools</div>
+        <div class="footer-tagline">Free developer tools by a solo dev. No tracking.</div>
+        <a href="https://zovo.one/pricing?utm_source=claudkit.com&amp;utm_medium=satellite&amp;utm_campaign=footer-link" class="footer-cta">Zovo Lifetime — $99 once, free forever &rarr;</a>
+        <div class="footer-copy">&copy; 2026 <a href="https://zovo.one">Zovo</a> &middot; 47/500 founding spots</div>
+    </div>
+</footer>
+
+<nav class="zovo-network" aria-label="Zovo Tools Network">
+    <div class="zovo-network-inner">
+        <h3 class="zovo-network-title">Explore More Tools</h3>
+        <div class="zovo-network-links">
+            <a href="https://abwex.com">ABWex — A/B Testing</a>
+            <a href="https://claudflow.com">ClaudFlow — Workflows</a>
+            <a href="https://claudhq.com">ClaudHQ — AI Code Tools &amp; Fixes</a>
+            <a href="https://enhio.com">Enhio — Text Tools</a>
+            <a href="https://epochpilot.com">EpochPilot — Timestamps</a>
+            <a href="https://gen8x.com">Gen8X — Color Tools</a>
+            <a href="https://gpt0x.com">GPT0X — AI Models</a>
+            <a href="https://heytensor.com">HeyTensor — ML Tools</a>
+            <a href="https://invokebot.com">InvokeBot — Webhooks</a>
+            <a href="https://kappafy.com">Kappafy — JSON</a>
+            <a href="https://kappakit.com">KappaKit — Dev Toolkit</a>
+            <a href="https://kickllm.com">KickLLM — LLM Costs</a>
+            <a href="https://krzen.com">Krzen — Image Tools</a>
+            <a href="https://lochbot.com">LochBot — Security</a>
+            <a href="https://lockml.com">LockML — ML Compare</a>
+            <a href="https://ml3x.com">ML3X — Matrix Math</a>
+        </div>
+    </div>
+</nav>
+
+<script>
+(function(){
+
+// ─── EXAMPLE DATA ─────────────────────────────────────────────────────────────
+const EXAMPLES = {
+  chart: {
+    desc: "A bar chart showing quarterly revenue across four product lines. Simulated response demonstrates Claude's chart data extraction capability.",
+    prompt: "Extract all data from this bar chart as a JSON object. Include axis labels, series names, and all numeric values.",
+    notes: ["Extracts numeric data values from bar and line charts","Reads axis labels, legends, and chart titles","Returns data as structured JSON when requested","Works best with high-contrast, legible chart text"],
+    response: `Here is the extracted data from the bar chart:
+
+\`\`\`json
+{
+  "chart_title": "Quarterly Revenue by Product Line (2025)",
+  "x_axis": "Quarter",
+  "y_axis": "Revenue (USD millions)",
+  "series": [
+    {
+      "name": "Product A",
+      "color": "blue",
+      "values": {"Q1": 4.2, "Q2": 5.1, "Q3": 6.3, "Q4": 7.8}
+    },
+    {
+      "name": "Product B",
+      "color": "green",
+      "values": {"Q1": 2.8, "Q2": 3.4, "Q3": 3.1, "Q4": 4.2}
+    },
+    {
+      "name": "Product C",
+      "color": "orange",
+      "values": {"Q1": 1.5, "Q2": 1.9, "Q3": 2.4, "Q4": 2.7}
+    },
+    {
+      "name": "Product D",
+      "color": "red",
+      "values": {"Q1": 0.9, "Q2": 1.1, "Q3": 1.3, "Q4": 1.6}
+    }
+  ],
+  "totals": {"Q1": 9.4, "Q2": 11.5, "Q3": 13.1, "Q4": 16.3},
+  "note": "Revenue shows consistent growth across all product lines, with Product A accounting for the majority of revenue."
+}
+\`\`\`
+
+Product A is the dominant revenue driver at approximately 47% of total revenue. All four product lines show quarter-over-quarter growth, with Q4 showing the strongest performance.`,
+    tokens: "1,640",
+    size: "1024×768"
+  },
+  linechart: {
+    desc: "A multi-series line chart showing monthly active users over 12 months for three user segments.",
+    prompt: "Describe the trends in this line chart. What are the key inflection points and which series grew fastest?",
+    notes: ["Identifies trends and inflection points in time-series data","Compares multiple data series and growth rates","Describes anomalies, drops, and acceleration points","Best for trend analysis rather than exact value extraction"],
+    response: `This line chart shows Monthly Active Users (MAU) for three user segments over 12 months:
+
+**Trend Analysis:**
+
+**Enterprise segment** (blue line): Steady growth from ~8K to ~22K users. Strongest acceleration in months 7-9, likely corresponding to a product launch or sales push. Growth rate: ~175% over the year.
+
+**SMB segment** (green line): Started at ~15K, grew to ~41K. Consistent upward trajectory with slight acceleration in Q4 (months 10-12). Growth rate: ~173%, closely tracking Enterprise.
+
+**Consumer segment** (orange line): Most volatile series. Started strongest at ~28K, showed a dip in months 4-5 (possibly a seasonal effect or product change), recovered and grew to ~52K by month 12. Growth rate: ~86% — lower than B2B segments.
+
+**Key observations:**
+- Month 5 shows a dip across all three segments, suggesting an external factor (market event, product issue, or seasonal pattern)
+- SMB overtook Consumer as the second-largest segment in month 9
+- Month 10 onward shows the steepest growth phase for all segments
+- Total MAU across segments approximately tripled over the year`,
+    tokens: "1,580",
+    size: "1200×600"
+  },
+  document: {
+    desc: "A scanned business contract page with header, numbered clauses, signature lines, and a table.",
+    prompt: "Extract the document structure: section headings, all clause numbers and their text, and any table data. Return as structured JSON.",
+    notes: ["Extracts text from typed documents with high accuracy","Understands document structure: headings, clauses, tables","Returns structured JSON when requested","Performance degrades for very small fonts or poor scan quality"],
+    response: `\`\`\`json
+{
+  "document_type": "Service Agreement",
+  "header": {
+    "title": "MASTER SERVICE AGREEMENT",
+    "parties": {
+      "client": "Acme Corporation (\"Client\")",
+      "provider": "TechCorp Solutions Inc. (\"Provider\")"
+    },
+    "effective_date": "May 28, 2026",
+    "agreement_number": "MSA-2026-0847"
+  },
+  "sections": [
+    {
+      "number": "1",
+      "title": "Services",
+      "clauses": [
+        {"id": "1.1", "text": "Provider shall deliver software development services as described in each Statement of Work (SOW) executed hereunder."},
+        {"id": "1.2", "text": "All SOWs are incorporated into this Agreement by reference and subject to its terms."}
+      ]
+    },
+    {
+      "number": "2",
+      "title": "Payment Terms",
+      "clauses": [
+        {"id": "2.1", "text": "Client shall pay invoices within thirty (30) days of receipt."},
+        {"id": "2.2", "text": "Late payments accrue interest at 1.5% per month on outstanding balances."}
+      ]
+    }
+  ],
+  "rate_table": {
+    "headers": ["Role", "Hourly Rate", "Monthly Cap"],
+    "rows": [
+      ["Senior Engineer", "$185", "$29,600"],
+      ["Engineer", "$145", "$23,200"],
+      ["Designer", "$125", "$20,000"]
+    ]
+  }
+}
+\`\`\``,
+    tokens: "2,180",
+    size: "850×1100"
+  },
+  screenshot: {
+    desc: "A web application dashboard screenshot with sidebar navigation, data tables, and status badges.",
+    prompt: "Describe all visible UI elements in this screenshot. Identify navigation items, visible data, button labels, and any status indicators.",
+    notes: ["Identifies and describes all visible UI components","Reads button labels, menu items, form field values","Recognizes status badges, icons, and visual indicators","Useful for automated QA, documentation, and accessibility review"],
+    response: `**Dashboard Overview Screenshot Analysis:**
+
+**Navigation (Left Sidebar):**
+- Logo: "AppDash" with a teal accent icon
+- Navigation items: Dashboard (active, highlighted), Analytics, Users, Settings, Billing
+- User avatar and name "Alex Kim" at bottom with a "Pro" badge
+
+**Top Header Bar:**
+- Search input: "Search projects..." placeholder
+- Notification bell icon with a red badge showing "3"
+- "New Project" button (purple, primary CTA)
+
+**Main Content Area:**
+
+*Metric Cards (top row, 4 cards):*
+1. Total Revenue — $48,291 — green up arrow +12.4% this month
+2. Active Users — 1,847 — green up arrow +8.2%
+3. Open Tickets — 23 — red down arrow (increase) +5 from last week
+4. Uptime — 99.98% — green checkmark
+
+*Data Table — Recent Projects:*
+Headers: Project Name | Status | Owner | Due Date | Progress
+Rows visible:
+- "Apollo Redesign" | In Progress (blue badge) | Sarah Chen | Jun 15 | 67%
+- "API v3 Migration" | Review (yellow badge) | Mike R. | Jun 3 | 91%
+- "Mobile App" | Blocked (red badge) | Alex Kim | Jul 1 | 34%
+- "Analytics Dashboard" | Complete (green badge) | Lisa T. | May 22 | 100%
+
+**Action buttons visible:** "View All" link below table, "Export CSV" button.`,
+    tokens: "1,780",
+    size: "1440×900"
+  },
+  photo: {
+    desc: "An outdoor street-level photograph of a busy urban intersection at midday.",
+    prompt: "Describe this scene in detail. What objects, people, and environmental conditions are visible?",
+    notes: ["Describes scene composition, lighting, and atmosphere","Identifies objects, people, vehicles, and environmental context","Estimates distances, proportions, and spatial relationships","Suitable for content moderation, accessibility alt-text generation, and scene understanding"],
+    response: `**Scene Description:**
+
+This photograph captures a busy urban intersection photographed from street level at what appears to be midday, given the high-angle sunlight and short shadows.
+
+**Foreground:**
+A pedestrian crosswalk occupies the lower third of the frame. Three pedestrians are mid-crossing — a person in business attire carrying a coffee cup, a cyclist dismounting their bike, and a person checking their phone while walking. The crosswalk markings are white and freshly painted.
+
+**Mid-ground:**
+The intersection is flanked by commercial storefronts. Visible signage includes a coffee shop with a green awning, a pharmacy chain logo, and what appears to be a clothing retailer. Traffic signals show red for vehicles; a countdown timer displays "8" seconds.
+
+**Traffic:**
+Three vehicles are stopped at the light: two sedans and an SUV. A yellow taxi cab is visible turning from the cross-street. A delivery truck with partial branding is parked in a loading zone to the right.
+
+**Background:**
+Mid-rise office buildings (approximately 8-12 stories) create a canyon effect. The sky is partially cloudy with blue visible between buildings.
+
+**Lighting & Atmosphere:**
+Midday summer lighting, clear and bright. No visible precipitation. The scene suggests a weekday based on the business attire of pedestrians and volume of foot traffic.
+
+**Estimated Location:** North American city center based on signage style, vehicle types, and urban density.`,
+    tokens: "1,540",
+    size: "1920×1280"
+  },
+  receipt: {
+    desc: "A restaurant receipt showing itemized food and drink orders, tax, tip, and payment method.",
+    prompt: "Extract all data from this receipt as JSON: restaurant name, date, all line items with prices, subtotal, tax, tip, and total.",
+    notes: ["Extracts line items, prices, taxes, and totals from receipts","Handles varying receipt layouts and formatting","Returns structured JSON for database ingestion","Works with photos of paper receipts, not just digital PDFs"],
+    response: `\`\`\`json
+{
+  "receipt": {
+    "merchant": {
+      "name": "The Olive Branch Bistro",
+      "address": "214 Market Street, San Francisco, CA 94105",
+      "phone": "(415) 555-0193",
+      "tax_id": "94-1234567"
+    },
+    "transaction": {
+      "date": "2026-05-28",
+      "time": "13:42",
+      "table": "12",
+      "server": "Jamie",
+      "receipt_number": "RTX-44821"
+    },
+    "items": [
+      {"qty": 2, "description": "Burrata Salad", "unit_price": 16.00, "total": 32.00},
+      {"qty": 1, "description": "Grilled Salmon", "unit_price": 34.00, "total": 34.00},
+      {"qty": 1, "description": "Pasta Primavera", "unit_price": 22.00, "total": 22.00},
+      {"qty": 2, "description": "House Red Wine (glass)", "unit_price": 14.00, "total": 28.00},
+      {"qty": 1, "description": "Sparkling Water", "unit_price": 5.00, "total": 5.00}
+    ],
+    "subtotal": 121.00,
+    "tax_rate": 0.0875,
+    "tax_amount": 10.59,
+    "tip": 24.20,
+    "total": 155.79,
+    "payment": {
+      "method": "Visa",
+      "last_four": "4821",
+      "status": "Approved"
+    }
+  }
+}
+\`\`\``,
+    tokens: "1,620",
+    size: "640×1280"
+  },
+  code: {
+    desc: "A screenshot of a code editor showing a Python function with syntax highlighting and line numbers.",
+    prompt: "Transcribe the code visible in this screenshot exactly. Identify the programming language, function names, and any potential bugs.",
+    notes: ["Transcribes code with high accuracy from screenshots","Identifies programming language and syntax","Can spot obvious bugs or anti-patterns visible in the code","Useful for code review from screen recordings or bug reports"],
+    response: `**Programming Language:** Python
+
+**Transcribed Code:**
+
+\`\`\`python
+def calculate_user_score(user_id: int, weights: dict) -> float:
+    """
+    Calculate composite engagement score for a user.
+    Returns a float between 0.0 and 1.0.
+    """
+    user = db.get_user(user_id)
+    if not user:
+        return 0.0
+
+    scores = {
+        'activity':   min(user.daily_logins / 30, 1.0),
+        'engagement': user.avg_session_minutes / 60,
+        'retention':  1.0 if user.days_since_signup > 90 else 0.5,
+        'referrals':  min(user.referral_count / 10, 1.0)
+    }
+
+    total = sum(scores[k] * weights.get(k, 0.25) for k in scores)
+    return round(total, 4)
+\`\`\`
+
+**Analysis:**
+
+Line numbers visible: 1-18.
+
+**Potential issues identified:**
+1. **Line 10** — \`user.avg_session_minutes / 60\` can exceed 1.0 (no \`min()\` cap). A user with >60 avg session minutes will produce a score component above 1.0, potentially inflating the total beyond the stated 0.0-1.0 range.
+2. **Line 8** — \`db.get_user()\` is called without error handling for database exceptions. A DB error would propagate as an unhandled exception rather than returning 0.0.
+3. **Line 15** — The \`weights.get(k, 0.25)\` fallback means weights not summing to 1.0 will produce a total outside the expected range.
+
+**Recommendation:** Add \`min(..., 1.0)\` to the engagement score calculation and ensure weights sum to 1.0 or normalize them.`,
+    tokens: "1,840",
+    size: "1280×720"
+  },
+  diagram: {
+    desc: "A system architecture diagram showing microservices, message queues, databases, and external API connections.",
+    prompt: "Describe this architecture diagram. List all components, their types, and how they are connected. Identify potential single points of failure.",
+    notes: ["Identifies architecture components and their roles","Traces data flow paths and connection directions","Recognizes common patterns (load balancers, caches, queues)","Useful for generating architecture documentation from diagrams"],
+    response: `**Architecture Diagram Analysis:**
+
+**Components Identified:**
+
+*Client Layer:*
+- Web Browser / Mobile App (user-facing entry points)
+- CDN (CloudFront icon) serving static assets
+
+*API Gateway Layer:*
+- API Gateway (single instance — potential SPOF) receiving all inbound traffic
+- Load Balancer distributing to service instances
+
+*Microservices Layer (5 services):*
+1. **Auth Service** — handles authentication/JWT validation
+2. **User Service** — user profile management, connected to Users DB
+3. **Order Service** — order processing, connected to Orders DB and Message Queue
+4. **Payment Service** — payment processing, external Stripe API connection
+5. **Notification Service** — consumes from Message Queue, sends email/SMS
+
+*Data Layer:*
+- Users DB (PostgreSQL icon)
+- Orders DB (PostgreSQL icon)
+- Redis Cache (between API Gateway and services)
+- Message Queue (RabbitMQ icon) between Order Service and Notification Service
+
+*External Integrations:*
+- Stripe API (Payment Service)
+- SendGrid API (Notification Service)
+- Third-party Auth provider (Auth Service)
+
+**Data Flow:**
+Client → CDN → API Gateway → Load Balancer → Auth Service (validate) → Target Service → Database/Queue → Response
+
+**Single Points of Failure:**
+1. **API Gateway** — no redundancy shown; failure takes down all services
+2. **Redis Cache** — single node; failure may cascade to DB overload
+3. **Message Queue** — single RabbitMQ instance; loss of queue drops notifications
+
+**Recommendations:** Add API Gateway redundancy with health checks, Redis Sentinel or Cluster mode, and RabbitMQ clustering with durable queues.`,
+    tokens: "2,040",
+    size: "1600×1000"
+  }
+};
+
+const PROMPT_SUGGESTIONS = {
+  chart: ["Extract data as JSON","What is the highest value?","Describe all series","Compare Q1 vs Q4"],
+  linechart: ["Describe the trend","Find inflection points","Which grew fastest?","Summarize in 2 sentences"],
+  document: ["Extract all text","List all clauses","Extract table data","Find dates and names"],
+  screenshot: ["List all UI elements","What buttons are visible?","Describe the layout","Find status indicators"],
+  photo: ["Describe the scene","Count visible people","Identify all objects","Estimate time of day"],
+  receipt: ["Extract as JSON","Total all line items","Who is the merchant?","What was the tip?"],
+  code: ["Transcribe the code","Find any bugs","What language is this?","Explain what this does"],
+  diagram: ["List all components","Trace the data flow","Find single points of failure","Describe connections"]
+};
+
+let activeExample = "chart";
+let activeCodeLang = "python";
+let activeMode = "upload";
+let uploadedImageData = null;
+let uploadedFileName = "";
+
+// Load example
+window.loadExample = function(type) {
+  activeExample = type;
+  const ex = EXAMPLES[type];
+  document.getElementById("example-desc").textContent = ex.desc;
+  document.getElementById("prompt-input").value = ex.prompt;
+  document.getElementById("response-area").textContent = "Click Analyze Image to see the simulated response for this example.";
+  document.getElementById("response-area").className = "response-area";
+
+  // Update notes
+  const notesList = document.getElementById("capability-notes");
+  notesList.innerHTML = ex.notes.map(n => `<li>${n}</li>`).join("");
+
+  // Update type buttons
+  document.querySelectorAll(".example-type").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.example-type[data-type="${type}"]`).classList.add("active");
+
+  // Update prompt chips
+  const chips = PROMPT_SUGGESTIONS[type] || [];
+  document.getElementById("prompt-chips").innerHTML = chips.map(c =>
+    `<button class="prompt-chip" onclick="useChip('${c.replace(/'/g,"\\'")}')">+ ${c}</button>`
+  ).join("");
+
+  updateCode();
+};
+
+window.useChip = function(text) {
+  document.getElementById("prompt-input").value = text;
+  updateCode();
+};
+
+// Run analysis
+window.runAnalysis = function() {
+  const prompt = document.getElementById("prompt-input").value.trim();
+  if (!prompt) {
+    document.getElementById("response-area").textContent = "Please enter an analysis prompt.";
+    return;
+  }
+
+  const btn = document.getElementById("run-btn");
+  const label = document.getElementById("btn-label");
+  btn.disabled = true;
+  label.innerHTML = '<span class="spinner"></span> Analyzing...';
+
+  const ex = EXAMPLES[activeExample];
+
+  setTimeout(function() {
+    const responseEl = document.getElementById("response-area");
+    responseEl.textContent = ex.response;
+
+    document.getElementById("meta-tokens").textContent = ex.tokens;
+    document.getElementById("meta-size").textContent = ex.size;
+    document.getElementById("meta-model").textContent = document.getElementById("model-select").value.split("-").slice(0,2).join(" ");
+
+    btn.disabled = false;
+    label.textContent = "Analyze Image";
+  }, 900);
+};
+
+window.clearAll = function() {
+  document.getElementById("prompt-input").value = "";
+  document.getElementById("response-area").textContent = "Select an example type above or upload an image and click Analyze Image to see a simulated Claude Vision response here.";
+  document.getElementById("meta-tokens").textContent = "—";
+  document.getElementById("meta-size").textContent = "—";
+  document.getElementById("meta-model").textContent = "—";
+  removeImage();
+};
+
+window.copyResponse = function() {
+  navigator.clipboard.writeText(document.getElementById("response-area").textContent);
+};
+
+// File handling
+window.handleFileSelect = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  handleFile(file);
+};
+
+function handleFile(file) {
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Image must be under 5MB.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    uploadedImageData = e.target.result;
+    uploadedFileName = file.name;
+    document.getElementById("upload-zone").style.display = "none";
+    document.getElementById("preview-container").style.display = "block";
+    document.getElementById("preview-img").src = uploadedImageData;
+    const sizeKB = (file.size / 1024).toFixed(0);
+    document.getElementById("file-meta").textContent = `${file.name} — ${sizeKB}KB — ${file.type}`;
+    updateCode();
+  };
+  reader.readAsDataURL(file);
+}
+
+window.removeImage = function() {
+  uploadedImageData = null;
+  uploadedFileName = "";
+  document.getElementById("upload-zone").style.display = "flex";
+  document.getElementById("preview-container").style.display = "none";
+  document.getElementById("preview-img").src = "";
+  document.getElementById("file-meta").textContent = "";
+  document.getElementById("file-input").value = "";
+  updateCode();
+};
+
+// Drag and drop
+const zone = document.getElementById("upload-zone");
+zone.addEventListener("dragover", function(e) { e.preventDefault(); zone.classList.add("drag-over"); });
+zone.addEventListener("dragleave", function() { zone.classList.remove("drag-over"); });
+zone.addEventListener("drop", function(e) {
+  e.preventDefault();
+  zone.classList.remove("drag-over");
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) handleFile(file);
+});
+
+// Mode toggle
+window.switchMode = function(mode) {
+  activeMode = mode;
+  document.getElementById("mode-upload").classList.toggle("active", mode === "upload");
+  document.getElementById("mode-url").classList.toggle("active", mode === "url");
+  document.getElementById("upload-section").style.display = mode === "upload" ? "block" : "none";
+  document.getElementById("url-section").style.display = mode === "url" ? "block" : "none";
+  updateCode();
+};
+
+window.updateCodeFromUrl = function() { updateCode(); };
+
+// ─── CODE GENERATION ──────────────────────────────────────────────────────────
+function buildCode(lang) {
+  const model = document.getElementById("model-select").value;
+  const prompt = document.getElementById("prompt-input").value.trim() || "Describe this image in detail.";
+  const sourceType = document.getElementById("code-source").value;
+  const imageUrl = (document.getElementById("url-input") || {}).value || "https://example.com/image.jpg";
+
+  const imageBlock_base64_py = `        {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": image_data,
+            }
+        },`;
+  const imageBlock_url_py = `        {
+            "type": "image",
+            "source": {
+                "type": "url",
+                "url": "${imageUrl}",
+            }
+        },`;
+
+  if (lang === "python") {
+    if (sourceType === "base64") {
+      return `import anthropic
+import base64
+
+client = anthropic.Anthropic()
+
+# Load and encode your image
+with open("image.jpg", "rb") as f:
+    image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+response = client.messages.create(
+    model="${model}",
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": [
+${imageBlock_base64_py}
+                {
+                    "type": "text",
+                    "text": ${JSON.stringify(prompt)}
+                }
+            ]
+        }
+    ]
+)
+
+print(response.content[0].text)
+print(f"Input tokens: {response.usage.input_tokens}")`;
+    } else {
+      return `import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.messages.create(
+    model="${model}",
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": [
+${imageBlock_url_py}
+                {
+                    "type": "text",
+                    "text": ${JSON.stringify(prompt)}
+                }
+            ]
+        }
+    ]
+)
+
+print(response.content[0].text)
+print(f"Input tokens: {response.usage.input_tokens}")`;
+    }
+  }
+
+  if (lang === "node") {
+    if (sourceType === "base64") {
+      return `import Anthropic from "@anthropic-ai/sdk";
+import fs from "fs";
+
+const client = new Anthropic();
+
+// Load and encode your image
+const imageData = fs.readFileSync("image.jpg").toString("base64");
+
+const response = await client.messages.create({
+  model: "${model}",
+  max_tokens: 1024,
+  messages: [
+    {
+      role: "user",
+      content: [
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: "image/jpeg",
+            data: imageData,
+          }
+        },
+        {
+          type: "text",
+          text: ${JSON.stringify(prompt)}
+        }
+      ]
+    }
+  ]
+});
+
+console.log(response.content[0].text);
+console.log("Input tokens:", response.usage.input_tokens);`;
+    } else {
+      return `import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const response = await client.messages.create({
+  model: "${model}",
+  max_tokens: 1024,
+  messages: [
+    {
+      role: "user",
+      content: [
+        {
+          type: "image",
+          source: {
+            type: "url",
+            url: "${imageUrl}",
+          }
+        },
+        {
+          type: "text",
+          text: ${JSON.stringify(prompt)}
+        }
+      ]
+    }
+  ]
+});
+
+console.log(response.content[0].text);
+console.log("Input tokens:", response.usage.input_tokens);`;
+    }
+  }
+
+  // curl
+  if (sourceType === "base64") {
+    return `# First encode your image as base64:
+# IMAGE_B64=$(base64 -i image.jpg)
+
+curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "${model}",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "image",
+            "source": {
+              "type": "base64",
+              "media_type": "image/jpeg",
+              "data": "'"$IMAGE_B64"'"
+            }
+          },
+          {
+            "type": "text",
+            "text": ${JSON.stringify(prompt)}
+          }
+        ]
+      }
+    ]
+  }'`;
+  } else {
+    return `curl https://api.anthropic.com/v1/messages \\
+  -H "content-type: application/json" \\
+  -H "x-api-key: $ANTHROPIC_API_KEY" \\
+  -H "anthropic-version: 2023-06-01" \\
+  -d '{
+    "model": "${model}",
+    "max_tokens": 1024,
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "image",
+            "source": {
+              "type": "url",
+              "url": "${imageUrl}"
+            }
+          },
+          {
+            "type": "text",
+            "text": ${JSON.stringify(prompt)}
+          }
+        ]
+      }
+    ]
+  }'`;
+  }
+}
+
+function updateCode() {
+  document.getElementById("code-display").textContent = buildCode(activeCodeLang);
+}
+
+window.switchCodeTab = function(lang) {
+  activeCodeLang = lang;
+  document.querySelectorAll(".code-tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.code-tab[data-lang="${lang}"]`).classList.add("active");
+  updateCode();
+};
+
+window.copyCode = function() {
+  navigator.clipboard.writeText(document.getElementById("code-display").textContent).then(() => {
+    const btn = document.querySelector(".copy-btn-float");
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+  });
+};
+
+// Init
+loadExample("chart");
+updateCode();
+
+})();
+</script>
+</body>
+</html>
