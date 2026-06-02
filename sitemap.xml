@@ -25,4 +25,10 @@
   <url><loc>https://claudkit.com/tools/message-format-converter.html</loc></url>
   <url><loc>https://claudkit.com/tools/tool-use-builder.html</loc></url>
   <url><loc>https://claudkit.com/tools/vision-api-tester.html</loc></url>
+  <url>
+    <loc>https://claudkit.com/tools/claude-model-comparison-2026-opus-vs-sonnet-vs-haiku</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

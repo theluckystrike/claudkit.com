@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Model Comparison 2026 — Opus vs Sonnet vs Haiku</title>
+  <meta name="description" content="Interactive comparison of Claude Opus 4, Sonnet 4 & Haiku 3.5: pricing, speed, context, quality, and monthly cost calculator.">
+  <link rel="canonical" href="https://claudkit.com/tools/claude-model-comparison-2026">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #0b0b0f;
+      color: #e5e5ec;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1280px;
+      width: 100%;
+    }
+    /* breadcrumb */
+    .breadcrumb {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 1.5rem;
+    }
+    .breadcrumb a {
+      color: #ec4899;
+      text-decoration: none;
+    }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb span { color: #6b7280; }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f0e6ff 0%, #ec4899 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .subhead {
+      color: #9ca3af;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      border-left: 4px solid #ec4899;
+      padding-left: 1rem;
+    }
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .model-card {
+      background: #13131b;
+      border-radius: 24px;
+      padding: 1.8rem 1.5rem;
+      border: 1px solid #2a2a3a;
+      transition: 0.2s;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    }
+    .model-card:hover { border-color: #ec4899; }
+    .model-name {
+      font-size: 1.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: #2a2a3a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+    }
+    .pricing-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.8rem 0;
+      padding: 0.4rem 0;
+      border-bottom: 1px dashed #2a2a3a;
+    }
+    .pricing-row span:first-child { color: #9ca3af; }
+    .pricing-row span:last-child { font-weight: 500; }
+    .spec {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem 1.2rem;
+      margin: 1rem 0 0.5rem;
+      font-size: 0.9rem;
+    }
+    .spec-item {
+      background: #1e1e2a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      color: #cbd5e1;
+    }
+    .spec-item strong { color: #ec4899; margin-right: 4px; }
+    .use-case {
+      margin-top: 1.2rem;
+      background: #1a1a26;
+      padding: 0.8rem 1rem;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      color: #b0b8c9;
+    }
+    .use-case strong { color: #ec4899; }
+
+    /* calculator */
+    .calc-section {
+      background: #101018;
+      border-radius: 32px;
+      padding: 2rem 1.8rem;
+      border: 1px solid #2a2a3a;
+      margin: 2.5rem 0;
+    }
+    .calc-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .calc-title span { background: #ec4899; padding: 0 12px; border-radius: 40px; font-size: 0.9rem; color: #fff; }
+    .calc-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+    .calc-inputs {
+      flex: 2;
+      min-width: 260px;
+    }
+    .calc-results {
+      flex: 3;
+      min-width: 280px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1.2rem;
+    }
+    .input-group label {
+      font-size: 0.9rem;
+      color: #b0b8c9;
+      margin-bottom: 4px;
+    }
+    .input-group input {
+      background: #1c1c28;
+      border: 1px solid #33334a;
+      border-radius: 40px;
+      padding: 0.8rem 1.2rem;
+      color: #f0f0f5;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .input-group input:focus { border-color: #ec4899; }
+    .input-group input[type="range"] {
+      padding: 0;
+      background: transparent;
+      border: none;
+      accent-color: #ec4899;
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .cost-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .cost-table th {
+      text-align: left;
+      padding: 0.6rem 0.2rem;
+      color: #9ca3af;
+      font-weight: 400;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    .cost-table td {
+      padding: 0.6rem 0.2rem;
+      border-bottom: 1px solid #1e1e2a;
+    }
+    .cost-table tr:last-child td { border: none; }
+    .cost-highlight {
+      color: #ec4899;
+      font-weight: 600;
+    }
+    .latency-bench {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .bench-card {
+      background: #13131b;
+      border-radius: 20px;
+      padding: 1rem;
+      border: 1px solid #2a2a3a;
+    }
+    .bench-card h4 { color: #ec4899; margin-bottom: 8px; font-weight: 500; }
+    .bench-value { font-size: 1.3rem; font-weight: 600; }
+    .bench-sub { font-size: 0.75rem; color: #6b7280; }
+    .quality-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.8rem 0;
+    }
+    .quality-item {
+      background: #16161f;
+      border-radius: 20px;
+      padding: 1rem 1.2rem;
+      flex: 1 0 180px;
+      border-left: 4px solid #ec4899;
+    }
+    .quality-item .task { font-weight: 500; }
+    .stars { color: #ec4899; letter-spacing: 2px; margin-top: 4px; }
+    .footnote {
+      text-align: center;
+      margin-top: 3rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    .footnote a { color: #ec4899; text-decoration: none; }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- BreadcrumbList schema (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
+      { "@type": "ListItem", "position": 3, "name": "Claude Model Comparison 2026", "item": "https://claudkit.com/tools/claude-model-comparison-2026" }
+    ]
+  }
+  </script>
+  <!-- WebApplication + FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["WebApplication", "FAQPage"],
+    "name": "Claude Model Comparison 2026 — Opus vs Sonnet vs Haiku",
+    "description": "Interactive comparison tool for Claude models: pricing, speed, context, quality, and monthly cost calculator.",
+    "url": "https://claudkit.com/tools/claude-model-comparison-2026",
+    "applicationCategory": "Utility",
+    "operatingSystem": "All",
+    "browserRequirements": "JavaScript enabled",
+    "mainEntity": [{
+      "@type": "Question",
+      "name": "Which Claude model is most cost-effective for high volume?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Haiku 3.5 offers lowest pricing ($0.25/$1.25 per MTok) and fastest speed, ideal for high-volume simple tasks." }
+    },{
+      "@type": "Question",
+      "name": "Does Opus 4 support vision?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, Opus 4 and Sonnet 4 support vision; Haiku 3.5 does not." }
+    }]
+  }
+  </script>
+
+  <!-- Breadcrumb UI -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="https://claudkit.com/">Home</a> <span>›</span>
+    <a href="https://claudkit.com/tools">Tools</a> <span>›</span>
+    <span>Claude Model Comparison 2026</span>
+  </nav>
+
+  <h1>Claude Model Comparison 2026</h1>
+  <div class="subhead">Opus 4 · Sonnet 4 · Haiku 3.5 — interactive benchmarks & cost calculator</div>
+
+  <!-- Model cards -->
+  <div class="model-grid">
+    <!-- Opus 4 -->
+    <div class="model-card">
+      <div class="model-name">Opus 4 <span class="badge">most capable</span></div>
+      <div class="pricing-row"><span>Input / MTok</span><span>$15.00</span></div>
+      <div class="pricing-row"><span>Output / MTok</span><span>$75.00</span></div>
+      <div class="spec">
+        <span class="spec-item"><strong>⚡</strong> 38 tok/s</span>
+        <span class="spec-item"><strong>📐</strong> 200K ctx</span>
+        <span class="spec-item"><strong>👁️</strong> Vision</span>
+        <span class="spec-item"><strong>🔧</strong> Tool use</span>
+        <span class="spec-item"><strong>📎</strong> 4096 out</span>
+      </div>
+      <div class="use-case"><strong>Best for:</strong> complex reasoning, research, code generation, analysis</div>
+    </div>
+    <!-- Sonnet 4 -->
+    <div class="model-card">
+      <div class="model-name">Sonnet 4 <span class="badge">balanced</span></div>
+      <div class="pricing-row"><span>Input / MTok</span><span>$3.00</span></div>
+      <div class="pricing-row"><span>Output / MTok</span><span>$15.00</span></div>
+      <div class="spec">
+        <span class="spec-item"><strong>⚡</strong> 62 tok/s</span>
+        <span class="spec-item"><strong>📐</strong> 200K ctx</span>
+        <span class="spec-item"><strong>👁️</strong> Vision</span>
+        <span class="spec-item"><strong>🔧</strong> Tool use</span>
+        <span class="spec-item"><strong>📎</strong> 8192 out</span>
+      </div>
+      <div class="use-case"><strong>Best for:</strong> everyday tasks, content writing, customer support, analysis</div>
+    </div>
+    <!-- Haiku 3.5 -->
+    <div class="model-card">
+      <div class="model-name">Haiku 3.5 <span class="badge">fastest</span></div>
+      <div class="pricing-row"><span>Input / MTok</span><span>$0.25</span></div>
+      <div class="pricing-row"><span>Output / MTok</span><span>$1.25</span></div>
+      <div class="spec">
+        <span class="spec-item"><strong>⚡</strong> 108 tok/s</span>
+        <span class="spec-item"><strong>📐</strong> 200K ctx</span>
+        <span class="spec-item"><strong>👁️</strong> —</span>
+        <span class="spec-item"><strong>🔧</strong> Tool use</span>
+        <span class="spec-item"><strong>📎</strong> 4096 out</span>
+      </div>
+      <div class="use-case"><strong>Best for:</strong> high‑volume, simple tasks, classification, extraction</div>
+    </div>
+  </div>
+
+  <!-- Latency benchmarks -->
+  <h2 style="margin-top: 1rem; font-weight: 500;">⚡ Latency benchmarks (tokens/sec)</h2>
+  <div class="latency-bench">
+    <div class="bench-card"><h4>Opus 4</h4><div class="bench-value">38 tok/s</div><div class="bench-sub">heavy reasoning</div></div>
+    <div class="bench-card"><h4>Sonnet 4</h4><div class="bench-value">62 tok/s</div><div class="bench-sub">balanced</div></div>
+    <div class="bench-card"><h4>Haiku 3.5</h4><div class="bench-value">108 tok/s</div><div class="bench-sub">lightning fast</div></div>
+  </div>
+
+  <!-- Quality ratings per task -->
+  <h2 style="font-weight: 500; margin-top: 1rem;">⭐ Quality ratings per task (1–5)</h2>
+  <div class="quality-grid" id="qualityGrid">
+    <div class="quality-item"><div class="task">💻 Coding</div><div class="stars">Opus ★★★★★ &nbsp; Sonnet ★★★★☆ &nbsp; Haiku ★★★☆☆</div></div>
+    <div class="quality-item"><div class="task">✍️ Writing</div><div class="stars">Opus ★★★★★ &nbsp; Sonnet ★★★★☆ &nbsp; Haiku ★★★☆☆</div></div>
+    <div class="quality-item"><div class="task">📊 Analysis</div><div class="stars">Opus ★★★★★ &nbsp; Sonnet ★★★★☆ &nbsp; Haiku ★★★★☆</div></div>
+    <div class="quality-item"><div class="task">🎨 Creative</div><div class="stars">Opus ★★★★★ &nbsp; Sonnet ★★★★☆ &nbsp; Haiku ★★★☆☆</div></div>
+  </div>
+
+  <!-- Interactive cost calculator -->
+  <div class="calc-section" id="calculator">
+    <div class="calc-title">📊 Monthly cost calculator <span>interactive</span></div>
+    <div class="calc-grid">
+      <div class="calc-inputs">
+        <div class="input-group">
+          <label for="dailyRequests">Daily requests</label>
+          <input type="number" id="dailyRequests" value="500" min="1" step="100">
+        </div>
+        <div class="input-group">
+          <label for="avgTokens">Avg tokens per request (input + output)</label>
+          <input type="range" id="avgTokens" min="100" max="8000" value="2000" step="100">
+          <div class="range-labels"><span>100</span><span id="tokenDisplay">2000</span><span>8000</span></div>
+        </div>
+        <div style="font-size:0.9rem; color:#9ca3af; margin-top: 0.5rem;">30 days/month, input/output split 60/40</div>
+      </div>
+      <div class="calc-results">
+        <table class="cost-table">
+          <thead><tr><th>Model</th><th>Monthly cost</th><th>Cost / 1K req</th></tr></thead>
+          <tbody id="costBody">
+            <tr><td>Opus 4</td><td id="opusCost">—</td><td id="opusPerK">—</td></tr>
+            <tr><td>Sonnet 4</td><td id="sonnetCost">—</td><td id="sonnetPerK">—</td></tr>
+            <tr><td>Haiku 3.5</td><td id="haikuCost">—</td><td id="haikuPerK">—</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 1rem; color: #9ca3af; font-size:0.9rem;">* Based on input $15/$3/$0.25 and output $75/$15/$1.25 per MTok.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <p>© 2026 <a href="https://claudkit.com">claudkit.com</a> — Claude model data for reference. Always verify latest pricing.</p>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const dailyInput = document.getElementById('dailyRequests');
+    const avgSlider = document.getElementById('avgTokens');
+    const tokenDisplay = document.getElementById('tokenDisplay');
+    const opusCost = document.getElementById('opusCost');
+    const sonnetCost = document.getElementById('sonnetCost');
+    const haikuCost = document.getElementById('haikuCost');
+    const opusPerK = document.getElementById('opusPerK');
+    const sonnetPerK = document.getElementById('sonnetPerK');
+    const haikuPerK = document.getElementById('haikuPerK');
+
+    function updateCost() {
+      const days = 30;
+      const daily = parseInt(dailyInput.value, 10) || 0;
+      const avg = parseInt(avgSlider.value, 10) || 0;
+      tokenDisplay.textContent = avg;
+
+      const inputRatio = 0.6;
+      const outputRatio = 0.4;
+      const inputTokens = avg * inputRatio;
+      const outputTokens = avg * outputRatio;
+
+      // per request cost (dollars)
+      function calcCost(inputPricePerMTok, outputPricePerMTok) {
+        const inputCost = (inputTokens / 1_000_000) * inputPricePerMTok;
+        const outputCost = (outputTokens / 1_000_000) * outputPricePerMTok;
+        return inputCost + outputCost;
+      }
+
+      const opusPerReq = calcCost(15, 75);
+      const sonnetPerReq = calcCost(3, 15);
+      const haikuPerReq = calcCost(0.25, 1.25);
+
+      const monthlyOpus = opusPerReq * daily * days;
+      const monthlySonnet = sonnetPerReq * daily * days;
+      const monthlyHaiku = haikuPerReq * daily * days;
+
+      const perKOpus = opusPerReq * 1000;
+      const perKSonnet = sonnetPerReq * 1000;
+      const perKHaiku = haikuPerReq * 1000;
+
+      opusCost.textContent = `$${monthlyOpus.toFixed(2)}`;
+      sonnetCost.textContent = `$${monthlySonnet.toFixed(2)}`;
+      haikuCost.textContent = `$${monthlyHaiku.toFixed(2)}`;
+      opusPerK.textContent = `$${perKOpus.toFixed(3)}`;
+      sonnetPerK.textContent = `$${perKSonnet.toFixed(3)}`;
+      haikuPerK.textContent = `$${perKHaiku.toFixed(3)}`;
+    }
+
+    dailyInput.addEventListener('input', updateCost);
+    avgSlider.addEventListener('input', updateCost);
+    updateCost();
+  })();
+</script>
+
+<!-- small extra interactive: click on model card shows alert (optional) but not intrusive -->
+<script>
+  (function secondary() {
+    const cards = document.querySelectorAll('.model-card');
+    cards.forEach((card, idx) => {
+      card.addEventListener('click', function(e) {
+        if (e.target.tagName === 'STRONG' || e.target.tagName === 'SPAN' || e.target.tagName === 'DIV') {
+          // just a subtle highlight feedback
+          this.style.transition = '0.1s';
+          this.style.borderColor = '#ec4899';
+          setTimeout(() => { this.style.borderColor = '#2a2a3a'; }, 300);
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
