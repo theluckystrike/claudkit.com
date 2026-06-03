@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Claude Prompt Caching Calculator — Estimate Cache</title>
+  <meta name="description" content="Calculate token & cost savings with Claude prompt caching. Compare Opus, Sonnet, Haiku. Interactive breakdown, cache TTL & code example.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://claudkit.com/tools/prompt-caching-calculator">
+  <!-- JSON-LD FAQ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does prompt caching reduce costs?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The system prompt is cached after the first turn. Subsequent turns reuse the cache, reducing input tokens billed. Only the first turn pays full system prompt cost."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the cache TTL?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cache entries expire after 5 minutes of inactivity. Each new request resets the TTL."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the minimum cacheable size?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The system prompt must be at least 1024 tokens to be eligible for caching."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 1.5rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+    header p {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 24px;
+      padding: 1.75rem 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem 1.5rem;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .field-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      letter-spacing: 0.01em;
+    }
+    .field-group input, .field-group select {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 0.7rem 1rem;
+      color: #f1f5f9;
+      font-size: 1rem;
+      transition: border 0.2s, box-shadow 0.2s;
+      outline: none;
+      width: 100%;
+    }
+    .field-group input:focus, .field-group select:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+    .field-group input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    .field-group input[type="number"]::-webkit-outer-spin-button,
+    .field-group input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .model-select {
+      background: #0f172a;
+    }
+    .results-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      margin: 1.5rem 0 1rem;
+      padding: 1.2rem 0 0.8rem;
+      border-top: 1px solid #2d3a50;
+    }
+    .result-item {
+      flex: 1 0 160px;
+    }
+    .result-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+    }
+    .result-item .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.3;
+    }
+    .result-item .value.savings {
+      color: #4ade80;
+    }
+    .result-item .value.savings-percent {
+      color: #fbbf24;
+    }
+    .badge {
+      background: #0f172a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #94a3b8;
+      display: inline-block;
+      margin-left: 0.5rem;
+    }
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0 0.5rem;
+      font-size: 0.9rem;
+    }
+    .breakdown-table th {
+      text-align: left;
+      padding: 0.5rem 0.3rem 0.3rem 0;
+      color: #94a3b8;
+      font-weight: 500;
+      border-bottom: 1px solid #2d3a50;
+    }
+    .breakdown-table td {
+      padding: 0.4rem 0.3rem 0.4rem 0;
+      border-bottom: 1px solid #1e2a3a;
+    }
+    .breakdown-table tr:last-child td {
+      border-bottom: none;
+    }
+    .code-block {
+      background: #0b1120;
+      padding: 1rem 1.2rem;
+      border-radius: 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #2a3a50;
+      color: #e2e8f0;
+      margin: 1rem 0 0.5rem;
+    }
+    .info-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      background: #0f172a;
+      padding: 1rem 1.2rem;
+      border-radius: 20px;
+      margin: 1.2rem 0 0.2rem;
+    }
+    .info-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .info-item strong {
+      color: #38bdf8;
+      font-weight: 500;
+    }
+    .info-item span {
+      color: #cbd5e1;
+    }
+    .footnote {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      color: #475569;
+      font-size: 0.85rem;
+      border-top: 1px solid #1e293b;
+      padding-top: 1.5rem;
+    }
+    @media (max-width: 640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .card {
+        padding: 1.25rem 1rem;
+      }
+      header h1 {
+        font-size: 1.6rem;
+      }
+      .result-item .value {
+        font-size: 1.3rem;
+      }
+      .results-summary {
+        gap: 0.8rem;
+      }
+    }
+  </style>
+
+    <meta property="og:title" content="Claude Prompt Caching Calculator — Estimate Cache">
+    <meta property="og:description" content="Calculate token & cost savings with Claude prompt caching. Compare Opus, Sonnet, Haiku. Interactive breakdown, cache TTL & code example.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://claudkit.com/tools/prompt-caching-calculator">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⏱️ Prompt Caching Calculator</h1>
+    <p>Estimate cache savings for Claude models · claudkit.com</p>
+  </header>
+
+  <div class="card">
+    <div class="grid-2">
+      <div class="field-group">
+        <label for="systemTokens">System prompt tokens</label>
+        <input type="number" id="systemTokens" min="0" step="1" value="2048" placeholder="e.g. 2048">
+      </div>
+      <div class="field-group">
+        <label for="turns">Conversation turns</label>
+        <input type="number" id="turns" min="1" step="1" value="5" placeholder="e.g. 5">
+      </div>
+      <div class="field-group">
+        <label for="userTokens">Avg user message tokens</label>
+        <input type="number" id="userTokens" min="0" step="1" value="320" placeholder="e.g. 320">
+      </div>
+      <div class="field-group">
+        <label for="assistantTokens">Avg assistant response tokens</label>
+        <input type="number" id="assistantTokens" min="0" step="1" value="800" placeholder="e.g. 800">
+      </div>
+      <div class="field-group">
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect" class="model-select">
+          <option value="opus" data-input-cost="15" data-output-cost="75">Claude Opus ($15 / $75 per M tokens)</option>
+          <option value="sonnet" selected data-input-cost="3" data-output-cost="15">Claude Sonnet ($3 / $15 per M tokens)</option>
+          <option value="haiku" data-input-cost="0.25" data-output-cost="1.25">Claude Haiku ($0.25 / $1.25 per M tokens)</option>
+        </select>
+      </div>
+      <div class="field-group" style="justify-content: flex-end;">
+        <button id="recalcBtn" style="background:#38bdf8; color:#0f172a; border:none; border-radius:40px; padding:0.7rem 1.8rem; font-weight:600; font-size:1rem; cursor:pointer; transition:0.2s; margin-top:1.4rem;">Calculate</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-summary" id="resultsSummary">
+      <div class="result-item"><span class="label">Total tokens (no cache)</span><div class="value" id="totalTokensNoCache">—</div></div>
+      <div class="result-item"><span class="label">Total tokens (with cache)</span><div class="value" id="totalTokensCache">—</div></div>
+      <div class="result-item"><span class="label">Cost without cache</span><div class="value" id="costNoCache">—</div></div>
+      <div class="result-item"><span class="label">Cost with cache</span><div class="value" id="costCache">—</div></div>
+      <div class="result-item"><span class="label">Savings</span><div class="value savings" id="savingsAmount">—</div></div>
+      <div class="result-item"><span class="label">Savings %</span><div class="value savings-percent" id="savingsPercent">—</div></div>
+    </div>
+
+    <!-- Per-turn breakdown -->
+    <h3 style="font-weight:500; font-size:1rem; color:#94a3b8; margin: 1rem 0 0.2rem;">📋 Cost breakdown per turn</h3>
+    <div style="overflow-x: auto;">
+      <table class="breakdown-table" id="breakdownTable">
+        <thead><tr><th>Turn</th><th>Input cached?</th><th>Input tokens</th><th>Output tokens</th><th>Cost (USD)</th></tr></thead>
+        <tbody id="breakdownBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Code example -->
+    <div style="margin-top: 1.8rem;">
+      <h3 style="font-weight:500; font-size:1rem; color:#94a3b8; margin-bottom:0.5rem;">💻 Enable prompt caching (API example)</h3>
+      <div class="code-block">
+// Claude API request with cache control (system prompt)
+const response = await fetch("https://api.anthropic.com/v1/messages", {
+  method: "POST",
+  headers: { "x-api-key": "sk-...", "anthropic-version": "2023-06-01" },
+  body: JSON.stringify({
+    model: "claude-sonnet-4-20250514",
+    system: [
+      { "type": "text", "text": "You are a helpful assistant.", "cache_control": { "type": "ephemeral" } }
+    ],
+    messages: [{ "role": "user", "content": "Hello" }]
+  })
+});
+      </div>
+    </div>
+
+    <!-- Cache info -->
+    <div class="info-grid">
+      <div class="info-item"><strong>⏳ Cache TTL</strong> <span>5 minutes inactivity</span></div>
+      <div class="info-item"><strong>📏 Min. cacheable size</strong> <span>1024 tokens (system prompt)</span></div>
+      <div class="info-item"><strong>⚡ First turn</strong> <span>full system prompt cost</span></div>
+      <div class="info-item"><strong>🔁 Subsequent turns</strong> <span>cached system prompt (reduced cost)</span></div>
+    </div>
+    <div class="footnote">* Caching only applies to system prompt. User & assistant tokens are billed normally each turn.</div>
+  </div>
+
+  <footer>© 2025 claudkit.com</footer>
+</div>
+
+<script>
+  (function() {
+    // DOM refs
+    const systemInput = document.getElementById('systemTokens');
+    const turnsInput = document.getElementById('turns');
+    const userInput = document.getElementById('userTokens');
+    const assistantInput = document.getElementById('assistantTokens');
+    const modelSelect = document.getElementById('modelSelect');
+    const recalcBtn = document.getElementById('recalcBtn');
+
+    const totalTokensNoCacheEl = document.getElementById('totalTokensNoCache');
+    const totalTokensCacheEl = document.getElementById('totalTokensCache');
+    const costNoCacheEl = document.getElementById('costNoCache');
+    const costCacheEl = document.getElementById('costCache');
+    const savingsAmountEl = document.getElementById('savingsAmount');
+    const savingsPercentEl = document.getElementById('savingsPercent');
+    const breakdownBody = document.getElementById('breakdownBody');
+
+    // pricing per million tokens
+    function getModelPricing(selectEl) {
+      const opt = selectEl.options[selectEl.selectedIndex];
+      const inputCost = parseFloat(opt.dataset.inputCost);
+      const outputCost = parseFloat(opt.dataset.outputCost);
+      return { inputCost, outputCost }; // per 1M tokens
+    }
+
+    function formatCost(val) {
+      if (val < 0.001) return '$' + val.toFixed(6);
+      if (val < 0.01) return '$' + val.toFixed(5);
+      if (val < 1) return '$' + val.toFixed(4);
+      return '$' + val.toFixed(4);
+    }
+
+    function formatTokens(val) {
+      return val.toLocaleString();
+    }
+
+    function calculate() {
+      // read values
+      let systemTokens = parseInt(systemInput.value, 10);
+      let turns = parseInt(turnsInput.value, 10);
+      let userTokens = parseInt(userInput.value, 10);
+      let assistantTokens = parseInt(assistantInput.value, 10);
+
+      // sanitize
+      if (isNaN(systemTokens) || systemTokens < 0) systemTokens = 0;
+      if (isNaN(turns) || turns < 1) turns = 1;
+      if (isNaN(userTokens) || userTokens < 0) userTokens = 0;
+      if (isNaN(assistantTokens) || assistantTokens < 0) assistantTokens = 0;
+
+      // enforce minimum cacheable size for realistic caching (but still calculate even if below 1024, show note)
+      const cacheEligible = systemTokens >= 1024; // cache only if >=1024, but we still calculate discount if user wants to see
+
+      const { inputCost, outputCost } = getModelPricing(modelSelect);
+      const inputCostPerToken = inputCost / 1_000_000;
+      const outputCostPerToken = outputCost / 1_000_000;
+
+      // Without caching: each turn pays full system prompt + user + assistant
+      // total tokens without cache = (system + user + assistant) * turns
+      const totalTokensNoCache = (systemTokens + userTokens + assistantTokens) * turns;
+      const costNoCache = (systemTokens * inputCostPerToken + userTokens * inputCostPerToken + assistantTokens * outputCostPerToken) * turns;
+
+      // With caching:
+      // Turn 1: system (full) + user + assistant
+      // Turn 2..turns: system tokens are cached → only cache read cost? Actually Anthropic bills cached input at ~50%? 
+      // For simplicity and public info: cached input tokens are billed at 50% of input cost. 
+      // We'll apply 50% discount on system tokens for turns 2+.
+      // If system < 1024, caching not available, fallback to no caching.
+      let costCache = 0;
+      let totalTokensCache = 0;
+      const breakdownRows = [];
+
+      // per turn tokens
+      const userTokenCost = userTokens * inputCostPerToken;
+      const assistantTokenCost = assistantTokens * outputCostPerToken;
+
+      for (let i = 1; i <= turns; i++) {
+        let inputTokensThisTurn = 0;
+        let costThisTurn = 0;
+        let cachedLabel = 'no';
+        let systemCostThisTurn = 0;
+
+        if (i === 1) {
+          // first turn: full system prompt
+          inputTokensThisTurn = systemTokens + userTokens;
+          systemCostThisTurn = systemTokens * inputCostPerToken;
+          cachedLabel = 'no (first)';
+        } else {
+          // subsequent turns: system prompt cached → 50% input cost for system tokens
+          if (cacheEligible && systemTokens > 0) {
+            systemCostThisTurn = systemTokens * inputCostPerToken * 0.5; // 50% cached rate
+            cachedLabel = 'yes (cached)';
+          } else {
+            systemCostThisTurn = systemTokens * inputCostPerToken;
+            cachedLabel = systemTokens >= 1024 ? 'no' : 'no (<1024)';
+          }
+          inputTokensThisTurn = systemTokens + userTokens; // tokens still count same (but billing differs)
+        }
+
+        const outputCostThisTurn = assistantTokens * outputCostPerToken;
+        costThisTurn = systemCostThisTurn + userTokenCost + outputCostThisTurn;
+        totalTokensCache += (systemTokens + userTokens + assistantTokens);
+
+        breakdownRows.push({
+          turn: i,
+          cached: cachedLabel,
+          inputTokens: systemTokens + userTokens,
+          outputTokens: assistantTokens,
+          cost: costThisTurn
+        });
+      }
+
+      costCache = breakdownRows.reduce((acc, r) => acc + r.cost, 0);
+
+      // totals
+      const savingsAmount = costNoCache - costCache;
+      const savingsPercent = costNoCache > 0 ? (savingsAmount / costNoCache) * 100 : 0;
+
+      // update DOM
+      totalTokensNoCacheEl.textContent = formatTokens(totalTokensNoCache);
+      totalTokensCacheEl.textContent = formatTokens(totalTokensCache);
+      costNoCacheEl.textContent = formatCost(costNoCache);
+      costCacheEl.textContent = formatCost(costCache);
+      savingsAmountEl.textContent = formatCost(savingsAmount);
+      savingsPercentEl.textContent = savingsPercent.toFixed(2) + '%';
+
+      // build breakdown table
+      let html = '';
+      for (const row of breakdownRows) {
+        html += `<tr><td>${row.turn}</td><td>${row.cached}</td><td>${formatTokens(row.inputTokens)}</td><td>${formatTokens(row.outputTokens)}</td><td>${formatCost(row.cost)}</td></tr>`;
+      }
+      breakdownBody.innerHTML = html;
+    }
+
+    // initial calculation
+    calculate();
+
+    // recalc on button click
+    recalcBtn.addEventListener('click', calculate);
+
+    // also recalc on enter key in inputs (optional)
+    const inputs = [systemInput, turnsInput, userInput, assistantInput, modelSelect];
+    inputs.forEach(el => el.addEventListener('change', calculate));
+    inputs.forEach(el => el.addEventListener('input', function(e) {
+      if (e.target.tagName === 'INPUT') calculate();
+    }));
+    // model select change
+    modelSelect.addEventListener('change', calculate);
+  })();
+</script>
+</body>
+</html>
