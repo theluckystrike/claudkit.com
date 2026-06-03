@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Claude Batch API Cost Estimator — Calculate Bulk Processing Savings</title>
+  <meta name="description" content="Estimate Claude API costs for standard vs batch mode. Compare pricing for Opus, Sonnet, Haiku. Break-even analysis, 24h SLA, real savings.">
+  <meta name="keywords" content="Claude, Batch API, cost estimator, bulk processing, Anthropic, Opus, Sonnet, Haiku, savings calculator">
+  <link rel="canonical" href="https://claudkit.com/tools/batch-api-cost-estimator">
+  <!-- JSON-LD FAQ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Claude Batch API pricing work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Batch mode offers a 50% discount on input tokens compared to standard API. Output tokens are charged at standard rates. Batch requests have a 24-hour SLA."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which Claude models support batch API?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Claude Opus, Sonnet, and Haiku all support batch processing. Each model has different per-token rates."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When is batch API cost-effective?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Batch mode becomes beneficial when processing large volumes, especially with high input token counts. The break-even point depends on request size and model."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 1.5rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .subhead {
+      color: #94a3b8;
+      font-size: 1.1rem;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 24px;
+      padding: 1.8rem 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      color: #f1f5f9;
+      font-size: 1rem;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: #0f172a;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      border: 1px solid #334155;
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-label input {
+      width: 1.2rem;
+      height: 1.2rem;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+    .badge {
+      background: #38bdf8;
+      color: #0f172a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
+    }
+    .results-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+    .stat {
+      background: #0f172a;
+      padding: 0.8rem 1.2rem;
+      border-radius: 20px;
+      flex: 1 1 140px;
+      border-left: 4px solid #38bdf8;
+    }
+    .stat .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+    .stat .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .stat .value.green {
+      color: #4ade80;
+    }
+    .stat .value.blue {
+      color: #38bdf8;
+    }
+    .stat .value.orange {
+      color: #fb923c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.2rem 0;
+    }
+    th {
+      text-align: left;
+      padding: 0.8rem 0.4rem 0.4rem 0.4rem;
+      font-weight: 600;
+      color: #94a3b8;
+      border-bottom: 1px solid #334155;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+    td {
+      padding: 0.7rem 0.4rem;
+      border-bottom: 1px solid #1e293b;
+    }
+    .highlight-row {
+      background: #1e293b;
+      border-radius: 12px;
+    }
+    .code-block {
+      background: #0f172a;
+      padding: 1.2rem;
+      border-radius: 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      margin: 1rem 0;
+    }
+    .break-even {
+      background: #0f172a;
+      padding: 1rem 1.2rem;
+      border-radius: 20px;
+      border-left: 4px solid #fb923c;
+      margin-top: 1rem;
+    }
+    .footer {
+      text-align: center;
+      padding: 2rem 0 0.5rem;
+      color: #64748b;
+      font-size: 0.9rem;
+      border-top: 1px solid #1e293b;
+      margin-top: 2rem;
+    }
+    @media (max-width: 700px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+      h1 {
+        font-size: 1.8rem;
+      }
+      .card {
+        padding: 1.2rem 1rem;
+      }
+      .stat .value {
+        font-size: 1.2rem;
+      }
+    }
+    .inline-code {
+      background: #1e293b;
+      padding: 0.1rem 0.4rem;
+      border-radius: 8px;
+      font-family: monospace;
+    }
+    .mb-1 { margin-bottom: 0.8rem; }
+    .mt-1 { margin-top: 0.8rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚡ Batch API Cost Estimator</h1>
+    <div class="subhead">Compare standard vs batch pricing for Claude models · 50% off input tokens</div>
+  </header>
+
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <div class="form-group">
+          <label for="requests">Number of requests</label>
+          <input type="number" id="requests" value="10000" min="1" step="100">
+        </div>
+        <div class="form-group">
+          <label for="inputTokens">Avg input tokens per request</label>
+          <input type="number" id="inputTokens" value="2000" min="1" step="10">
+        </div>
+        <div class="form-group">
+          <label for="outputTokens">Avg output tokens per request</label>
+          <input type="number" id="outputTokens" value="500" min="1" step="10">
+        </div>
+      </div>
+      <div>
+        <div class="form-group">
+          <label for="model">Model</label>
+          <select id="model">
+            <option value="opus" data-input-rate="15" data-output-rate="75">Claude Opus (input $15/M, output $75/M)</option>
+            <option value="sonnet" selected data-input-rate="3" data-output-rate="15">Claude Sonnet (input $3/M, output $15/M)</option>
+            <option value="haiku" data-input-rate="0.25" data-output-rate="1.25">Claude Haiku (input $0.25/M, output $1.25/M)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Batch mode (50% discount on input tokens)</label>
+          <div class="toggle-wrap">
+            <label class="toggle-label">
+              <input type="checkbox" id="batchToggle" checked> 
+              <span>Batch enabled</span>
+            </label>
+            <span class="badge">24h SLA</span>
+          </div>
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #94a3b8;">
+          <span>⚡ Batch input: <span id="batchDiscountDisplay">50%</span> discount</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-summary" id="resultsSummary">
+      <div class="stat"><span class="label">Standard cost</span><div class="value blue" id="standardCost">$0.00</div></div>
+      <div class="stat"><span class="label">Batch cost</span><div class="value green" id="batchCost">$0.00</div></div>
+      <div class="stat"><span class="label">Savings</span><div class="value orange" id="savings">$0.00</div></div>
+      <div class="stat"><span class="label">Cost / request (batch)</span><div class="value" id="costPerReq">$0.0000</div></div>
+    </div>
+
+    <!-- Comparison table -->
+    <h3 style="margin-top: 1.8rem; font-weight: 500;">📊 Cost comparison</h3>
+    <table id="comparisonTable">
+      <thead>
+        <tr><th>Metric</th><th>Standard API</th><th>Batch API</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Total input tokens</td><td id="totalInputStd">—</td><td id="totalInputBatch">—</td></tr>
+        <tr><td>Input cost</td><td id="inputCostStd">—</td><td id="inputCostBatch">—</td></tr>
+        <tr><td>Output cost</td><td id="outputCostStd">—</td><td id="outputCostBatch">—</td></tr>
+        <tr><td><strong>Total cost</strong></td><td id="totalCostStd"><strong>$0.00</strong></td><td id="totalCostBatch"><strong>$0.00</strong></td></tr>
+        <tr><td>Processing time</td><td>~minutes</td><td>≤ 24 hours (SLA)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Break-even -->
+    <div class="break-even" id="breakEvenBox">
+      <strong>📈 Break-even analysis</strong> <span id="breakEvenText">Batch is cheaper at any volume (input discount always applies).</span>
+    </div>
+
+    <!-- Code example -->
+    <h3 style="margin-top: 1.8rem; font-weight: 500;">🧪 Claude Batch API example (Python)</h3>
+    <div class="code-block">
+# Install: pip install anthropic
+import anthropic
+
+client = anthropic.Anthropic(api_key="your-api-key")
+
+# Create a batch of messages
+requests = [
+    {
+        "custom_id": "req-001",
+        "params": {
+            "model": "claude-sonnet-4-20250514",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": "Hello, batch!"}]
+        }
+    }
+]
+
+batch = client.batches.create(
+    requests=requests,
+    processing_window="24h"  # batch SLA
+)
+print(f"Batch ID: {batch.id}")
+    </div>
+  </div>
+
+  <div class="footer">
+    © 2025 claudkit.com — Built for developers
+  </div>
+</div>
+
+<script>
+  (function() {
+    // rates per million tokens
+    const modelRates = {
+      opus: { input: 15, output: 75 },
+      sonnet: { input: 3, output: 15 },
+      haiku: { input: 0.25, output: 1.25 }
+    };
+
+    const requestsInput = document.getElementById('requests');
+    const inputTokensInput = document.getElementById('inputTokens');
+    const outputTokensInput = document.getElementById('outputTokens');
+    const modelSelect = document.getElementById('model');
+    const batchToggle = document.getElementById('batchToggle');
+    const batchDiscountDisplay = document.getElementById('batchDiscountDisplay');
+
+    // result fields
+    const standardCostEl = document.getElementById('standardCost');
+    const batchCostEl = document.getElementById('batchCost');
+    const savingsEl = document.getElementById('savings');
+    const costPerReqEl = document.getElementById('costPerReq');
+
+    // table cells
+    const totalInputStd = document.getElementById('totalInputStd');
+    const totalInputBatch = document.getElementById('totalInputBatch');
+    const inputCostStd = document.getElementById('inputCostStd');
+    const inputCostBatch = document.getElementById('inputCostBatch');
+    const outputCostStd = document.getElementById('outputCostStd');
+    const outputCostBatch = document.getElementById('outputCostBatch');
+    const totalCostStd = document.getElementById('totalCostStd');
+    const totalCostBatch = document.getElementById('totalCostBatch');
+    const breakEvenText = document.getElementById('breakEvenText');
+
+    function formatCurrency(value) {
+      return '$' + value.toFixed(2);
+    }
+
+    function formatCurrencyPrecise(value) {
+      if (value < 0.01) return '$' + value.toFixed(6);
+      return '$' + value.toFixed(4);
+    }
+
+    function updateCalculator() {
+      // get inputs
+      let requests = parseInt(requestsInput.value, 10);
+      let inputTokens = parseInt(inputTokensInput.value, 10);
+      let outputTokens = parseInt(outputTokensInput.value, 10);
+      if (isNaN(requests) || requests < 1) requests = 1;
+      if (isNaN(inputTokens) || inputTokens < 1) inputTokens = 1;
+      if (isNaN(outputTokens) || outputTokens < 1) outputTokens = 1;
+
+      const modelKey = modelSelect.value;
+      const rates = modelRates[modelKey];
+      if (!rates) return;
+
+      const batchEnabled = batchToggle.checked;
+      const discount = batchEnabled ? 0.5 : 0.0;  // 50% off input tokens
+
+      // totals
+      const totalInput = requests * inputTokens;
+      const totalOutput = requests * outputTokens;
+
+      // standard cost (no discount)
+      const stdInputCost = (totalInput / 1_000_000) * rates.input;
+      const stdOutputCost = (totalOutput / 1_000_000) * rates.output;
+      const stdTotal = stdInputCost + stdOutputCost;
+
+      // batch cost: input with discount
+      const batchInputRate = rates.input * (1 - discount);
+      const batchInputCost = (totalInput / 1_000_000) * batchInputRate;
+      const batchOutputCost = (totalOutput / 1_000_000) * rates.output;  // output full price
+      const batchTotal = batchInputCost + batchOutputCost;
+
+      const savings = stdTotal - batchTotal;
+      const costPerReq = batchTotal / requests;
+
+      // update summary
+      standardCostEl.textContent = formatCurrency(stdTotal);
+      batchCostEl.textContent = formatCurrency(batchTotal);
+      savingsEl.textContent = formatCurrency(savings);
+      costPerReqEl.textContent = formatCurrencyPrecise(costPerReq);
+
+      // update table
+      totalInputStd.textContent = totalInput.toLocaleString();
+      totalInputBatch.textContent = totalInput.toLocaleString();
+      inputCostStd.textContent = formatCurrency(stdInputCost);
+      inputCostBatch.textContent = formatCurrency(batchInputCost);
+      outputCostStd.textContent = formatCurrency(stdOutputCost);
+      outputCostBatch.textContent = formatCurrency(batchOutputCost);
+      totalCostStd.innerHTML = '<strong>' + formatCurrency(stdTotal) + '</strong>';
+      totalCostBatch.innerHTML = '<strong>' + formatCurrency(batchTotal) + '</strong>';
+
+      // break-even analysis
+      let breakEvenMsg = '';
+      if (batchEnabled) {
+        // batch always cheaper because input discount > 0 (output same)
+        breakEvenMsg = '✅ Batch is always cheaper due to 50% input discount. Savings increase with volume.';
+      } else {
+        // if batch disabled, standard = batch (no discount)
+        breakEvenMsg = '⚖️ Batch mode disabled — enable to see discount.';
+      }
+      // Additional nuance: if batch enabled, break-even is always positive.
+      // But we can compute theoretical break-even volume if needed: any volume >0 yields savings.
+      if (batchEnabled && savings >= 0) {
+        // show savings percentage
+        const savingsPct = stdTotal > 0 ? ((savings / stdTotal) * 100) : 0;
+        breakEvenMsg = `📉 Batch saves ${savingsPct.toFixed(1)}% vs standard. No minimum volume — every request benefits.`;
+      } else if (batchEnabled && savings < 0) {
+        // should not happen because input discount always reduces cost (output same)
+        breakEvenMsg = '⚠️ Unexpected: batch cost higher (check rates).';
+      }
+      breakEvenText.textContent = breakEvenMsg;
+
+      // discount display
+      batchDiscountDisplay.textContent = batchEnabled ? '50%' : '0%';
+    }
+
+    // event listeners
+    [requestsInput, inputTokensInput, outputTokensInput, modelSelect, batchToggle].forEach(el => {
+      el.addEventListener('input', updateCalculator);
+      el.addEventListener('change', updateCalculator);
+    });
+
+    // initial calculation
+    updateCalculator();
+  })();
+</script>
+</body>
+</html>

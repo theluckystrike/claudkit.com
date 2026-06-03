@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Claude Token Budget Planner — Optimize Context Window Usage</title>
+  <meta name="description" content="Plan and optimize your Claude context window usage. Visualize token budgets for Opus, Sonnet, Haiku. Get cost estimates and optimization tips.">
+  <link rel="canonical" href="https://claudkit.com/tools/token-budget-planner">
+  <!-- JSON-LD FAQ Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is the context window for Claude models?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Claude Opus, Sonnet, and Haiku all support a 200K token context window."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can I reduce token usage?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use truncation, summarization, sliding window techniques, and limit conversation history."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the cost per request?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Cost depends on model and total tokens. Opus ~$15/M input tokens, Sonnet ~$3/M, Haiku ~$0.25/M. Output tokens are charged separately."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      padding: 1.5rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .subhead {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+    .label {
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 0.25rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    select, input {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 0.6rem 1rem;
+      border-radius: 2rem;
+      font-size: 1rem;
+      width: 100%;
+      transition: border 0.2s;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .budget-section {
+      background: #0f172a;
+      border-radius: 1rem;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #38bdf8;
+      margin-bottom: 0.5rem;
+    }
+    .budget-section .section-label {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .budget-section input {
+      width: 100px;
+      text-align: right;
+      padding: 0.4rem 0.8rem;
+      border-radius: 2rem;
+    }
+    .token-badge {
+      background: #1e293b;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .stacked-bar-container {
+      width: 100%;
+      background: #1e293b;
+      border-radius: 2rem;
+      height: 2.8rem;
+      overflow: hidden;
+      display: flex;
+      margin: 1.5rem 0 0.5rem;
+      border: 1px solid #334155;
+    }
+    .bar-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #0f172a;
+      transition: width 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      min-width: 2px;
+    }
+    .bar-segment span {
+      padding: 0 4px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      margin: 0.75rem 0 1rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+    }
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      background: #0f172a;
+      padding: 1rem 1.2rem;
+      border-radius: 2rem;
+      margin: 1rem 0;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    .warning {
+      background: #f59e0b20;
+      border-left: 6px solid #f59e0b;
+      padding: 0.8rem 1.2rem;
+      border-radius: 1rem;
+      color: #fcd34d;
+      font-weight: 500;
+    }
+    .danger {
+      background: #ef444420;
+      border-left-color: #ef4444;
+      color: #fca5a5;
+    }
+    .tip-box {
+      background: #0f172a;
+      border-radius: 1rem;
+      padding: 1rem 1.2rem;
+      margin-top: 1rem;
+    }
+    .tip-title {
+      font-weight: 600;
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+    }
+    .tip-list {
+      list-style: none;
+    }
+    .tip-list li {
+      padding: 0.3rem 0;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+    .tip-list li::before {
+      content: "▹";
+      position: absolute;
+      left: 0;
+      color: #38bdf8;
+    }
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      color: #475569;
+      font-size: 0.85rem;
+      border-top: 1px solid #1e293b;
+      padding-top: 1.5rem;
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 0.4rem 1.2rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: 0.2s;
+    }
+    .btn-reset:hover {
+      border-color: #38bdf8;
+      color: #e2e8f0;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.6rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .budget-section { flex-wrap: wrap; gap: 0.5rem; }
+      .budget-section input { width: 80px; }
+      .stats { flex-direction: column; gap: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧠 Claude Token Budget Planner</h1>
+    <div class="subhead">Optimize context window usage · Opus · Sonnet · Haiku</div>
+  </header>
+
+  <div class="card">
+    <div class="flex-row" style="justify-content: space-between;">
+      <div style="flex:1; min-width: 160px;">
+        <div class="label">Model</div>
+        <select id="modelSelect" aria-label="Select Claude model">
+          <option value="opus" data-cost-input="15" data-cost-output="75">Claude Opus (200K)</option>
+          <option value="sonnet" data-cost-input="3" data-cost-output="15" selected>Claude Sonnet (200K)</option>
+          <option value="haiku" data-cost-input="0.25" data-cost-output="1.25">Claude Haiku (200K)</option>
+        </select>
+      </div>
+      <div style="text-align: right;">
+        <div class="label">Context window</div>
+        <div style="font-size: 1.3rem; font-weight: 600; color:#38bdf8;">200,000</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget sections -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <span class="label">📋 Token budget sections</span>
+      <button class="btn-reset" id="resetDefaults">Reset defaults</button>
+    </div>
+    <div id="budgetSections">
+      <!-- dynamically populated -->
+    </div>
+  </div>
+
+  <!-- Visual bar + stats -->
+  <div class="card">
+    <div class="stacked-bar-container" id="stackedBar"></div>
+    <div class="legend" id="legendContainer"></div>
+
+    <div class="stats" id="statsPanel">
+      <div class="stat-item"><span class="stat-value" id="usedTokens">0</span><div class="stat-label">Used</div></div>
+      <div class="stat-item"><span class="stat-value" id="remainingTokens">200K</span><div class="stat-label">Remaining</div></div>
+      <div class="stat-item"><span class="stat-value" id="usagePercent">0%</span><div class="stat-label">Usage</div></div>
+      <div class="stat-item"><span class="stat-value" id="costPerRequest">$0.00</span><div class="stat-label">Cost / request</div></div>
+    </div>
+
+    <div id="warningContainer"></div>
+  </div>
+
+  <!-- Optimization tips -->
+  <div class="card">
+    <div class="tip-title">⚡ Optimization tips</div>
+    <ul class="tip-list">
+      <li><strong>Truncation:</strong> Trim older messages or long documents to fit.</li>
+      <li><strong>Summarization:</strong> Replace lengthy context with condensed summaries.</li>
+      <li><strong>Sliding window:</strong> Keep only recent N messages for conversation.</li>
+      <li><strong>RAG chunking:</strong> Retrieve only relevant document chunks.</li>
+      <li><strong>System prompt:</strong> Keep concise; move examples to few-shot.</li>
+    </ul>
+  </div>
+
+  <footer>© 2025 claudkit.com</footer>
+</div>
+
+<script>
+  (function() {
+    // ----- configuration -----
+    const CONTEXT_WINDOW = 200000;
+    const SECTION_COLORS = {
+      'systemPrompt': '#38bdf8',      // sky
+      'fewShot': '#818cf8',           // indigo
+      'userContext': '#34d399',       // emerald
+      'retrievedDocs': '#fbbf24',     // amber
+      'conversationHistory': '#f472b6', // pink
+      'reservedOutput': '#a78bfa'     // violet
+    };
+    const SECTION_LABELS = {
+      'systemPrompt': 'System prompt',
+      'fewShot': 'Few-shot examples',
+      'userContext': 'User context',
+      'retrievedDocs': 'Retrieved docs (RAG)',
+      'conversationHistory': 'Conversation history',
+      'reservedOutput': 'Reserved for output'
+    };
+    const DEFAULT_TOKENS = {
+      systemPrompt: 1200,
+      fewShot: 2400,
+      userContext: 8000,
+      retrievedDocs: 15000,
+      conversationHistory: 12000,
+      reservedOutput: 4096
+    };
+
+    // DOM refs
+    const modelSelect = document.getElementById('modelSelect');
+    const budgetSectionsEl = document.getElementById('budgetSections');
+    const stackedBar = document.getElementById('stackedBar');
+    const legendContainer = document.getElementById('legendContainer');
+    const usedTokensEl = document.getElementById('usedTokens');
+    const remainingTokensEl = document.getElementById('remainingTokens');
+    const usagePercentEl = document.getElementById('usagePercent');
+    const costPerRequestEl = document.getElementById('costPerRequest');
+    const warningContainer = document.getElementById('warningContainer');
+    const resetBtn = document.getElementById('resetDefaults');
+
+    // state
+    let sections = { ...DEFAULT_TOKENS };
+
+    // ----- helpers -----
+    function getModelCost() {
+      const opt = modelSelect.options[modelSelect.selectedIndex];
+      return {
+        inputCostPerMillion: parseFloat(opt.dataset.costInput) || 3,
+        outputCostPerMillion: parseFloat(opt.dataset.costOutput) || 15
+      };
+    }
+
+    function computeTotal() {
+      let total = 0;
+      for (let key in sections) {
+        total += Number(sections[key]) || 0;
+      }
+      return total;
+    }
+
+    // ----- render budget sections -----
+    function renderSections() {
+      let html = '';
+      for (let key in SECTION_LABELS) {
+        const label = SECTION_LABELS[key];
+        const val = sections[key] || 0;
+        const color = SECTION_COLORS[key] || '#38bdf8';
+        html += `
+          <div class="budget-section" style="border-left-color: ${color};">
+            <span class="section-label">${label}</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <input type="number" min="0" max="200000" step="1" value="${val}" 
+                     data-key="${key}" aria-label="${label} tokens">
+              <span class="token-badge">tokens</span>
+            </div>
+          </div>
+        `;
+      }
+      budgetSectionsEl.innerHTML = html;
+
+      // attach events
+      document.querySelectorAll('#budgetSections input[type="number"]').forEach(inp => {
+        inp.addEventListener('input', function(e) {
+          const key = this.dataset.key;
+          let val = parseInt(this.value, 10);
+          if (isNaN(val) || val < 0) val = 0;
+          if (val > CONTEXT_WINDOW) val = CONTEXT_WINDOW;
+          sections[key] = val;
+          updateAll();
+        });
+      });
+    }
+
+    // ----- update bar, stats, warnings -----
+    function updateAll() {
+      const total = computeTotal();
+      const remaining = Math.max(0, CONTEXT_WINDOW - total);
+      const percent = Math.min(100, (total / CONTEXT_WINDOW) * 100);
+      const used = total;
+
+      // stacked bar
+      let barHtml = '';
+      const keys = Object.keys(SECTION_COLORS);
+      keys.forEach(key => {
+        const val = Number(sections[key]) || 0;
+        if (val === 0) return;
+        const pct = Math.min(100, (val / CONTEXT_WINDOW) * 100);
+        const color = SECTION_COLORS[key];
+        const label = SECTION_LABELS[key];
+        barHtml += `<div class="bar-segment" style="width:${pct}%; background:${color};" title="${label}: ${val.toLocaleString()}"><span>${val > 0 ? (pct > 3 ? Math.round(val/1000)+'k' : '') : ''}</span></div>`;
+      });
+      // empty space
+      if (remaining > 0) {
+        const remainPct = Math.max(0, (remaining / CONTEXT_WINDOW) * 100);
+        barHtml += `<div class="bar-segment" style="width:${remainPct}%; background:#1e293b; color:#475569;" title="Free: ${remaining.toLocaleString()}"><span>${remainPct > 4 ? 'free' : ''}</span></div>`;
+      }
+      stackedBar.innerHTML = barHtml || '<div style="width:100%; background:#1e293b;"></div>';
+
+      // legend
+      let legendHtml = '';
+      keys.forEach(key => {
+        const val = Number(sections[key]) || 0;
+        if (val === 0) return;
+        const color = SECTION_COLORS[key];
+        legendHtml += `<div class="legend-item"><span class="legend-color" style="background:${color};"></span>${SECTION_LABELS[key]}</div>`;
+      });
+      legendContainer.innerHTML = legendHtml;
+
+      // stats
+      usedTokensEl.textContent = used.toLocaleString();
+      remainingTokensEl.textContent = remaining.toLocaleString();
+      usagePercentEl.textContent = percent.toFixed(1) + '%';
+
+      // cost calculation
+      const cost = getModelCost();
+      const inputTokens = total; // simplified: all input tokens
+      const outputTokens = Number(sections.reservedOutput) || 0;
+      const inputCost = (inputTokens / 1_000_000) * cost.inputCostPerMillion;
+      const outputCost = (outputTokens / 1_000_000) * cost.outputCostPerMillion;
+      const totalCost = inputCost + outputCost;
+      costPerRequestEl.textContent = `$${totalCost.toFixed(4)}`;
+
+      // warnings
+      let warnHtml = '';
+      if (percent > 90) {
+        const isDanger = percent > 95;
+        warnHtml = `<div class="warning ${isDanger ? 'danger' : ''}">⚠️ <strong>${percent.toFixed(1)}%</strong> context window used. ${isDanger ? 'Critical: reduce token usage to avoid truncation.' : 'Consider optimizing to stay under 90%.'}</div>`;
+      } else if (percent > 75) {
+        warnHtml = `<div class="warning" style="background:#2dd4bf10; border-left-color:#2dd4bf; color:#5eead4;">📊 ${percent.toFixed(1)}% used — approaching limit.</div>`;
+      }
+      warningContainer.innerHTML = warnHtml;
+    }
+
+    // ----- reset -----
+    function resetDefaults() {
+      sections = { ...DEFAULT_TOKENS };
+      // update inputs
+      document.querySelectorAll('#budgetSections input[type="number"]').forEach(inp => {
+        const key = inp.dataset.key;
+        if (key && sections[key] !== undefined) {
+          inp.value = sections[key];
+        }
+      });
+      updateAll();
+    }
+
+    // ----- model change -----
+    modelSelect.addEventListener('change', function() {
+      updateAll();
+    });
+
+    // ----- init -----
+    renderSections();
+    updateAll();
+
+    resetBtn.addEventListener('click', resetDefaults);
+
+    // extra: update on any input change already handled
+  })();
+</script>
+</body>
+</html>

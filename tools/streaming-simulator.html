@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Claude Streaming Response Simulator — Test SSE Event Handling | claudkit.com</title>
+  <meta name="description" content="Interactive SSE streaming simulator for Claude API. Adjust tokens/sec, see raw events, timing metrics, and code examples in Python & JS. Dark theme, mobile-ready.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://claudkit.com/tools/streaming-simulator">
+  <!-- JSON-LD FAQ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does the Claude streaming simulator work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "It simulates server-sent events (SSE) similar to Claude's streaming API. You enter sample text, set tokens per second, and watch tokens appear one by one with a blinking cursor. Raw events and timing metrics are displayed in real time."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What events are emitted?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The simulator emits 'content_block_delta' events with a JSON payload containing type (text) and delta (token). Each token is sent as a separate SSE event."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I see code examples for Claude streaming?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, below the simulator you'll find ready-to-use Python (anthropic SDK) and JavaScript (fetch + ReadableStream) examples that match the SSE pattern."
+        }
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      padding: 1.5rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1280px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #f1f5f9;
+    }
+    .card h2 i {
+      color: #38bdf8;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    textarea, input, select {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border 0.2s;
+    }
+    textarea:focus, input:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .param-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1rem;
+    }
+    .param-row label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #cbd5e1;
+    }
+    .param-row input[type="range"] {
+      width: 140px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .param-row input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      background: #334155;
+      border-radius: 8px;
+    }
+    .param-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px;
+      width: 18px;
+      background: #38bdf8;
+      border-radius: 50%;
+      margin-top: -6px;
+    }
+    .badge {
+      background: #0f172a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      border: 1px solid #334155;
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1rem 0 0.5rem;
+    }
+    .btn {
+      background: transparent;
+      border: 1px solid #334155;
+      padding: 0.6rem 1.4rem;
+      border-radius: 40px;
+      font-weight: 500;
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-primary {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #0f172a;
+    }
+    .btn-primary:hover {
+      background: #7dd3fc;
+    }
+    .btn-outline:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .stream-box {
+      background: #0f172a;
+      border-radius: 1rem;
+      padding: 1.25rem;
+      min-height: 140px;
+      border: 1px solid #2d3a4f;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+      margin: 0.75rem 0;
+      position: relative;
+    }
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 1.2em;
+      background: #38bdf8;
+      margin-left: 2px;
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      margin: 0.5rem 0 0.25rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
+    .metrics span strong {
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+    .event-panel {
+      background: #0f172a;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      border: 1px solid #2d3a4f;
+      margin-top: 0.5rem;
+    }
+    .event-entry {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #1e2a3a;
+      color: #a5b4cb;
+      word-break: break-all;
+    }
+    .event-entry .evt-event {
+      color: #f472b6;
+    }
+    .event-entry .evt-data {
+      color: #34d399;
+    }
+    .view-toggle {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-bottom: 0.25rem;
+    }
+    .view-toggle .btn {
+      padding: 0.3rem 1rem;
+      font-size: 0.75rem;
+    }
+    .view-toggle .active-toggle {
+      background: #38bdf8;
+      color: #0f172a;
+      border-color: #38bdf8;
+    }
+    .code-block {
+      background: #0f172a;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', monospace;
+      font-size: 0.8rem;
+      border: 1px solid #2d3a4f;
+      margin-top: 0.5rem;
+      white-space: pre;
+      color: #a5b4cb;
+    }
+    .code-block .kw { color: #f472b6; }
+    .code-block .str { color: #34d399; }
+    .code-block .fn { color: #60a5fa; }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #475569;
+      font-size: 0.9rem;
+      border-top: 1px solid #1e293b;
+      padding-top: 1.5rem;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      body { padding: 1rem 0.75rem; }
+      header h1 { font-size: 1.6rem; }
+    }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .mt-1 { margin-top: 0.75rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚡ Claude Streaming Simulator</h1>
+    <p>Test SSE event handling • token-by-token • raw events</p>
+  </header>
+
+  <div class="grid-2">
+    <!-- LEFT: Simulator controls -->
+    <div class="card">
+      <h2><span>✍️</span> Simulator</h2>
+      <div class="input-group">
+        <label for="sampleText" style="color:#94a3b8;">Sample response text</label>
+        <textarea id="sampleText" placeholder="Enter text to stream, e.g. Hello! This is a simulated Claude streaming response with tokens...">Claude: Hello! I'm streaming this response token by token. Each word or character group appears as a separate SSE event, just like the real API.</textarea>
+      </div>
+      <div class="param-row">
+        <label>🔁 Speed <span id="speedLabel" class="badge">45 tok/s</span></label>
+        <input type="range" id="speedSlider" min="10" max="100" value="45" step="1">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="startBtn">▶ Start stream</button>
+        <button class="btn btn-outline" id="stopBtn" disabled>■ Stop</button>
+        <button class="btn btn-outline" id="clearBtn">⟲ Clear</button>
+      </div>
+
+      <!-- streaming output -->
+      <div class="stream-box" id="streamOutput"><span class="cursor-blink"></span></div>
+
+      <!-- metrics -->
+      <div class="metrics" id="metricsArea">
+        <span>⏱️ TTFT: <strong id="ttftMetric">—</strong></span>
+        <span>📈 tok/s: <strong id="tpsMetric">—</strong></span>
+        <span>⏳ total: <strong id="totalTimeMetric">—</strong></span>
+        <span># tokens: <strong id="tokenCountMetric">0</strong></span>
+      </div>
+    </div>
+
+    <!-- RIGHT: Raw events + toggle -->
+    <div class="card">
+      <div class="flex-between">
+        <h2><span>📡</span> Raw SSE events</h2>
+        <div class="view-toggle" id="viewToggleGroup">
+          <button class="btn active-toggle" data-view="text" id="viewTextBtn">Text</button>
+          <button class="btn" data-view="json" id="viewJsonBtn">JSON</button>
+        </div>
+      </div>
+      <div class="event-panel" id="eventPanel">
+        <div style="color:#64748b; font-style:italic;">Events will appear here …</div>
+      </div>
+      <p style="color:#64748b; font-size:0.75rem; margin-top: 0.5rem;">event: content_block_delta • data: {type, delta}</p>
+    </div>
+  </div>
+
+  <!-- Code examples -->
+  <div class="grid-2" style="margin-top: 0.5rem;">
+    <div class="card">
+      <h2>🐍 Python (anthropic SDK)</h2>
+      <div class="code-block" id="pythonCode">from anthropic import Anthropic
+
+client = Anthropic(api_key="sk-...")
+with client.messages.stream(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hello"}]
+) as stream:
+    for event in stream:
+        if event.type == "content_block_delta":
+            print(event.delta.text, end="", flush=True)</div>
+    </div>
+    <div class="card">
+      <h2>🟨 JavaScript (fetch + ReadableStream)</h2>
+      <div class="code-block" id="jsCode">const response = await fetch("https://api.anthropic.com/v1/messages", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "x-api-key": "sk-..." },
+  body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1024, stream: true, messages: [{ role: "user", content: "Hello" }] })
+});
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = decoder.decode(value, { stream: true });
+  // parse SSE events: event: content_block_delta\ndata: {...}
+  console.log(chunk);
+}</div>
+    </div>
+  </div>
+
+  <footer>© 2025 claudkit.com</footer>
+</div>
+
+<script>
+  (function() {
+    const sampleText = document.getElementById('sampleText');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel = document.getElementById('speedLabel');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const streamOutput = document.getElementById('streamOutput');
+    const eventPanel = document.getElementById('eventPanel');
+    const ttftMetric = document.getElementById('ttftMetric');
+    const tpsMetric = document.getElementById('tpsMetric');
+    const totalTimeMetric = document.getElementById('totalTimeMetric');
+    const tokenCountMetric = document.getElementById('tokenCountMetric');
+
+    // view toggle
+    const viewTextBtn = document.getElementById('viewTextBtn');
+    const viewJsonBtn = document.getElementById('viewJsonBtn');
+    let currentView = 'text'; // 'text' or 'json'
+
+    // state
+    let isStreaming = false;
+    let stopRequested = false;
+    let timerId = null;
+    let tokens = [];
+    let currentTokenIndex = 0;
+    let startTimestamp = null;
+    let firstTokenTimestamp = null;
+    let tokenCount = 0;
+    let totalTokens = 0;
+    let intervalMs = 1000 / 45; // default
+
+    // speed slider
+    function updateSpeed() {
+      const val = parseInt(speedSlider.value, 10);
+      speedLabel.textContent = `${val} tok/s`;
+      intervalMs = 1000 / val;
+    }
+    speedSlider.addEventListener('input', updateSpeed);
+    updateSpeed();
+
+    // helpers
+    function tokenizeText(text) {
+      // split into tokens: words + punctuation, but keep spaces as separate tokens for realism
+      const regex = /(\S+\s*)/g;
+      const parts = text.match(regex) || [];
+      // if empty, fallback
+      if (parts.length === 0 && text.length > 0) return [text];
+      return parts;
+    }
+
+    function renderStreamText() {
+      let content = '';
+      for (let i = 0; i < currentTokenIndex; i++) {
+        content += tokens[i];
+      }
+      // add cursor
+      return content + '<span class="cursor-blink"></span>';
+    }
+
+    function appendEventToPanel(eventData, view) {
+      // remove placeholder
+      const placeholder = eventPanel.querySelector('div[style*="italic"]');
+      if (placeholder) placeholder.remove();
+
+      const entry = document.createElement('div');
+      entry.className = 'event-entry';
+      if (view === 'text') {
+        entry.innerHTML = `<span class="evt-event">event: content_block_delta</span>\n<span class="evt-data">data: ${escapeHtml(JSON.stringify(eventData))}</span>`;
+      } else {
+        // JSON view: pretty
+        const jsonObj = { event: 'content_block_delta', data: eventData };
+        entry.textContent = JSON.stringify(jsonObj, null, 2);
+      }
+      eventPanel.appendChild(entry);
+      eventPanel.scrollTop = eventPanel.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function clearAll() {
+      if (isStreaming) stopStream();
+      streamOutput.innerHTML = '<span class="cursor-blink"></span>';
+      eventPanel.innerHTML = '<div style="color:#64748b; font-style:italic;">Events will appear here …</div>';
+      ttftMetric.textContent = '—';
+      tpsMetric.textContent = '—';
+      totalTimeMetric.textContent = '—';
+      tokenCountMetric.textContent = '0';
+      tokens = [];
+      currentTokenIndex = 0;
+      tokenCount = 0;
+      totalTokens = 0;
+      startTimestamp = null;
+      firstTokenTimestamp = null;
+      stopRequested = false;
+    }
+
+    function stopStream() {
+      if (isStreaming) {
+        stopRequested = true;
+        isStreaming = false;
+        if (timerId) {
+          clearTimeout(timerId);
+          timerId = null;
+        }
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        // final metrics
+        if (startTimestamp) {
+          const elapsed = (performance.now() - startTimestamp) / 1000;
+          totalTimeMetric.textContent = elapsed.toFixed(2) + 's';
+          if (tokenCount > 0) {
+            tpsMetric.textContent = (tokenCount / elapsed).toFixed(1);
+          }
+        }
+      }
+    }
+
+    function startStream() {
+      if (isStreaming) return;
+      const text = sampleText.value.trim();
+      if (!text) {
+        alert('Please enter sample text.');
+        return;
+      }
+
+      // reset
+      clearAll();
+      tokens = tokenizeText(text);
+      totalTokens = tokens.length;
+      tokenCount = 0;
+      currentTokenIndex = 0;
+      stopRequested = false;
+      isStreaming = true;
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      startTimestamp = performance.now();
+      firstTokenTimestamp = null;
+
+      // clear event panel placeholder
+      eventPanel.innerHTML = '';
+
+      // start emitting
+      emitToken();
+    }
+
+    function emitToken() {
+      if (stopRequested || !isStreaming || currentTokenIndex >= totalTokens) {
+        // stream ended
+        if (isStreaming) {
+          isStreaming = false;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          // final metrics
+          if (startTimestamp) {
+            const elapsed = (performance.now() - startTimestamp) / 1000;
+            totalTimeMetric.textContent = elapsed.toFixed(2) + 's';
+            if (tokenCount > 0) {
+              tpsMetric.textContent = (tokenCount / elapsed).toFixed(1);
+            }
+          }
+          // ensure cursor still visible
+          streamOutput.innerHTML = tokens.join('') + '<span class="cursor-blink"></span>';
+        }
+        return;
+      }
+
+      // first token timing
+      if (firstTokenTimestamp === null) {
+        firstTokenTimestamp = performance.now();
+        const ttft = (firstTokenTimestamp - startTimestamp) / 1000;
+        ttftMetric.textContent = ttft.toFixed(3) + 's';
+      }
+
+      // get token
+      const token = tokens[currentTokenIndex];
+      currentTokenIndex++;
+      tokenCount++;
+
+      // update token count metric
+      tokenCountMetric.textContent = tokenCount;
+
+      // update stream output
+      streamOutput.innerHTML = renderStreamText();
+
+      // build event data
+      const eventData = { type: 'text', delta: token };
+      // append to panel based on current view
+      appendEventToPanel(eventData, currentView);
+
+      // schedule next token
+      const delay = intervalMs * (0.8 + Math.random() * 0.4); // slight jitter
+      timerId = setTimeout(() => {
+        timerId = null;
+        emitToken();
+      }, delay);
+    }
+
+    // event listeners
+    startBtn.addEventListener('click', startStream);
+    stopBtn.addEventListener('click', stopStream);
+    clearBtn.addEventListener('click', function() {
+      if (isStreaming) stopStream();
+      clearAll();
+    });
+
+    // view toggle
+    function setView(view) {
+      currentView = view;
+      if (view === 'text') {
+        viewTextBtn.classList.add('active-toggle');
+        viewJsonBtn.classList.remove('active-toggle');
+      } else {
+        viewJsonBtn.classList.add('active-toggle');
+        viewTextBtn.classList.remove('active-toggle');
+      }
+      // re-render events in panel (keep current events)
+      const entries = eventPanel.querySelectorAll('.event-entry');
+      // we need to rebuild from stored tokens? we have tokens array and currentTokenIndex.
+      // simpler: clear panel and replay from stored tokens (but we don't store all event data separately)
+      // we'll rebuild from tokens array up to currentTokenIndex.
+      const storedTokens = tokens.slice(0, currentTokenIndex);
+      eventPanel.innerHTML = '';
+      if (storedTokens.length === 0) {
+        eventPanel.innerHTML = '<div style="color:#64748b; font-style:italic;">Events will appear here …</div>';
+      } else {
+        for (let i = 0; i < storedTokens.length; i++) {
+          const t = storedTokens[i];
+          const data = { type: 'text', delta: t };
+          const entry = document.createElement('div');
+          entry.className = 'event-entry';
+          if (view === 'text') {
+            entry.innerHTML = `<span class="evt-event">event: content_block_delta</span>\n<span class="evt-data">data: ${escapeHtml(JSON.stringify(data))}</span>`;
+          } else {
+            entry.textContent = JSON.stringify({ event: 'content_block_delta', data: data }, null, 2);
+          }
+          eventPanel.appendChild(entry);
+        }
+        eventPanel.scrollTop = eventPanel.scrollHeight;
+      }
+    }
+
+    viewTextBtn.addEventListener('click', function() { setView('text'); });
+    viewJsonBtn.addEventListener('click', function() { setView('json'); });
+
+    // initial clear
+    clearAll();
+
+    // handle window unload / noop
+  })();
+</script>
+</body>
+</html>
