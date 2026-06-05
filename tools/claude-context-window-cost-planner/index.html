@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Claude Context Window Cost Planner | claudkit.com</title>
+  <meta name="description" content="Interactive cost modeling for multi-turn Claude applications. Compute input/output tokens, monthly cost, sliding window savings, prompt caching, and...">
+  <meta name="keywords" content="Claude, cost planner, context window, tokens, Haiku, Sonnet, Opus, prompt caching, sliding window, breakeven">
+  <link rel="canonical" href="https://claudkit.com/tools/claude-context-window-cost-planner">
+  <!-- JSON-LD Schema: WebApplication + FAQPage + BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Claude Context Window Cost Planner",
+        "url": "https://claudkit.com/tools/claude-context-window-cost-planner",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "All",
+        "browserRequirements": "JavaScript enabled"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does sliding window reduce cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "By limiting context to the last N turns, input tokens grow linearly instead of quadratically, cutting cost for long conversations."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is prompt caching?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Prompt caching reuses cached context (90% hit rate) at 10% of input cost, dramatically reducing monthly spend."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "When should I upgrade from Haiku to Sonnet?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Use the breakeven calculator: compare daily cost at your volume; if quality justifies the premium, Sonnet may be worthwhile."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com" },
+          { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
+          { "@type": "ListItem", "position": 3, "name": "Claude Context Window Cost Planner", "item": "https://claudkit.com/tools/claude-context-window-cost-planner" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #0b0b0f;
+      color: #e5e5e5;
+      padding: 1.2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #2a2a3a;
+      padding-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #f0f0f5;
+    }
+    h1 span {
+      color: #ec4899;
+    }
+    .sub {
+      color: #9ca3af;
+      font-size: 0.95rem;
+      margin-top: 0.2rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .card {
+      background: #15151e;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      border: 1px solid #2a2a3a;
+      transition: 0.2s;
+    }
+    .card h2 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: #f0f0f5;
+      border-left: 4px solid #ec4899;
+      padding-left: 0.75rem;
+    }
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 1rem 0 0.5rem;
+      color: #ddd;
+    }
+    .slider-group {
+      margin-bottom: 1.2rem;
+    }
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-bottom: 0.3rem;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: #ec4899;
+      background: #2a2a3a;
+      height: 6px;
+      border-radius: 10px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ec4899;
+      cursor: pointer;
+      border: 2px solid #1e1e2a;
+    }
+    .num-input {
+      background: #1e1e2a;
+      border: 1px solid #3a3a4e;
+      color: #fff;
+      padding: 0.3rem 0.6rem;
+      border-radius: 30px;
+      width: 80px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: #1a1a28;
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      border: 1px solid #33334a;
+    }
+    .toggle-wrap span {
+      font-size: 0.9rem;
+    }
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #3a3a4e;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+    .switch.active {
+      background: #ec4899;
+    }
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .switch.active::after {
+      transform: translateX(20px);
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin: 1rem 0;
+    }
+    .stat-item {
+      background: #1a1a28;
+      padding: 0.6rem 0.8rem;
+      border-radius: 16px;
+      border-left: 3px solid #ec4899;
+    }
+    .stat-item .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #9ca3af;
+    }
+    .stat-item .value {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #f0f0f5;
+    }
+    .cost-haiku { color: #67e8f9; }
+    .cost-sonnet { color: #fbbf24; }
+    .cost-opus { color: #f472b6; }
+    .badge {
+      background: #2a2a3a;
+      padding: 0.15rem 0.6rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      color: #aaa;
+    }
+    .chart-box {
+      background: #101018;
+      border-radius: 16px;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      border: 1px solid #2a2a3a;
+      overflow-x: auto;
+    }
+    .chart-box svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .footnote {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+    }
+    .btn-copy {
+      background: transparent;
+      border: 1px solid #ec4899;
+      color: #ec4899;
+      padding: 0.3rem 1rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-copy:hover {
+      background: #ec489922;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+      border-top: 1px solid #2a2a3a;
+      padding-top: 1.5rem;
+      width: 100%;
+    }
+    @media (max-width: 800px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+
+<meta property="og:title" content="Claude Context Window Cost Planner | claudkit.com">
+<meta property="og:description" content="Interactive cost modeling for multi-turn Claude applications. Compute input/output tokens, monthly cost, sliding window savings, prompt caching, and...">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/claude-context-window-cost-planner">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧠 <span>Claude</span> Context Window Cost Planner</h1>
+    <div class="sub">Multi‑turn cost modeling · Haiku · Sonnet · Opus · Caching · Sliding window</div>
+  </header>
+
+  <!-- main grid -->
+  <div class="grid-2">
+    <!-- left: inputs -->
+    <div class="card">
+      <h2>⚙️ Parameters</h2>
+      <div class="slider-group">
+        <label>Avg turns per conversation <span id="turnsVal">10</span></label>
+        <input type="range" id="turnsSlider" min="1" max="50" value="10" step="1">
+      </div>
+      <div class="slider-group">
+        <label>Tokens per user message <span id="userTokVal">120</span></label>
+        <input type="range" id="userTokSlider" min="10" max="800" value="120" step="5">
+      </div>
+      <div class="slider-group">
+        <label>Tokens per assistant response <span id="asstTokVal">350</span></label>
+        <input type="range" id="asstTokSlider" min="10" max="1500" value="350" step="5">
+      </div>
+      <div class="slider-group">
+        <label>System prompt length (tokens) <span id="sysTokVal">200</span></label>
+        <input type="range" id="sysTokSlider" min="0" max="2000" value="200" step="10">
+      </div>
+      <div class="slider-group">
+        <label>Daily conversations <span id="dailyConvVal">500</span></label>
+        <input type="range" id="dailyConvSlider" min="10" max="50000" value="500" step="10">
+      </div>
+
+      <div class="toggle-wrap" style="margin-top: 0.5rem;">
+        <span style="color:#ccc;">⏳ Full history</span>
+        <div id="historyToggle" class="switch active"></div>
+        <span style="color:#ccc;">Sliding window</span>
+        <span id="windowLabel" class="badge" style="margin-left:0.3rem;">N=10</span>
+      </div>
+      <div id="windowSizeGroup" style="margin-top:0.8rem; display: none;">
+        <label style="font-size:0.85rem;">Window size (last N turns)</label>
+        <input type="range" id="windowSizeSlider" min="2" max="30" value="10" step="1">
+        <span id="windowSizeVal" style="color:#ec4899; margin-left:0.5rem;">10</span>
+      </div>
+    </div>
+
+    <!-- right: costs & summary -->
+    <div class="card">
+      <h2>💰 Monthly cost estimate</h2>
+      <div class="stat-grid">
+        <div class="stat-item"><span class="label">Input tokens</span><span class="value" id="monthlyInputTokens">—</span></div>
+        <div class="stat-item"><span class="label">Output tokens</span><span class="value" id="monthlyOutputTokens">—</span></div>
+        <div class="stat-item cost-haiku"><span class="label">Haiku</span><span class="value" id="haikuCost">—</span></div>
+        <div class="stat-item cost-sonnet"><span class="label">Sonnet 4</span><span class="value" id="sonnetCost">—</span></div>
+        <div class="stat-item cost-opus"><span class="label">Opus 4</span><span class="value" id="opusCost">—</span></div>
+        <div class="stat-item" style="border-left-color:#34d399;"><span class="label">Cached savings (90%)</span><span class="value" id="cachedSavings">—</span></div>
+      </div>
+      <div style="margin-top:0.5rem; background:#1a1a28; border-radius:16px; padding:0.6rem 1rem;">
+        <span style="font-size:0.8rem; color:#9ca3af;">⚡ Breakeven: </span>
+        <span id="breakevenText" style="font-weight:500;">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- charts row -->
+  <div class="grid-2" style="margin-top: 1.5rem;">
+    <div class="card">
+      <h2>📈 Cost per conversation (Haiku)</h2>
+      <div class="chart-box" id="chartSuperlinear"></div>
+      <div class="footnote">Input cost grows super‑linearly with turns (full history).</div>
+    </div>
+    <div class="card">
+      <h2>🪟 Sliding window optimization</h2>
+      <div class="chart-box" id="chartSliding"></div>
+      <div class="footnote">Monthly cost (Haiku) at window sizes 5, 10, 20 vs full history.</div>
+    </div>
+  </div>
+
+  <!-- prompt caching + breakeven detail -->
+  <div class="grid-2" style="margin-top: 1.5rem;">
+    <div class="card">
+      <h2>📦 Prompt caching calculator</h2>
+      <p style="font-size:0.9rem; color:#b0b0c0;">Assuming 90% context cached → input cost = 10% of original.</p>
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-top:0.8rem;">
+        <span>Monthly input (no cache): <strong id="inputNoCache">—</strong></span>
+        <span>With caching: <strong id="inputCached">—</strong></span>
+        <span style="color:#34d399;">Savings: <strong id="cacheSavingsVal">—</strong></span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>⚖️ Breakeven: Haiku → Sonnet</h2>
+      <p style="font-size:0.9rem; color:#b0b0c0;">At what daily volume does Sonnet cost justify? (cost difference vs quality)</p>
+      <div id="breakevenDetail" style="font-size:0.95rem; margin-top:0.5rem;">Adjust parameters to see breakeven volume.</div>
+    </div>
+  </div>
+
+  <footer>© 2025 claudkit.com</footer>
+</div>
+
+<script>
+  (function() {
+    // DOM refs
+    const turnsSlider = document.getElementById('turnsSlider');
+    const turnsVal = document.getElementById('turnsVal');
+    const userTokSlider = document.getElementById('userTokSlider');
+    const userTokVal = document.getElementById('userTokVal');
+    const asstTokSlider = document.getElementById('asstTokSlider');
+    const asstTokVal = document.getElementById('asstTokVal');
+    const sysTokSlider = document.getElementById('sysTokSlider');
+    const sysTokVal = document.getElementById('sysTokVal');
+    const dailyConvSlider = document.getElementById('dailyConvSlider');
+    const dailyConvVal = document.getElementById('dailyConvVal');
+    const historyToggle = document.getElementById('historyToggle');
+    const windowSizeGroup = document.getElementById('windowSizeGroup');
+    const windowSizeSlider = document.getElementById('windowSizeSlider');
+    const windowSizeVal = document.getElementById('windowSizeVal');
+    const windowLabel = document.getElementById('windowLabel');
+
+    // output fields
+    const monthlyInputTokens = document.getElementById('monthlyInputTokens');
+    const monthlyOutputTokens = document.getElementById('monthlyOutputTokens');
+    const haikuCost = document.getElementById('haikuCost');
+    const sonnetCost = document.getElementById('sonnetCost');
+    const opusCost = document.getElementById('opusCost');
+    const cachedSavings = document.getElementById('cachedSavings');
+    const breakevenText = document.getElementById('breakevenText');
+    const inputNoCache = document.getElementById('inputNoCache');
+    const inputCached = document.getElementById('inputCached');
+    const cacheSavingsVal = document.getElementById('cacheSavingsVal');
+    const breakevenDetail = document.getElementById('breakevenDetail');
+
+    // chart containers
+    const chartSuperlinear = document.getElementById('chartSuperlinear');
+    const chartSliding = document.getElementById('chartSliding');
+
+    let slidingMode = false;  // true = sliding window
+
+    // toggle sliding
+    historyToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      slidingMode = this.classList.contains('active');
+      windowSizeGroup.style.display = slidingMode ? 'block' : 'none';
+      if (!slidingMode) windowLabel.innerText = 'Full';
+      else windowLabel.innerText = `N=${windowSizeSlider.value}`;
+      updateAll();
+    });
+
+    windowSizeSlider.addEventListener('input', function() {
+      windowSizeVal.innerText = this.value;
+      windowLabel.innerText = `N=${this.value}`;
+      updateAll();
+    });
+
+    // all sliders
+    const sliders = [turnsSlider, userTokSlider, asstTokSlider, sysTokSlider, dailyConvSlider];
+    sliders.forEach(s => s.addEventListener('input', updateAll));
+
+    // helpers
+    function num(v) { return parseInt(v, 10) || 0; }
+
+    function formatTokens(v) {
+      if (v >= 1e6) return (v/1e6).toFixed(2) + 'M';
+      if (v >= 1e3) return (v/1e3).toFixed(1) + 'k';
+      return v.toString();
+    }
+
+    function formatCurrency(v) {
+      if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M';
+      if (v >= 1e3) return '$' + (v/1e3).toFixed(2) + 'k';
+      return '$' + v.toFixed(2);
+    }
+
+    function compute() {
+      const turns = num(turnsSlider.value);
+      const userTok = num(userTokSlider.value);
+      const asstTok = num(asstTokSlider.value);
+      const sysTok = num(sysTokSlider.value);
+      const daily = num(dailyConvSlider.value);
+      const windowSize = num(windowSizeSlider.value);
+      const useSliding = slidingMode;
+
+      // tokens per turn (user+assistant)
+      const turnTok = userTok + asstTok;
+
+      // compute cumulative input tokens per conversation (full history)
+      // turn_n: system + sum_{i=1 to n} (user_i + asst_i)   but we treat each turn as user+assistant
+      // For turn t (1-indexed): input tokens = system + (t-1)*turnTok + userTok? Actually careful:
+      // At turn n, context = system + (user1+asst1) + (user2+asst2) + ... + (user_{n-1}+asst_{n-1}) + user_n
+      // We'll approximate: input tokens at turn n = sysTok + (n-1)*turnTok + userTok
+      // Output tokens per turn = asstTok (constant)
+      let totalInputTokensPerConv = 0;
+      let totalOutputTokensPerConv = 0;
+      for (let n = 1; n <= turns; n++) {
+        let inputN;
+        if (useSliding) {
+          // sliding window: only last windowSize turns (including current)
+          const effectiveTurns = Math.min(n, windowSize);
+          // context = system + sum of last (effectiveTurns-1) full turns + userTok
+          inputN = sysTok + (effectiveTurns - 1) * turnTok + userTok;
+        } else {
+          inputN = sysTok + (n - 1) * turnTok + userTok;
+        }
+        totalInputTokensPerConv += inputN;
+        totalOutputTokensPerConv += asstTok;
+      }
+
+      const monthlyInput = totalInputTokensPerConv * daily * 30;
+      const monthlyOutput = totalOutputTokensPerConv * daily * 30;
+
+      // pricing per MTok
+      const haikuIn = 0.25, haikuOut = 1.25;
+      const sonnetIn = 3, sonnetOut = 15;
+      const opusIn = 15, opusOut = 75;
+
+      const haikuCostVal = (monthlyInput / 1e6 * haikuIn) + (monthlyOutput / 1e6 * haikuOut);
+      const sonnetCostVal = (monthlyInput / 1e6 * sonnetIn) + (monthlyOutput / 1e6 * sonnetOut);
+      const opusCostVal = (monthlyInput / 1e6 * opusIn) + (monthlyOutput / 1e6 * opusOut);
+
+      // caching: 90% cached => input cost = 0.1 * input cost
+      const cachedInputCost = (monthlyInput / 1e6 * haikuIn) * 0.1;
+      const cachedTotal = cachedInputCost + (monthlyOutput / 1e6 * haikuOut);
+      const savings = haikuCostVal - cachedTotal;
+
+      // breakeven: daily volume where sonnet cost = haiku cost? Actually "cost premium" – we compute daily cost difference
+      // For given daily volume, show cost diff per day.
+      const dailyInputPerConv = totalInputTokensPerConv;
+      const dailyOutputPerConv = totalOutputTokensPerConv;
+      const dailyInputTotal = dailyInputPerConv * daily;
+      const dailyOutputTotal = dailyOutputPerConv * daily;
+      const dailyHaiku = (dailyInputTotal/1e6 * haikuIn) + (dailyOutputTotal/1e6 * haikuOut);
+      const dailySonnet = (dailyInputTotal/1e6 * sonnetIn) + (dailyOutputTotal/1e6 * sonnetOut);
+      const diffDaily = dailySonnet - dailyHaiku;
+      let breakevenMsg = '';
+      if (diffDaily > 0) {
+        breakevenMsg = `Sonnet costs $${diffDaily.toFixed(2)}/day more than Haiku (${daily} convs).`;
+      } else {
+        breakevenMsg = `Sonnet is cheaper at this volume (unusual).`;
+      }
+      // additional: volume where diff = $10/day? 
+      const dailyCostPerConvHaiku = (dailyInputPerConv/1e6 * haikuIn) + (dailyOutputPerConv/1e6 * haikuOut);
+      const dailyCostPerConvSonnet = (dailyInputPerConv/1e6 * sonnetIn) + (dailyOutputPerConv/1e6 * sonnetOut);
+      const convDiff = dailyCostPerConvSonnet - dailyCostPerConvHaiku;
+      let breakevenVolume = convDiff > 0 ? Math.ceil(10 / convDiff) : Infinity;
+      let breakevenExtra = (breakevenVolume < 1e6) ? ` ~${breakevenVolume} convs/day for $10 extra.` : '';
+
+      return {
+        turns, userTok, asstTok, sysTok, daily, windowSize, useSliding,
+        totalInputTokensPerConv, totalOutputTokensPerConv,
+        monthlyInput, monthlyOutput,
+        haikuCostVal, sonnetCostVal, opusCostVal,
+        savings, cachedTotal,
+        diffDaily, breakevenMsg, breakevenVolume, convDiff, breakevenExtra,
+        dailyInputPerConv, dailyOutputPerConv
+      };
+    }
+
+    function renderCharts(d) {
+      // chart 1: cost per conversation vs turns (full history, Haiku)
+      const turns = d.turns;
+      const userTok = d.userTok, asstTok = d.asstTok, sysTok = d.sysTok;
+      const turnTok = userTok + asstTok;
+      let points = [];
+      for (let t = 1; t <= turns; t++) {
+        let inputCost = 0;
+        for (let n = 1; n <= t; n++) {
+          let inp = sysTok + (n-1)*turnTok + userTok;
+          inputCost += inp / 1e6 * 0.25;
+        }
+        let outCost = t * asstTok / 1e6 * 1.25;
+        points.push({ turn: t, cost: inputCost + outCost });
+      }
+      if (points.length === 0) points.push({turn:1, cost:0});
+      const maxCost = Math.max(...points.map(p=>p.cost), 0.001);
+      const width = 280, height = 120;
+      const pad = {top: 8, bottom: 18, left: 8, right: 8};
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+      let svg = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+      svg += `<rect width="${width}" height="${height}" fill="#101018" rx="8"/>`;
+      // grid lines
+      for (let i = 0; i <= 3; i++) {
+        let y = pad.top + (i/3)*plotH;
+        svg += `<line x1="${pad.left}" y1="${y}" x2="${width-pad.right}" y2="${y}" stroke="#2a2a3a" stroke-width="0.5"/>`;
+      }
+      // line
+      if (points.length > 1) {
+        let dStr = points.map((p, i) => {
+          let x = pad.left + (p.turn-1)/(turns-1||1) * plotW;
+          let y = pad.top + (1 - p.cost/maxCost) * plotH;
+          return `${i===0?'M':'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
+        }).join(' ');
+        svg += `<path d="${dStr}" stroke="#ec4899" stroke-width="2" fill="none" stroke-linejoin="round"/>`;
+        // dots
+        points.forEach(p => {
+          let x = pad.left + (p.turn-1)/(turns-1||1) * plotW;
+          let y = pad.top + (1 - p.cost/maxCost) * plotH;
+          svg += `<circle cx="${x}" cy="${y}" r="2.5" fill="#ec4899"/>`;
+        });
+      }
+      svg += `</svg>`;
+      chartSuperlinear.innerHTML = svg;
+
+      // chart 2: sliding window cost comparison (Haiku monthly)
+      const daily = d.daily;
+      const windowSizes = [5, 10, 20];
+      let fullCost = 0;
+      // compute full history monthly cost (Haiku)
+      let fullInput = 0, fullOutput = 0;
+      for (let n = 1; n <= turns; n++) {
+        fullInput += sysTok + (n-1)*turnTok + userTok;
+        fullOutput += asstTok;
+      }
+      fullCost = (fullInput * daily * 30 / 1e6 * 0.25) + (fullOutput * daily * 30 / 1e6 * 1.25);
+      let windowCosts = windowSizes.map(ws => {
+        let inp = 0, out = 0;
+        for (let n = 1; n <= turns; n++) {
+          let effective = Math.min(n, ws);
+          inp += sysTok + (effective-1)*turnTok + userTok;
+          out += asstTok;
+        }
+        return (inp * daily * 30 / 1e6 * 0.25) + (out * daily * 30 / 1e6 * 1.25);
+      });
+      const allCosts = [fullCost, ...windowCosts];
+      const maxC = Math.max(...allCosts, 0.001);
+      const w2 = 280, h2 = 120;
+      const pad2 = {top: 8, bottom: 20, left: 8, right: 8};
+      const plotW2 = w2 - pad2.left - pad2.right;
+      const plotH2 = h2 - pad2.top - pad2.bottom;
+      let svg2 = `<svg viewBox="0 0 ${w2} ${h2}" xmlns="http://www.w3.org/2000/svg">`;
+      svg2 += `<rect width="${w2}" height="${h2}" fill="#101018" rx="8"/>`;
+      const labels = ['Full', 'W5', 'W10', 'W20'];
+      const vals = [fullCost, ...windowCosts];
+      const barW = plotW2 / (vals.length + 1) * 0.6;
+      const gap = plotW2 / (vals.length + 1);
+      vals.forEach((v, i) => {
+        let x = pad2.left + gap * (i+0.5) - barW/2;
+        let barH = (v / maxC) * plotH2;
+        let y = pad2.top + plotH2 - barH;
+        svg2 += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${i===0?'#ec4899':'#f472b6'}" rx="3"/>`;
+        svg2 += `<text x="${x+barW/2}" y="${pad2.top+plotH2+12}" text-anchor="middle" font-size="7" fill="#aaa">${labels[i]}</text>`;
+        svg2 += `<text x="${x+barW/2}" y="${y-3}" text-anchor="middle" font-size="6" fill="#ddd">$${v.toFixed(1)}</text>`;
+      });
+      svg2 += `</svg>`;
+      chartSliding.innerHTML = svg2;
+    }
+
+    function updateAll() {
+      const d = compute();
+      turnsVal.innerText = d.turns;
+      userTokVal.innerText = d.userTok;
+      asstTokVal.innerText = d.asstTok;
+      sysTokVal.innerText = d.sysTok;
+      dailyConvVal.innerText = d.daily;
+
+      monthlyInputTokens.innerText = formatTokens(d.monthlyInput);
+      monthlyOutputTokens.innerText = formatTokens(d.monthlyOutput);
+      haikuCost.innerText = formatCurrency(d.haikuCostVal);
+      sonnetCost.innerText = formatCurrency(d.sonnetCostVal);
+      opusCost.innerText = formatCurrency(d.opusCostVal);
+      cachedSavings.innerText = formatCurrency(d.savings);
+      breakevenText.innerText = d.breakevenMsg + d.breakevenExtra;
+
+      // caching details
+      const inputCostNoCache = d.monthlyInput / 1e6 * 0.25;
+      inputNoCache.innerText = formatCurrency(inputCostNoCache);
+      const inputCachedVal = inputCostNoCache * 0.1;
+      inputCached.innerText = formatCurrency(inputCachedVal);
+      cacheSavingsVal.innerText = formatCurrency(inputCostNoCache - inputCachedVal);
+
+      // breakeven detail
+      const convDiff = d.convDiff;
+      if (convDiff > 0) {
+        const vol10 = Math.ceil(10 / convDiff);
+        breakevenDetail.innerText = `Each conversation costs $${convDiff.toFixed(4)} more with Sonnet. To spend $10 extra, need ~${vol10} convs/day. Current daily diff: $${(d.diffDaily).toFixed(2)}.`;
+      } else {
+        breakevenDetail.innerText = `Sonnet is cheaper per conversation at current params.`;
+      }
+
+      renderCharts(d);
+    }
+
+    // initial
+    updateAll();
+  })();
+</script>
+</body>
+</html>

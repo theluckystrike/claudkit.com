@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Anthropic Rate Limit Calculator · claudkit.com</title>
+  <meta name="description" content="Plan your Anthropic API usage with real tier limits (2025). Compute TPM/RPM headroom, burst capacity, retry backoff, queue drain time, and upgrade...">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://claudkit.com/tools/anthropic-rate-limit-calculator">
+  <!-- JSON-LD: WebApplication + FAQPage + BreadcrumbList -->
+  <script type="application/ld+json">
+    [{
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Anthropic Rate Limit Calculator",
+      "url": "https://claudkit.com/tools/anthropic-rate-limit-calculator",
+      "description": "Interactive rate limit planning tool for Anthropic API tiers (2025).",
+      "applicationCategory": "Developer Tool",
+      "operatingSystem": "All",
+      "browserRequirements": "JavaScript"
+    }, {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{
+        "@type": "Question",
+        "name": "How is TPM usage calculated?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "TPM = requests per minute × average tokens per request (input+output). Headroom is (tier limit − usage) / tier limit × 100%."
+        }
+      }, {
+        "@type": "Question",
+        "name": "What does burst tokens mean?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Burst tokens = (tier TPM limit / 60) × burst duration in seconds. This shows how many tokens you can send in a short burst without exceeding the per‑minute ceiling."
+        }
+      }, {
+        "@type": "Question",
+        "name": "How is queue drain time estimated?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Given a queue of N requests and average tokens per request, drain time = (N × avg tokens) / (tier TPM / 60) seconds, assuming full utilization."
+        }
+      }]
+    }, {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "claudkit.com", "item": "https://claudkit.com" },
+        { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
+        { "@type": "ListItem", "position": 3, "name": "Anthropic Rate Limit Calculator", "item": "https://claudkit.com/tools/anthropic-rate-limit-calculator" }
+      ]
+    }]
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #0d0d0f;
+      color: #e8e8ed;
+      padding: 1.2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 1.8rem;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #f0f0f5 0%, #ec4899 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: #9ca3af;
+      margin-top: 0.3rem;
+      font-size: 0.95rem;
+    }
+    .card {
+      background: #1a1a20;
+      border-radius: 24px;
+      padding: 1.5rem 1.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      border: 1px solid #2c2c36;
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: #ec4899;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 1.5rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #b0b0b8;
+      letter-spacing: 0.02em;
+    }
+    .input-group input, .input-group select {
+      background: #0f0f14;
+      border: 1px solid #33333f;
+      border-radius: 14px;
+      padding: 0.7rem 0.9rem;
+      color: #f0f0f5;
+      font-size: 0.95rem;
+      transition: 0.2s;
+      outline: none;
+    }
+    .input-group input:focus, .input-group select:focus {
+      border-color: #ec4899;
+      box-shadow: 0 0 0 2px rgba(236,72,153,0.25);
+    }
+    .input-group input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    .input-group input[type="number"]::-webkit-outer-spin-button,
+    .input-group input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .stat-badge {
+      background: #0f0f14;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      border: 1px solid #2c2c36;
+    }
+    .gauge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      margin: 1rem 0 0.5rem;
+    }
+    .gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 110px;
+    }
+    .gauge svg {
+      width: 100px;
+      height: 60px;
+      overflow: visible;
+    }
+    .gauge-label {
+      font-size: 0.75rem;
+      color: #a0a0aa;
+      margin-top: 0.2rem;
+    }
+    .gauge-value {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .traffic-light {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin: 0.5rem 0;
+    }
+    .light {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #3a3a44;
+      transition: 0.2s;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+    }
+    .light.green { background: #22c55e; box-shadow: 0 0 12px #22c55e88; }
+    .light.yellow { background: #eab308; box-shadow: 0 0 12px #eab30888; }
+    .light.red { background: #ef4444; box-shadow: 0 0 12px #ef444488; }
+    .upgrade-rec {
+      background: #0f0f14;
+      border-radius: 20px;
+      padding: 0.8rem 1.2rem;
+      border-left: 4px solid #ec4899;
+      margin: 0.8rem 0;
+    }
+    .metric-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 2rem;
+      justify-content: space-between;
+      background: #0f0f14;
+      border-radius: 20px;
+      padding: 0.8rem 1.2rem;
+      margin: 0.6rem 0;
+    }
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .metric-item .label {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .metric-item .value {
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+    .footnote {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.85rem;
+      border-top: 1px solid #2c2c36;
+      padding-top: 1.5rem;
+    }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .gauge svg { width: 80px; height: 50px; }
+      header h1 { font-size: 1.6rem; }
+    }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid #ec4899;
+      color: #ec4899;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-reset:hover {
+      background: #ec489922;
+    }
+  </style>
+
+<meta property="og:title" content="Anthropic Rate Limit Calculator · claudkit.com">
+<meta property="og:description" content="Plan your Anthropic API usage with real tier limits (2025). Compute TPM/RPM headroom, burst capacity, retry backoff, queue drain time, and upgrade...">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/anthropic-rate-limit-calculator">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚡ Anthropic Rate Limit Calculator</h1>
+    <p>Plan your API usage · 2025 tier limits · claudkit.com</p>
+  </header>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="card-title">📐 Usage parameters</div>
+    <div class="grid-2">
+      <div class="input-group">
+        <label for="tierSelect">Current tier</label>
+        <select id="tierSelect">
+          <option value="tier1">Tier 1 (free / new)</option>
+          <option value="tier2" selected>Tier 2</option>
+          <option value="tier3">Tier 3</option>
+          <option value="tier4">Tier 4</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect">
+          <option value="haiku">Claude Haiku</option>
+          <option value="sonnet" selected>Claude Sonnet</option>
+          <option value="opus">Claude Opus</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="rpmNeeded">Requests per minute (RPM) needed</label>
+        <input type="number" id="rpmNeeded" value="120" min="1" step="1">
+      </div>
+      <div class="input-group">
+        <label for="avgTokens">Avg tokens per request (input + output)</label>
+        <input type="number" id="avgTokens" value="800" min="1" step="10">
+      </div>
+      <div class="input-group">
+        <label for="burstSec">Peak burst duration (seconds)</label>
+        <input type="number" id="burstSec" value="10" min="1" step="1">
+      </div>
+      <div class="input-group">
+        <label for="queueN">Queue depth (N requests)</label>
+        <input type="number" id="queueN" value="50" min="0" step="1">
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; margin-top: 0.8rem;">
+      <button class="btn-reset" id="resetDefaults">Reset to defaults</button>
+    </div>
+  </div>
+
+  <!-- Results: gauges + traffic light + upgrade -->
+  <div class="card">
+    <div class="card-title">📊 Utilization & headroom</div>
+    <div class="gauge-group" id="gaugeGroup">
+      <div class="gauge" id="rpmGauge">
+        <svg viewBox="0 0 100 60"></svg>
+        <div class="gauge-value" id="rpmPercent">0%</div>
+        <div class="gauge-label">RPM used</div>
+      </div>
+      <div class="gauge" id="tpmGauge">
+        <svg viewBox="0 0 100 60"></svg>
+        <div class="gauge-value" id="tpmPercent">0%</div>
+        <div class="gauge-label">TPM used</div>
+      </div>
+    </div>
+    <div class="traffic-light" id="trafficLightContainer">
+      <span style="font-weight:500;">Traffic:</span>
+      <span class="light" id="lightGreen"></span>
+      <span class="light" id="lightYellow"></span>
+      <span class="light" id="lightRed"></span>
+      <span id="trafficLabel" style="margin-left:0.3rem; font-size:0.9rem;">—</span>
+    </div>
+    <div class="upgrade-rec" id="upgradeRec">✅ Current tier handles workload comfortably.</div>
+  </div>
+
+  <!-- Metrics: burst, recovery, queue, backoff -->
+  <div class="card">
+    <div class="card-title">⏱️ Advanced metrics</div>
+    <div class="metric-row" id="metricRow1">
+      <div class="metric-item"><span class="label">Burst tokens (peak)</span><span class="value" id="burstTokens">0</span></div>
+      <div class="metric-item"><span class="label">Recovery time (s)</span><span class="value" id="recoverySec">0</span></div>
+      <div class="metric-item"><span class="label">Concurrent safe limit</span><span class="value" id="concurrentLimit">0</span></div>
+    </div>
+    <div class="metric-row" id="metricRow2">
+      <div class="metric-item"><span class="label">Queue drain (s)</span><span class="value" id="queueDrainSec">0</span></div>
+      <div class="metric-item"><span class="label">Backoff base / max</span><span class="value" id="backoffDisplay">1s / 60s</span></div>
+      <div class="metric-item"><span class="label">Jitter</span><span class="value" id="jitterDisplay">±0.5s</span></div>
+    </div>
+    <div class="footnote">Exponential backoff recommendation: base 1s, max 60s, full jitter (0.5*base).</div>
+  </div>
+
+  <!-- FAQ (compact) -->
+  <div class="card" style="background: #15151c;">
+    <div class="card-title">❓ Quick FAQ</div>
+    <div style="display:flex; flex-direction: column; gap:0.8rem; font-size:0.9rem;">
+      <div><strong style="color:#ec4899;">How is TPM usage calculated?</strong> TPM = RPM × avg tokens. Headroom = (limit − usage)/limit × 100%.</div>
+      <div><strong style="color:#ec4899;">What does burst tokens mean?</strong> (tier TPM/60) × burst seconds — max tokens in a short burst.</div>
+      <div><strong style="color:#ec4899;">Queue drain time?</strong> (N × avg tokens) / (tier TPM/60) seconds, assuming full throughput.</div>
+    </div>
+  </div>
+
+  <footer>© 2025 claudkit.com</footer>
+</div>
+
+<script>
+  (function() {
+    // ----- TIER DATA (2025) -----
+    const TIERS = {
+      tier1: { label: 'Tier 1', haiku: { tpm: 50000, rpm: 50 }, sonnet: { tpm: 40000, rpm: 50 }, opus: { tpm: 0, rpm: 0 } },
+      tier2: { label: 'Tier 2', haiku: { tpm: 400000, rpm: 2000 }, sonnet: { tpm: 160000, rpm: 1000 }, opus: { tpm: 0, rpm: 0 } },
+      tier3: { label: 'Tier 3', haiku: { tpm: 2000000, rpm: 4000 }, sonnet: { tpm: 800000, rpm: 4000 }, opus: { tpm: 40000, rpm: 1000 } },
+      tier4: { label: 'Tier 4', haiku: { tpm: 4000000, rpm: 8000 }, sonnet: { tpm: 2000000, rpm: 8000 }, opus: { tpm: 400000, rpm: 4000 } }
+    };
+
+    // DOM refs
+    const tierSelect = document.getElementById('tierSelect');
+    const modelSelect = document.getElementById('modelSelect');
+    const rpmNeeded = document.getElementById('rpmNeeded');
+    const avgTokens = document.getElementById('avgTokens');
+    const burstSec = document.getElementById('burstSec');
+    const queueN = document.getElementById('queueN');
+
+    const rpmPercentEl = document.getElementById('rpmPercent');
+    const tpmPercentEl = document.getElementById('tpmPercent');
+    const rpmGaugeSvg = document.querySelector('#rpmGauge svg');
+    const tpmGaugeSvg = document.querySelector('#tpmGauge svg');
+    const lightGreen = document.getElementById('lightGreen');
+    const lightYellow = document.getElementById('lightYellow');
+    const lightRed = document.getElementById('lightRed');
+    const trafficLabel = document.getElementById('trafficLabel');
+    const upgradeRec = document.getElementById('upgradeRec');
+
+    const burstTokensEl = document.getElementById('burstTokens');
+    const recoverySecEl = document.getElementById('recoverySec');
+    const concurrentLimitEl = document.getElementById('concurrentLimit');
+    const queueDrainSecEl = document.getElementById('queueDrainSec');
+    const backoffDisplay = document.getElementById('backoffDisplay');
+    const jitterDisplay = document.getElementById('jitterDisplay');
+
+    // helpers
+    function getTierLimits() {
+      const tierKey = tierSelect.value;
+      const modelKey = modelSelect.value;
+      const tier = TIERS[tierKey];
+      if (!tier) return null;
+      const limits = tier[modelKey];
+      if (!limits || limits.tpm === 0) return null;
+      return { tpm: limits.tpm, rpm: limits.rpm, tierLabel: tier.label };
+    }
+
+    function drawGauge(svgEl, percent) {
+      const pct = Math.min(100, Math.max(0, percent));
+      const r = 22;
+      const cx = 50, cy = 50;
+      const circumference = 2 * Math.PI * r;
+      const offset = circumference * (1 - pct / 100);
+      let svgContent = `
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#2c2c36" stroke-width="6" />
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ec4899" stroke-width="6" 
+          stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" 
+          transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round" />
+        <text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#f0f0f5" font-size="12" font-weight="600">${Math.round(pct)}%</text>
+      `;
+      svgEl.innerHTML = svgContent;
+    }
+
+    function compute() {
+      const limits = getTierLimits();
+      if (!limits) {
+        // opus not available in tier1/tier2
+        rpmPercentEl.textContent = 'N/A';
+        tpmPercentEl.textContent = 'N/A';
+        drawGauge(rpmGaugeSvg, 0);
+        drawGauge(tpmGaugeSvg, 0);
+        trafficLabel.textContent = 'Opus not available in this tier';
+        upgradeRec.innerHTML = '⚠️ Selected model not available in this tier. Choose Haiku or Sonnet, or upgrade tier.';
+        burstTokensEl.textContent = '—';
+        recoverySecEl.textContent = '—';
+        concurrentLimitEl.textContent = '—';
+        queueDrainSecEl.textContent = '—';
+        lightGreen.className = 'light';
+        lightYellow.className = 'light';
+        lightRed.className = 'light';
+        return;
+      }
+
+      const rpm = parseInt(rpmNeeded.value, 10) || 0;
+      const tokens = parseInt(avgTokens.value, 10) || 0;
+      const burst = parseInt(burstSec.value, 10) || 0;
+      const queue = parseInt(queueN.value, 10) || 0;
+
+      const tpmUsage = rpm * tokens;
+      const rpmLimit = limits.rpm;
+      const tpmLimit = limits.tpm;
+
+      const rpmUtil = rpmLimit > 0 ? (rpm / rpmLimit) * 100 : 0;
+      const tpmUtil = tpmLimit > 0 ? (tpmUsage / tpmLimit) * 100 : 0;
+      const maxUtil = Math.max(rpmUtil, tpmUtil);
+
+      // headroom
+      const rpmHeadroom = rpmLimit > 0 ? ((rpmLimit - rpm) / rpmLimit) * 100 : 0;
+      const tpmHeadroom = tpmLimit > 0 ? ((tpmLimit - tpmUsage) / tpmLimit) * 100 : 0;
+
+      // gauges
+      const displayPct = Math.min(100, Math.max(0, maxUtil));
+      drawGauge(rpmGaugeSvg, Math.min(100, rpmUtil));
+      drawGauge(tpmGaugeSvg, Math.min(100, tpmUtil));
+      rpmPercentEl.textContent = `${Math.round(rpmUtil)}%`;
+      tpmPercentEl.textContent = `${Math.round(tpmUtil)}%`;
+
+      // traffic light
+      lightGreen.className = 'light';
+      lightYellow.className = 'light';
+      lightRed.className = 'light';
+      let trafficText = '';
+      if (maxUtil < 70) {
+        lightGreen.className = 'light green';
+        trafficText = '🟢 Low utilization (<70%)';
+      } else if (maxUtil <= 90) {
+        lightYellow.className = 'light yellow';
+        trafficText = '🟡 Approaching limit (70–90%)';
+      } else {
+        lightRed.className = 'light red';
+        trafficText = '🔴 Over 90% — risk of throttling';
+      }
+      trafficLabel.textContent = trafficText;
+
+      // upgrade recommendation
+      let upgradeMsg = '';
+      const currentTierKey = tierSelect.value;
+      const modelKey = modelSelect.value;
+      const tierOrder = ['tier1','tier2','tier3','tier4'];
+      const currentIdx = tierOrder.indexOf(currentTierKey);
+      let found = false;
+      for (let i = currentIdx; i < tierOrder.length; i++) {
+        const t = TIERS[tierOrder[i]];
+        const m = t[modelKey];
+        if (m && m.tpm > 0 && m.rpm > 0) {
+          if (rpm <= m.rpm && tpmUsage <= m.tpm) {
+            if (tierOrder[i] === currentTierKey) {
+              upgradeMsg = `✅ Current tier (${t.label}) handles workload.`;
+            } else {
+              upgradeMsg = `⬆️ Upgrade to ${t.label} (${modelKey}: ${(m.tpm/1000).toFixed(0)}K TPM / ${m.rpm} RPM) handles your load.`;
+            }
+            found = true;
+            break;
+          }
+        }
+      }
+      if (!found) {
+        upgradeMsg = '⚠️ Even Tier 4 cannot handle this load. Reduce RPM or tokens per request.';
+      }
+      upgradeRec.innerHTML = upgradeMsg;
+
+      // burst tokens
+      const burstTokens = (tpmLimit / 60) * burst;
+      burstTokensEl.textContent = Math.round(burstTokens).toLocaleString();
+
+      // recovery time (TPM window 60s rolling) – if usage > limit, time to recover if usage stops
+      let recoverySec = 0;
+      if (tpmUsage > tpmLimit) {
+        // excess tokens per minute
+        const excess = tpmUsage - tpmLimit;
+        // assume we stop sending, recovery = (excess / (tpmLimit/60)) seconds? Actually rolling window: after 60s excess decays.
+        // simplified: if we stop, after 60s the window resets. but we show approximate seconds to drop below limit.
+        // better: excess tokens need to be "aged out". each second we lose (tpmLimit/60) tokens from the window if no new requests.
+        const drainRate = tpmLimit / 60;
+        recoverySec = excess / drainRate;
+        recoverySec = Math.min(120, Math.max(0, recoverySec));
+      } else {
+        recoverySec = 0;
+      }
+      recoverySecEl.textContent = recoverySec.toFixed(1);
+
+      // concurrent safe limit (based on RPM)
+      const concurrentSafe = rpmLimit > 0 ? Math.floor(rpmLimit / (rpm || 1)) : 0;
+      concurrentLimitEl.textContent = Math.max(1, concurrentSafe);
+
+      // queue drain time
+      let drainSec = 0;
+      if (tpmLimit > 0 && tokens > 0 && queue > 0) {
+        const tokensPerSec = tpmLimit / 60;
+        drainSec = (queue * tokens) / tokensPerSec;
+      }
+      queueDrainSecEl.textContent = drainSec.toFixed(1);
+
+      // backoff display (static recommendation)
+      backoffDisplay.textContent = '1s / 60s';
+      jitterDisplay.textContent = '±0.5s';
+    }
+
+    // reset defaults
+    function resetDefaults() {
+      tierSelect.value = 'tier2';
+      modelSelect.value = 'sonnet';
+      rpmNeeded.value = 120;
+      avgTokens.value = 800;
+      burstSec.value = 10;
+      queueN.value = 50;
+      compute();
+    }
+
+    // event listeners
+    [tierSelect, modelSelect, rpmNeeded, avgTokens, burstSec, queueN].forEach(el => {
+      el.addEventListener('input', compute);
+      el.addEventListener('change', compute);
+    });
+    document.getElementById('resetDefaults').addEventListener('click', resetDefaults);
+
+    // initial compute
+    compute();
+  })();
+</script>
+</body>
+</html>

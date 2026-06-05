@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Tool Use Latency Calculator · claudkit</title>
+  <meta name="description" content="Interactive latency modeling for Claude tool-use: compare sequential vs parallel execution, estimate token overhead, and get optimization recommendations.">
+  <link rel="canonical" href="https://claudkit.com/tools/tool-use-latency-calculator">
+  <meta name="theme-color" content="#0b0b10">
+  <!-- JSON-LD Schema: WebApplication + FAQPage + BreadcrumbList -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Tool Use Latency Calculator",
+          "url": "https://claudkit.com/tools/tool-use-latency-calculator",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "All",
+          "browserRequirements": "JavaScript enabled",
+          "description": "Interactive latency modeling for Claude tool-use: sequential vs parallel execution, token overhead, and recommendations."
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "When should I use parallel tool execution?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "When you have more than 2 independent tool calls that can run simultaneously, parallel execution reduces wall-clock latency significantly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the 'latency tax' for large schemas?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Schemas with more than 20 tool definitions increase token overhead and model latency. Consider consolidating or reducing tool count."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How is token overhead calculated?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Token overhead = (tool schema tokens) + (tool result tokens). Schema tokens are auto-estimated as 50 tokens per tool definition."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "claudkit", "item": "https://claudkit.com" },
+            { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
+            { "@type": "ListItem", "position": 3, "name": "Tool Use Latency Calculator", "item": "https://claudkit.com/tools/tool-use-latency-calculator" }
+          ]
+        }
+      ]
+    }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0b0b10;
+      color: #e5e5ec;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 1.2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+    }
+    /* header */
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.2rem;
+      color: #f0f0f8;
+    }
+    .accent {
+      color: #ec4899;
+    }
+    .subhead {
+      color: #9a9aae;
+      margin-bottom: 2rem;
+      border-left: 3px solid #ec4899;
+      padding-left: 0.8rem;
+      font-weight: 350;
+    }
+    /* grid layout */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.8rem;
+      margin-bottom: 2.5rem;
+    }
+    @media (max-width: 720px) {
+      .calc-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+    .card {
+      background: #14141c;
+      border-radius: 24px;
+      padding: 1.5rem 1.3rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      border: 1px solid #2a2a38;
+    }
+    .card h2 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 1.2rem;
+      color: #ececf5;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card h2 i {
+      color: #ec4899;
+      font-style: normal;
+      font-weight: 400;
+    }
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 450;
+      color: #b9b9d0;
+      margin-bottom: 0.25rem;
+    }
+    .input-group .hint {
+      font-size: 0.7rem;
+      color: #7a7a92;
+      margin-left: 0.3rem;
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      background: #1e1e2a;
+      border: 1px solid #33334a;
+      border-radius: 14px;
+      color: #f0f0fa;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+    .input-group input:focus {
+      outline: none;
+      border-color: #ec4899;
+      box-shadow: 0 0 0 2px rgba(236,72,153,0.3);
+    }
+    .input-row {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .input-row .input-group {
+      flex: 1;
+      min-width: 80px;
+    }
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #1a1a28;
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
+      border: 1px solid #2f2f44;
+    }
+    .toggle-wrap span {
+      font-size: 0.9rem;
+      color: #cccce0;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #3a3a52;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-switch.active {
+      background: #ec4899;
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle-switch.active::after {
+      left: 23px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #252538;
+    }
+    .stat-label {
+      color: #a8a8c2;
+    }
+    .stat-value {
+      font-weight: 500;
+      color: #f0f0fa;
+    }
+    .accent-value {
+      color: #ec4899;
+      font-weight: 600;
+    }
+    .waterfall-svg {
+      width: 100%;
+      background: #0e0e16;
+      border-radius: 18px;
+      padding: 0.5rem 0;
+      margin: 0.8rem 0;
+    }
+    .rec-box {
+      background: #1b1b2a;
+      border-radius: 18px;
+      padding: 0.8rem 1rem;
+      margin-top: 0.8rem;
+      border-left: 4px solid #ec4899;
+    }
+    .rec-box p {
+      font-size: 0.9rem;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.5rem 0.3rem;
+      color: #b0b0cc;
+      font-weight: 500;
+      border-bottom: 1px solid #2f2f48;
+    }
+    td {
+      padding: 0.5rem 0.3rem;
+      border-bottom: 1px solid #202038;
+    }
+    .footer {
+      margin-top: 3rem;
+      text-align: center;
+      color: #5f5f78;
+      font-size: 0.85rem;
+      border-top: 1px solid #202038;
+      padding-top: 1.5rem;
+    }
+    .small-note {
+      font-size: 0.7rem;
+      color: #6a6a84;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gap-2 { gap: 0.5rem; }
+  </style>
+
+<meta property="og:title" content="Tool Use Latency Calculator · claudkit">
+<meta property="og:description" content="Interactive latency modeling for Claude tool-use: compare sequential vs parallel execution, estimate token overhead, and get optimization recommendations.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/tool-use-latency-calculator">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚡ <span class="accent">Tool Use</span> Latency Calculator</h1>
+    <div class="subhead">Claude tool-use · sequential vs parallel · token cost · latency breakdown</div>
+  </header>
+
+  <div class="calc-grid">
+    <!-- LEFT: inputs -->
+    <div class="card">
+      <h2><i>⚙️</i> Parameters</h2>
+      <div class="input-group">
+        <label>Number of tool definitions <span class="hint">(schema)</span></label>
+        <input type="number" id="toolCount" value="8" min="1" max="80" step="1">
+      </div>
+      <div class="input-group">
+        <label>Avg tokens to describe all tools <span class="hint">(auto: 50/tool)</span></label>
+        <input type="number" id="schemaTokens" value="400" min="10" step="10">
+      </div>
+      <div class="input-group">
+        <label>Avg tool calls per request</label>
+        <input type="number" id="toolCalls" value="4" min="1" max="30" step="1">
+      </div>
+      <div class="input-group">
+        <label>Tool execution time distribution (ms)</label>
+        <div class="input-row">
+          <div class="input-group"><label>p50</label><input type="number" id="p50" value="120" min="1" step="5"></div>
+          <div class="input-group"><label>p95</label><input type="number" id="p95" value="380" min="1" step="5"></div>
+          <div class="input-group"><label>p99</label><input type="number" id="p99" value="620" min="1" step="5"></div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Model response latency (tool-use request) <span class="hint">ms</span></label>
+        <input type="number" id="modelLatency" value="800" min="50" step="10">
+      </div>
+      <div class="input-group flex-between">
+        <div class="toggle-wrap">
+          <span>⚡ Parallel execution</span>
+          <div id="parallelToggle" class="toggle-switch active"></div>
+        </div>
+        <div class="input-group" style="max-width: 130px;">
+          <label>Max parallel</label>
+          <input type="number" id="maxParallel" value="4" min="1" max="20" step="1">
+        </div>
+      </div>
+      <div style="margin-top: 0.5rem;">
+        <button id="recalcBtn" style="background:#ec4899; border:none; color:#0b0b10; font-weight:600; padding:0.5rem 1.5rem; border-radius:40px; cursor:pointer; width:100%;">⟳ Update estimates</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: results + waterfall -->
+    <div class="card">
+      <h2><i>📊</i> Latency &amp; overhead</h2>
+      <div class="stat-row"><span class="stat-label">⏱️ Sequential total (p50)</span><span class="stat-value" id="seqP50">—</span></div>
+      <div class="stat-row"><span class="stat-label">⏱️ Parallel total (p50)</span><span class="stat-value accent-value" id="parP50">—</span></div>
+      <div class="stat-row"><span class="stat-label">⚡ Speedup (p50)</span><span class="stat-value" id="speedupP50">—</span></div>
+      <div class="stat-row"><span class="stat-label">📦 Token overhead / req</span><span class="stat-value" id="tokenOverhead">—</span></div>
+      <div class="stat-row"><span class="stat-label">💰 Cost overhead (input tokens)</span><span class="stat-value" id="costOverhead">—</span></div>
+      
+      <div class="waterfall-svg" id="waterfallContainer">
+        <svg id="waterfallSvg" viewBox="0 0 340 120" style="width:100%; height:auto; display:block;"></svg>
+      </div>
+      <div class="small-note" style="text-align:center;">⬤ sequential &nbsp; ⬤ parallel (p50 latencies)</div>
+    </div>
+  </div>
+
+  <!-- row: breakdown + rec + table -->
+  <div class="calc-grid" style="margin-top:0;">
+    <div class="card">
+      <h2><i>📉</i> P50 / P95 / P99 total latency</h2>
+      <div class="stat-row"><span class="stat-label">p50 sequential</span><span class="stat-value" id="p50seq">—</span></div>
+      <div class="stat-row"><span class="stat-label">p95 sequential</span><span class="stat-value" id="p95seq">—</span></div>
+      <div class="stat-row"><span class="stat-label">p99 sequential</span><span class="stat-value" id="p99seq">—</span></div>
+      <div class="stat-row"><span class="stat-label">p50 parallel</span><span class="stat-value accent-value" id="p50par">—</span></div>
+      <div class="stat-row"><span class="stat-label">p95 parallel</span><span class="stat-value accent-value" id="p95par">—</span></div>
+      <div class="stat-row"><span class="stat-label">p99 parallel</span><span class="stat-value accent-value" id="p99par">—</span></div>
+      
+      <div class="rec-box" id="recommendationBox">
+        <p><span class="accent">💡 Recommendation</span><br><span id="recommendationText">Adjust parameters to see insights.</span></p>
+      </div>
+    </div>
+    <div class="card">
+      <h2><i>📋</i> Comparison: 1/2/3/5/10 calls</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Calls</th><th>Sequential (ms)</th><th>Parallel (ms)</th><th>Speedup</th></tr></thead>
+          <tbody id="comparisonTableBody">
+            <tr><td>1</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>2</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>3</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>5</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>10</td><td>—</td><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="small-note">* using p50 tool latency; parallel with max parallel limit</div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 claudkit.com — Tool Use Latency Calculator
+  </footer>
+</div>
+
+<script>
+  (function() {
+    // DOM refs
+    const toolCountEl = document.getElementById('toolCount');
+    const schemaTokensEl = document.getElementById('schemaTokens');
+    const toolCallsEl = document.getElementById('toolCalls');
+    const p50El = document.getElementById('p50');
+    const p95El = document.getElementById('p95');
+    const p99El = document.getElementById('p99');
+    const modelLatencyEl = document.getElementById('modelLatency');
+    const parallelToggle = document.getElementById('parallelToggle');
+    const maxParallelEl = document.getElementById('maxParallel');
+    const recalcBtn = document.getElementById('recalcBtn');
+
+    // output fields
+    const seqP50 = document.getElementById('seqP50');
+    const parP50 = document.getElementById('parP50');
+    const speedupP50 = document.getElementById('speedupP50');
+    const tokenOverhead = document.getElementById('tokenOverhead');
+    const costOverhead = document.getElementById('costOverhead');
+    const p50seq = document.getElementById('p50seq');
+    const p95seq = document.getElementById('p95seq');
+    const p99seq = document.getElementById('p99seq');
+    const p50par = document.getElementById('p50par');
+    const p95par = document.getElementById('p95par');
+    const p99par = document.getElementById('p99par');
+    const recommendationText = document.getElementById('recommendationText');
+    const comparisonBody = document.getElementById('comparisonTableBody');
+    const svg = document.getElementById('waterfallSvg');
+
+    let parallelEnabled = true; 
+
+    // toggle
+    parallelToggle.addEventListener('click', function(e) {
+      this.classList.toggle('active');
+      parallelEnabled = this.classList.contains('active');
+      computeAll();
+    });
+
+    // recalc
+    recalcBtn.addEventListener('click', computeAll);
+    // also on change of key inputs
+    [toolCountEl, schemaTokensEl, toolCallsEl, p50El, p95El, p99El, modelLatencyEl, maxParallelEl].forEach(el => {
+      el.addEventListener('input', computeAll);
+    });
+
+    function computeAll() {
+      // read values
+      const toolDefs = parseInt(toolCountEl.value) || 1;
+      let schemaTokens = parseInt(schemaTokensEl.value) || 50;
+      // auto estimate: 50 per tool
+      const autoSchema = toolDefs * 50;
+      // if user changed manually, respect but we can show hint; we use schemaTokens as entered
+      // but we also update auto estimate in background? we keep user value.
+      // we also update schemaTokens field to reflect auto if it matches? we'll just use it.
+      // for token overhead we compute: schemaTokens + toolCalls * avg_result_tokens (assume 80 per call)
+      const toolCalls = parseInt(toolCallsEl.value) || 1;
+      const p50 = parseFloat(p50El.value) || 0;
+      const p95 = parseFloat(p95El.value) || 0;
+      const p99 = parseFloat(p99El.value) || 0;
+      const modelLat = parseFloat(modelLatencyEl.value) || 0;
+      const maxPar = parseInt(maxParallelEl.value) || 1;
+
+      const parallel = parallelEnabled;
+
+      // ----- computations -----
+      // tool latencies for p50/p95/p99
+      const toolLatP50 = p50;
+      const toolLatP95 = p95;
+      const toolLatP99 = p99;
+
+      // sequential total = model_lat + sum(tool_latencies) = model_lat + toolCalls * toolLat
+      const seqTotalP50 = modelLat + toolCalls * toolLatP50;
+      const seqTotalP95 = modelLat + toolCalls * toolLatP95;
+      const seqTotalP99 = modelLat + toolCalls * toolLatP99;
+
+      // parallel: model_lat + max(tool_latencies_batch). With max parallel limit, we split into batches.
+      let parTotalP50 = modelLat;
+      let parTotalP95 = modelLat;
+      let parTotalP99 = modelLat;
+      if (parallel && toolCalls > 0) {
+        const batches = Math.ceil(toolCalls / Math.max(1, maxPar));
+        // each batch takes max tool latency (p50 etc)
+        // total parallel latency = model + batches * maxToolLat (since sequential batches)
+        // Actually if truly parallel within batch, each batch takes max latency, and batches are sequential.
+        // But typical: if maxParallel >= toolCalls, all parallel => 1 batch.
+        // We'll compute: number of batches = ceil(toolCalls / maxPar). Each batch duration = max tool latency.
+        const batchLatP50 = toolLatP50;
+        const batchLatP95 = toolLatP95;
+        const batchLatP99 = toolLatP99;
+        parTotalP50 = modelLat + batches * batchLatP50;
+        parTotalP95 = modelLat + batches * batchLatP95;
+        parTotalP99 = modelLat + batches * batchLatP99;
+      } else {
+        // sequential fallback
+        parTotalP50 = seqTotalP50;
+        parTotalP95 = seqTotalP95;
+        parTotalP99 = seqTotalP99;
+      }
+
+      // speedup
+      const speedP50 = seqTotalP50 / (parTotalP50 || 1);
+
+      // token overhead: schemaTokens + toolCalls * 80 (avg result tokens)
+      const resultTokensPerCall = 80;
+      const totalOverhead = schemaTokens + toolCalls * resultTokensPerCall;
+      // cost overhead: input tokens * price (Claude 3.5 Sonnet ~$3 per 1M input)
+      const pricePer1M = 3.0;
+      const costPerReq = (totalOverhead / 1_000_000) * pricePer1M;
+
+      // update DOM
+      seqP50.textContent = seqTotalP50.toFixed(1) + ' ms';
+      parP50.textContent = parTotalP50.toFixed(1) + ' ms';
+      speedupP50.textContent = speedP50.toFixed(2) + 'x';
+      tokenOverhead.textContent = totalOverhead + ' tokens';
+      costOverhead.textContent = '$' + costPerReq.toFixed(5);
+
+      p50seq.textContent = seqTotalP50.toFixed(1) + ' ms';
+      p95seq.textContent = seqTotalP95.toFixed(1) + ' ms';
+      p99seq.textContent = seqTotalP99.toFixed(1) + ' ms';
+      p50par.textContent = parTotalP50.toFixed(1) + ' ms';
+      p95par.textContent = parTotalP95.toFixed(1) + ' ms';
+      p99par.textContent = parTotalP99.toFixed(1) + ' ms';
+
+      // recommendation
+      let rec = '';
+      if (toolDefs > 20) rec += '⚠️ Large schema (>20 tools) increases latency tax. Consider reducing. ';
+      if (parallel && toolCalls > 2 && maxPar >= 2) rec += '✅ Parallel execution beneficial (>2 independent tools). ';
+      else if (!parallel && toolCalls > 2) rec += '💡 Enable parallel execution for >2 tool calls to reduce latency. ';
+      if (toolCalls <= 2) rec += 'ℹ️ Few tool calls; parallel may not give major gains. ';
+      if (rec === '') rec = 'Parameters look balanced.';
+      recommendationText.textContent = rec;
+
+      // comparison table for 1,2,3,5,10 calls using p50
+      const callCounts = [1,2,3,5,10];
+      let rowsHtml = '';
+      for (let n of callCounts) {
+        const seqN = modelLat + n * toolLatP50;
+        let parN = modelLat;
+        if (parallel && n>0) {
+          const batches = Math.ceil(n / Math.max(1, maxPar));
+          parN = modelLat + batches * toolLatP50;
+        } else {
+          parN = seqN;
+        }
+        const speedN = seqN / (parN || 1);
+        rowsHtml += `<tr><td>${n}</td><td>${seqN.toFixed(1)}</td><td>${parN.toFixed(1)}</td><td>${speedN.toFixed(2)}x</td></tr>`;
+      }
+      comparisonBody.innerHTML = rowsHtml;
+
+      // waterfall SVG (p50)
+      drawWaterfall(modelLat, toolLatP50, toolCalls, parallel, maxPar);
+    }
+
+    function drawWaterfall(modelLat, toolLat, calls, parallel, maxPar) {
+      const width = 340, height = 120;
+      const margin = { top: 10, bottom: 20, left: 10, right: 10 };
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+      const maxVal = modelLat + calls * toolLat + 50;
+      const scaleX = (val) => (val / maxVal) * innerW + margin.left;
+
+      let bars = [];
+      // model bar
+      bars.push({ label: 'model', x: 0, w: modelLat, color: '#a78bfa' });
+      if (!parallel) {
+        // sequential: each tool
+        for (let i=0; i<calls; i++) {
+          bars.push({ label: `T${i+1}`, x: modelLat + i*toolLat, w: toolLat, color: '#ec4899' });
+        }
+      } else {
+        // parallel batches
+        const batchSize = Math.max(1, maxPar);
+        const batches = Math.ceil(calls / batchSize);
+        let offset = modelLat;
+        for (let b=0; b<batches; b++) {
+          bars.push({ label: `batch${b+1}`, x: offset, w: toolLat, color: '#ec4899' });
+          offset += toolLat;
+        }
+      }
+
+      // clear svg
+      svg.innerHTML = '';
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      // background
+      const rectBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rectBg.setAttribute('width', width); rectBg.setAttribute('height', height);
+      rectBg.setAttribute('fill', '#0e0e16'); rectBg.setAttribute('rx', '12');
+      svg.appendChild(rectBg);
+
+      // draw bars
+      const barHeight = 14;
+      const yStart = margin.top + 10;
+      bars.forEach((b, idx) => {
+        const x = scaleX(b.x);
+        const w = scaleX(b.x + b.w) - x;
+        if (w < 1) return;
+        const y = yStart + idx * (barHeight + 6);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', x); rect.setAttribute('y', y);
+        rect.setAttribute('width', w); rect.setAttribute('height', barHeight);
+        rect.setAttribute('fill', b.color);
+        rect.setAttribute('rx', '4');
+        svg.appendChild(rect);
+        // label
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x + 3); text.setAttribute('y', y + barHeight - 3);
+        text.setAttribute('fill', '#f0f0fa'); text.setAttribute('font-size', '7');
+        text.textContent = b.label;
+        svg.appendChild(text);
+      });
+      // axis hint
+      const axis = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      axis.setAttribute('x', margin.left); axis.setAttribute('y', height - 4);
+      axis.setAttribute('fill', '#6a6a84'); axis.setAttribute('font-size', '6');
+      axis.textContent = '0 ms';
+      svg.appendChild(axis);
+      const axis2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      axis2.setAttribute('x', width - 30); axis2.setAttribute('y', height - 4);
+      axis2.setAttribute('fill', '#6a6a84'); axis2.setAttribute('font-size', '6');
+      axis2.textContent = maxVal.toFixed(0)+' ms';
+      svg.appendChild(axis2);
+    }
+
+    // initial compute
+    computeAll();
+  })();
+</script>
+</body>
+</html>

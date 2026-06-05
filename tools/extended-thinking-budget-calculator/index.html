@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Extended Thinking Budget Calculator · claudkit</title>
+  <meta name="description" content="Optimize Claude extended thinking token budgets. Compare costs, quality S-curve, and monthly spend for Sonnet 4 and Opus 4.">
+  <link rel="canonical" href="https://claudkit.com/tools/extended-thinking-budget-calculator">
+  <!-- JSON-LD: WebApplication + FAQPage + BreadcrumbList -->
+  <script type="application/ld+json">
+    [{
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Extended Thinking Budget Calculator",
+      "url": "https://claudkit.com/tools/extended-thinking-budget-calculator",
+      "description": "Interactive tool for optimizing Claude extended thinking token budgets.",
+      "applicationCategory": "Utilities",
+      "operatingSystem": "All",
+      "browserRequirements": "JavaScript"
+    },{
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [{
+        "@type": "Question",
+        "name": "What is the optimal thinking budget for math tasks?",
+        "acceptedAnswer": { "@type": "Answer", "text": "For math and reasoning, a budget around 32K tokens gives the best quality‑to‑cost ratio." }
+      },{
+        "@type": "Question",
+        "name": "How does thinking budget affect cost?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Thinking tokens are billed at input price. Larger budgets increase overhead, but the quality S‑curve shows diminishing returns above 16K." }
+      },{
+        "@type": "Question",
+        "name": "Which model is cheaper for extended thinking?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Claude Sonnet 4 has lower per‑token costs ($3/$15 vs $15/$75) and thinking at $3/MTok, making it more budget‑friendly." }
+      }]
+    },{
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "claudkit",
+        "item": "https://claudkit.com"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Tools",
+        "item": "https://claudkit.com/tools"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Extended Thinking Budget Calculator"
+      }]
+    }]
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #0b0b0f;
+      color: #e5e5ec;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      padding: 1.2rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2, h3 {
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    h1 {
+      font-size: 2rem;
+      color: #ec4899;
+      margin-bottom: 0.25rem;
+    }
+    .subhead {
+      color: #a1a1b0;
+      margin-bottom: 2rem;
+      border-left: 4px solid #ec4899;
+      padding-left: 1rem;
+    }
+    .card {
+      background: #15151f;
+      border-radius: 24px;
+      padding: 1.5rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      border: 1px solid #2a2a3a;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #b0b0c5;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+    select, input[type="number"], input[type="range"] {
+      width: 100%;
+      background: #0e0e18;
+      border: 1px solid #2e2e42;
+      color: #f0f0f5;
+      padding: 0.6rem 0.8rem;
+      border-radius: 16px;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+    select:focus, input:focus {
+      outline: 2px solid #ec4899;
+      border-color: transparent;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: #2a2a3e;
+      border-radius: 10px;
+      padding: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ec4899;
+      cursor: pointer;
+      border: 2px solid #1a1a2a;
+    }
+    .range-value {
+      display: inline-block;
+      background: #1e1e2e;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      color: #ec4899;
+      font-weight: 500;
+    }
+    .stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      background: #0d0d16;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      margin: 0.5rem 0;
+    }
+    .stat-label { color: #9a9ab0; }
+    .stat-value { font-weight: 600; color: #f0f0fa; }
+    .pink { color: #ec4899; }
+    .badge {
+      background: #2a1a2e;
+      color: #ec4899;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+    }
+    .bar-chart {
+      display: flex;
+      height: 32px;
+      border-radius: 40px;
+      overflow: hidden;
+      background: #1c1c2a;
+      margin: 0.8rem 0;
+    }
+    .bar-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .bar-input { background: #3b3b5c; color: #ddd; }
+    .bar-thinking { background: #ec4899; color: #0b0b0f; }
+    .bar-output { background: #6d4a9e; color: #eee; }
+    canvas {
+      width: 100%;
+      height: auto;
+      background: #0b0b12;
+      border-radius: 20px;
+      display: block;
+      margin: 0.5rem 0;
+      border: 1px solid #2a2a3e;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th {
+      text-align: left;
+      color: #b0b0c8;
+      font-weight: 500;
+      padding: 0.5rem 0.2rem;
+      border-bottom: 1px solid #2a2a3e;
+    }
+    td {
+      padding: 0.5rem 0.2rem;
+      border-bottom: 1px solid #1e1e2e;
+    }
+    .footer {
+      text-align: center;
+      color: #5a5a72;
+      padding: 2rem 0 0.5rem;
+      font-size: 0.9rem;
+    }
+    .mobile-stack {
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 700px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .stat-row { flex-direction: column; align-items: start; gap: 0.2rem; }
+    }
+    .rec-badge {
+      display: inline-block;
+      background: #1f1f32;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      margin: 0.2rem 0.2rem;
+      font-size: 0.8rem;
+    }
+  </style>
+
+<meta property="og:title" content="Extended Thinking Budget Calculator · claudkit">
+<meta property="og:description" content="Optimize Claude extended thinking token budgets. Compare costs, quality S-curve, and monthly spend for Sonnet 4 and Opus 4.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/extended-thinking-budget-calculator">
+</head>
+<body>
+<div class="container">
+  <h1>🧠 Extended Thinking Budget</h1>
+  <div class="subhead">Optimize token budgets for Claude extended thinking · claudkit</div>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <label for="taskType">Task type</label>
+        <select id="taskType">
+          <option value="high">Math / Coding / Reasoning (high benefit)</option>
+          <option value="medium" selected>Analysis / Planning (medium benefit)</option>
+          <option value="low">Writing / Summarization (low benefit)</option>
+        </select>
+      </div>
+      <div>
+        <label for="modelSelect">Model</label>
+        <select id="modelSelect">
+          <option value="sonnet" selected>Claude Sonnet 4 ($3/$15 + thinking $3/MTok)</option>
+          <option value="opus">Claude Opus 4 ($15/$75 + thinking $15/MTok)</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:1rem;">
+      <div>
+        <label for="budgetSlider">Thinking budget (log scale: 1K–100K)</label>
+        <input type="range" id="budgetSlider" min="1024" max="100000" value="16000" step="1">
+        <div><span class="range-value" id="budgetDisplay">16,000</span> tokens</div>
+      </div>
+      <div>
+        <label for="outputTokens">Expected output tokens</label>
+        <input type="number" id="outputTokens" min="1" max="100000" value="800" step="10">
+      </div>
+    </div>
+    <div style="margin-top:0.8rem;">
+      <label for="dailyRequests">Daily requests</label>
+      <input type="number" id="dailyRequests" min="1" max="1000000" value="500" step="10">
+    </div>
+  </div>
+
+  <!-- Cost breakdown + bar chart -->
+  <div class="card">
+    <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">💰 Cost breakdown (per request)</h2>
+    <div id="costBreakdown" class="stat-row"><span class="stat-label">Base input</span><span class="stat-value" id="baseInputCost">$0.0000</span></div>
+    <div class="stat-row"><span class="stat-label">Thinking overhead</span><span class="stat-value" id="thinkingCost">$0.0000</span></div>
+    <div class="stat-row"><span class="stat-label">Output cost</span><span class="stat-value" id="outputCost">$0.0000</span></div>
+    <div class="stat-row pink"><span class="stat-label">Total per request</span><span class="stat-value" id="totalPerRequest">$0.0000</span></div>
+    <div class="stat-row"><span class="stat-label">Monthly (30d)</span><span class="stat-value" id="monthlyCost">$0.00</span></div>
+    <div class="stat-row"><span class="stat-label">Thinking overhead %</span><span class="stat-value" id="overheadPercent">0%</span></div>
+
+    <div class="bar-chart" id="barChartContainer">
+      <div class="bar-segment bar-input" id="barInput" style="width:30%;">input</div>
+      <div class="bar-segment bar-thinking" id="barThinking" style="width:30%;">think</div>
+      <div class="bar-segment bar-output" id="barOutput" style="width:40%;">output</div>
+    </div>
+  </div>
+
+  <!-- Quality S-curve canvas + recommended budgets -->
+  <div class="grid-2">
+    <div class="card">
+      <h2 style="font-size:1.1rem;">📈 Quality vs budget (S‑curve)</h2>
+      <canvas id="qualityCanvas" width="400" height="200"></canvas>
+      <p style="font-size:0.75rem; color:#7a7a92;">Minimal gain below 1K · steep 1K–16K · diminishing 16K–100K</p>
+    </div>
+    <div class="card">
+      <h2 style="font-size:1.1rem;">🎯 Recommended budgets by task</h2>
+      <div><span class="rec-badge">🧮 Math: 32K</span> <span class="rec-badge">💻 Coding: 16K</span> <span class="rec-badge">✍️ Writing: 1K–4K</span></div>
+      <div style="margin-top:1rem;"><span class="rec-badge">📊 Analysis: 8K–16K</span> <span class="rec-badge">🧠 Reasoning: 32K</span></div>
+      <p style="font-size:0.8rem; margin-top:1rem; color:#a0a0b8;">Adjust slider to match task complexity.</p>
+    </div>
+  </div>
+
+  <!-- Comparison table: no thinking vs 4K vs 16K vs 64K -->
+  <div class="card">
+    <h2 style="font-size:1.1rem;">📊 Comparison: cost multiplier at different budgets</h2>
+    <div style="overflow-x:auto;">
+      <table id="comparisonTable">
+        <thead><tr><th>Budget</th><th>Cost / request</th><th>vs no thinking</th><th>Monthly (30d)</th></tr></thead>
+        <tbody id="comparisonBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Monthly cost at various budgets (simple list) -->
+  <div class="card">
+    <h2 style="font-size:1.1rem;">📆 Monthly cost at various budgets</h2>
+    <div id="monthlyVarious" class="grid-3" style="margin-top:0.5rem;"></div>
+  </div>
+
+  <div class="footer">© 2025 claudkit.com</div>
+</div>
+
+<script>
+  (function() {
+    // DOM refs
+    const taskType = document.getElementById('taskType');
+    const modelSelect = document.getElementById('modelSelect');
+    const budgetSlider = document.getElementById('budgetSlider');
+    const budgetDisplay = document.getElementById('budgetDisplay');
+    const outputTokens = document.getElementById('outputTokens');
+    const dailyRequests = document.getElementById('dailyRequests');
+
+    const baseInputCostEl = document.getElementById('baseInputCost');
+    const thinkingCostEl = document.getElementById('thinkingCost');
+    const outputCostEl = document.getElementById('outputCost');
+    const totalPerRequestEl = document.getElementById('totalPerRequest');
+    const monthlyCostEl = document.getElementById('monthlyCost');
+    const overheadPercentEl = document.getElementById('overheadPercent');
+    const barInput = document.getElementById('barInput');
+    const barThinking = document.getElementById('barThinking');
+    const barOutput = document.getElementById('barOutput');
+    const comparisonBody = document.getElementById('comparisonBody');
+    const monthlyVarious = document.getElementById('monthlyVarious');
+    const canvas = document.getElementById('qualityCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // helpers
+    function formatCurrency(val) {
+      if (Math.abs(val) < 0.0001) return '$0.0000';
+      return '$' + val.toFixed(4);
+    }
+    function formatCurrency2(val) {
+      return '$' + val.toFixed(2);
+    }
+    function formatNum(n) {
+      return n.toLocaleString();
+    }
+
+    // compute all
+    function compute() {
+      const task = taskType.value; // high, medium, low
+      const model = modelSelect.value;
+      const budget = parseInt(budgetSlider.value, 10);
+      const output = parseInt(outputTokens.value, 10) || 0;
+      const daily = parseInt(dailyRequests.value, 10) || 0;
+
+      // prices per token (dollars per token)
+      let inputPricePerToken, outputPricePerToken, thinkingPricePerToken;
+      if (model === 'sonnet') {
+        inputPricePerToken = 3 / 1_000_000;
+        outputPricePerToken = 15 / 1_000_000;
+        thinkingPricePerToken = 3 / 1_000_000;
+      } else { // opus
+        inputPricePerToken = 15 / 1_000_000;
+        outputPricePerToken = 75 / 1_000_000;
+        thinkingPricePerToken = 15 / 1_000_000;
+      }
+
+      // base input tokens (assume 2000 context)
+      const baseInput = 2000;
+      const baseInputCost = baseInput * inputPricePerToken;
+      const thinkingCostVal = budget * thinkingPricePerToken;
+      const outputCostVal = output * outputPricePerToken;
+      const totalPerReq = baseInputCost + thinkingCostVal + outputCostVal;
+      const monthly = totalPerReq * daily * 30;
+      const overhead = totalPerReq > 0 ? (thinkingCostVal / totalPerReq) * 100 : 0;
+
+      // update display
+      baseInputCostEl.textContent = formatCurrency(baseInputCost);
+      thinkingCostEl.textContent = formatCurrency(thinkingCostVal);
+      outputCostEl.textContent = formatCurrency(outputCostVal);
+      totalPerRequestEl.textContent = formatCurrency(totalPerReq);
+      monthlyCostEl.textContent = formatCurrency2(monthly);
+      overheadPercentEl.textContent = overhead.toFixed(1) + '%';
+
+      // bar chart (relative widths)
+      const total = baseInputCost + thinkingCostVal + outputCostVal;
+      if (total > 0) {
+        const pInput = (baseInputCost / total) * 100;
+        const pThinking = (thinkingCostVal / total) * 100;
+        const pOutput = (outputCostVal / total) * 100;
+        barInput.style.width = pInput + '%';
+        barInput.textContent = 'input ' + pInput.toFixed(0) + '%';
+        barThinking.style.width = pThinking + '%';
+        barThinking.textContent = 'think ' + pThinking.toFixed(0) + '%';
+        barOutput.style.width = pOutput + '%';
+        barOutput.textContent = 'output ' + pOutput.toFixed(0) + '%';
+      } else {
+        barInput.style.width = '33%'; barInput.textContent = 'input';
+        barThinking.style.width = '33%'; barThinking.textContent = 'think';
+        barOutput.style.width = '34%'; barOutput.textContent = 'output';
+      }
+
+      // comparison table: no thinking (budget=0), 4K, 16K, 64K
+      const budgets = [0, 4096, 16384, 65536];
+      let rows = '';
+      budgets.forEach(b => {
+        const think = b * thinkingPricePerToken;
+        const tot = baseInputCost + think + outputCostVal;
+        const mult = (totalPerReq > 0) ? (tot / totalPerReq) : 1;
+        const month = tot * daily * 30;
+        rows += `<tr><td>${b === 0 ? 'no thinking' : formatNum(b)}</td><td>${formatCurrency(tot)}</td><td>${mult.toFixed(2)}x</td><td>${formatCurrency2(month)}</td></tr>`;
+      });
+      comparisonBody.innerHTML = rows;
+
+      // monthly at various budgets (5 points)
+      const variousBudgets = [1024, 4096, 16000, 32000, 64000, 100000];
+      let html = '';
+      variousBudgets.forEach(b => {
+        const think = b * thinkingPricePerToken;
+        const tot = baseInputCost + think + outputCostVal;
+        const month = tot * daily * 30;
+        html += `<div style="background:#0d0d16; border-radius:20px; padding:0.6rem; text-align:center;"><span style="color:#ec4899; font-weight:600;">${formatNum(b)}</span><br><span style="font-size:0.9rem;">${formatCurrency2(month)}/mo</span></div>`;
+      });
+      monthlyVarious.innerHTML = html;
+
+      // draw S-curve on canvas
+      drawSCurve(budget);
+    }
+
+    function drawSCurve(currentBudget) {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      
+      // background
+      ctx.fillStyle = '#0b0b12';
+      ctx.fillRect(0, 0, w, h);
+      
+      // S-curve: quality (0-1) vs budget (0-100K)
+      // qualitative: minimal below 1K, steep 1K-16K, diminishing 16K-100K
+      const points = [];
+      for (let b = 0; b <= 100000; b += 500) {
+        let quality;
+        if (b < 1000) {
+          quality = 0.1 + 0.1 * (b / 1000); // 0.1 -> 0.2
+        } else if (b < 16000) {
+          // steep: from 0.2 to 0.85
+          const t = (b - 1000) / (15000);
+          quality = 0.2 + 0.65 * t;
+        } else {
+          // diminishing: 0.85 to 0.98
+          const t = (b - 16000) / (84000);
+          quality = 0.85 + 0.13 * (1 - Math.exp(-3 * t));
+        }
+        if (quality > 0.98) quality = 0.98;
+        points.push({ b, q: quality });
+      }
+
+      // draw axes
+      ctx.strokeStyle = '#3a3a4e';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, 10);
+      ctx.lineTo(30, h-10);
+      ctx.lineTo(w-10, h-10);
+      ctx.stroke();
+
+      // draw curve
+      ctx.beginPath();
+      ctx.strokeStyle = '#ec4899';
+      ctx.lineWidth = 2.5;
+      const xScale = (w - 40) / 100000;
+      const yScale = (h - 20) / 0.98;
+      points.forEach((p, i) => {
+        const x = 30 + p.b * xScale;
+        const y = h - 10 - p.q * yScale;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // mark current budget
+      const idx = points.findIndex(p => p.b >= currentBudget);
+      if (idx > 0 && currentBudget >= 0) {
+        const p = points[idx];
+        const x = 30 + p.b * xScale;
+        const y = h - 10 - p.q * yScale;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2*Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ec4899';
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ec4899';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('◀ ' + formatNum(currentBudget), x+8, y-4);
+      }
+
+      // labels
+      ctx.fillStyle = '#9a9ab0';
+      ctx.font = '9px sans-serif';
+      ctx.fillText('1K', 30+1000*xScale-8, h-2);
+      ctx.fillText('16K', 30+16000*xScale-12, h-2);
+      ctx.fillText('100K', w-40, h-2);
+      ctx.fillText('quality', 4, 14);
+    }
+
+    // update display on slider
+    budgetSlider.addEventListener('input', function() {
+      const val = parseInt(this.value, 10);
+      budgetDisplay.textContent = formatNum(val);
+      compute();
+    });
+
+    // other inputs
+    taskType.addEventListener('change', compute);
+    modelSelect.addEventListener('change', compute);
+    outputTokens.addEventListener('input', compute);
+    dailyRequests.addEventListener('input', compute);
+
+    // init
+    compute();
+    // fix canvas size for retina?
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0) {
+        canvas.width = Math.min(400, rect.width * 2);
+        canvas.height = 200;
+        compute();
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 50);
+  })();
+</script>
+</body>
+</html>

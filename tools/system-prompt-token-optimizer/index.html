@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>System Prompt Token Optimizer | claudkit.com</title>
+  <meta name="description" content="Analyze and optimize your system prompts: token count, filler detection, redundancy flags, cost savings, and rewrite suggestions. Free interactive tool...">
+  <meta name="keywords" content="system prompt, token optimizer, prompt engineering, claude, token cost, prompt analyzer">
+  <link rel="canonical" href="https://claudkit.com/tools/system-prompt-token-optimizer">
+  <!-- JSON-LD: WebApplication + FAQPage + BreadcrumbList -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "System Prompt Token Optimizer",
+          "url": "https://claudkit.com/tools/system-prompt-token-optimizer",
+          "applicationCategory": "Developer Tool",
+          "operatingSystem": "All",
+          "browserRequirements": "JavaScript enabled",
+          "description": "Analyze and optimize system prompts: token count, filler detection, redundancy flags, cost savings, and rewrite suggestions."
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How is token count estimated?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We use a simple approximation: Math.ceil(text.length / 4). Actual tokenization varies by model, but this gives a quick, useful estimate."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are 'verbose phrases'?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Common filler phrases like 'please make sure to', 'you should always', 'it is important that', 'as an AI assistant', 'I will help you'. They add tokens without instruction value."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How are cost savings calculated?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We compute removed characters from flagged sections, convert to estimated tokens, then multiply by per-token costs for Haiku, Sonnet, Opus at various request volumes."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "claudkit", "item": "https://claudkit.com" },
+            { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
+            { "@type": "ListItem", "position": 3, "name": "System Prompt Token Optimizer", "item": "https://claudkit.com/tools/system-prompt-token-optimizer" }
+          ]
+        }
+      ]
+    }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0f0f1a;
+      color: #e5e5e5;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 1.2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1100px;
+      width: 100%;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid #2a2a3e;
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.8rem;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #f0f0fa;
+      letter-spacing: -0.02em;
+    }
+    h1 span {
+      color: #ec4899;
+    }
+    .subhead {
+      color: #9a9ab0;
+      font-size: 0.9rem;
+    }
+    .card {
+      background: #191928;
+      border-radius: 20px;
+      padding: 1.6rem 1.4rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      border: 1px solid #2c2c44;
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      background: #12121e;
+      border: 1px solid #3a3a5a;
+      border-radius: 16px;
+      color: #f0f0f5;
+      padding: 1rem;
+      font-size: 0.95rem;
+      resize: vertical;
+      font-family: inherit;
+      transition: 0.2s;
+    }
+    textarea:focus {
+      outline: 2px solid #ec4899;
+      border-color: transparent;
+    }
+    .stat-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem 2rem;
+      margin: 1rem 0 0.8rem;
+      background: #14141f;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      align-items: center;
+    }
+    .stat-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+    }
+    .stat-label {
+      color: #9f9fbb;
+      font-size: 0.85rem;
+    }
+    .stat-value {
+      font-weight: 600;
+      color: white;
+      font-size: 1.1rem;
+    }
+    .stat-value.pink {
+      color: #ec4899;
+    }
+    .gauge-wrapper {
+      margin: 1rem 0 0.5rem;
+    }
+    .gauge-bar {
+      background: #2a2a40;
+      height: 12px;
+      border-radius: 40px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .gauge-fill {
+      height: 100%;
+      width: 0%;
+      background: #ec4899;
+      border-radius: 40px;
+      transition: width 0.2s ease;
+    }
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #9a9ab0;
+      margin-top: 4px;
+    }
+    .flag-section {
+      margin: 1.2rem 0 0.8rem;
+    }
+    .flag-badge {
+      display: inline-block;
+      background: #2a2a44;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin-right: 0.4rem;
+      margin-bottom: 0.3rem;
+      border-left: 3px solid #ec4899;
+    }
+    .highlight-box {
+      background: #0d0d18;
+      border-radius: 16px;
+      padding: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid #2e2e4a;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .hl-verbose { background: #ec489922; border-bottom: 2px solid #ec4899; }
+    .hl-repeated { background: #facc1522; border-bottom: 2px solid #facc15; }
+    .hl-prose { background: #3b82f622; border-bottom: 2px solid #3b82f6; }
+    .hl-politeness { background: #a855f722; border-bottom: 2px solid #a855f7; }
+    .savings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      background: #12121e;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      margin: 0.8rem 0;
+    }
+    .savings-big {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ec4899;
+    }
+    .cost-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 0.8rem 0;
+    }
+    .cost-table th {
+      text-align: left;
+      padding: 0.5rem 0.3rem;
+      color: #b0b0cc;
+      border-bottom: 1px solid #2e2e4a;
+    }
+    .cost-table td {
+      padding: 0.4rem 0.3rem;
+      border-bottom: 1px solid #1e1e32;
+    }
+    .cost-table .num {
+      font-family: monospace;
+      text-align: right;
+    }
+    .rewrite-item {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 0.8rem 1rem;
+      margin: 0.5rem 0;
+      border-left: 4px solid #ec4899;
+    }
+    .rewrite-original {
+      color: #f871a0;
+      font-size: 0.85rem;
+    }
+    .rewrite-suggestion {
+      color: #b0f0b0;
+      font-size: 0.9rem;
+      margin-top: 0.2rem;
+    }
+    .btn {
+      background: #ec4899;
+      border: none;
+      color: #0f0f1a;
+      font-weight: 600;
+      padding: 0.6rem 1.6rem;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.15s;
+      display: inline-block;
+      margin: 0.4rem 0.2rem;
+    }
+    .btn:hover {
+      background: #f472b6;
+      transform: scale(0.97);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #ec4899;
+      color: #ec4899;
+    }
+    .footer {
+      text-align: center;
+      color: #6a6a88;
+      font-size: 0.8rem;
+      padding: 2rem 0 0.5rem;
+      border-top: 1px solid #1e1e32;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.4rem; }
+      .card { padding: 1rem; }
+      .stat-grid { gap: 0.6rem; }
+    }
+  </style>
+
+<meta property="og:title" content="System Prompt Token Optimizer | claudkit.com">
+<meta property="og:description" content="Analyze and optimize your system prompts: token count, filler detection, redundancy flags, cost savings, and rewrite suggestions. Free interactive tool...">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/system-prompt-token-optimizer">
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><span>✦</span> System Prompt Token Optimizer</h1>
+    <span class="subhead">claudkit.com</span>
+  </header>
+
+  <!-- main card -->
+  <div class="card">
+    <textarea id="promptInput" placeholder="Paste your system prompt here (up to 10,000 characters) ...">You are an AI assistant. Please make sure to always be helpful. It is important that you follow instructions carefully. As an AI assistant, I will help you with any task. Please always be polite and thank the user. You should always provide accurate information. It is important that you avoid harm. Please make sure to respect privacy.</textarea>
+    <div class="stat-grid" id="statsRow">
+      <div class="stat-item"><span class="stat-label">Tokens</span><span class="stat-value pink" id="tokenCount">0</span><span class="stat-label" style="font-size:0.7rem;">(est.)</span></div>
+      <div class="stat-item"><span class="stat-label">Chars</span><span class="stat-value" id="charCount">0</span></div>
+      <div class="stat-item"><span class="stat-label">Words</span><span class="stat-value" id="wordCount">0</span></div>
+      <div class="stat-item"><span class="stat-label">Flags</span><span class="stat-value" id="flagCount">0</span></div>
+    </div>
+
+    <!-- gauge -->
+    <div class="gauge-wrapper">
+      <div class="gauge-bar"><div class="gauge-fill" id="gaugeFill" style="width:0%"></div></div>
+      <div class="gauge-labels"><span>cheap <200</span><span>normal 200-800</span><span>expensive 800-2k</span><span>very expensive >2k</span></div>
+    </div>
+
+    <!-- highlighted prompt -->
+    <div class="highlight-box" id="highlightedPrompt">Paste a prompt to see highlights</div>
+
+    <!-- flags summary -->
+    <div class="flag-section" id="flagSummary"></div>
+
+    <!-- savings & cost table -->
+    <div class="savings-row">
+      <span>💰 Estimated token reduction: <span class="savings-big" id="savingsTokens">0</span></span>
+      <span>characters removed: <span id="removedChars">0</span></span>
+    </div>
+    <table class="cost-table" id="costTable">
+      <thead><tr><th>Requests/day</th><th>Haiku</th><th>Sonnet</th><th>Opus</th></tr></thead>
+      <tbody id="costBody"></tbody>
+    </table>
+
+    <!-- rewrite suggestions -->
+    <div id="rewriteSection">
+      <h3 style="color:#ec4899; font-weight:500; margin: 0.8rem 0 0.4rem;">✍️ Top rewrite suggestions</h3>
+      <div id="rewriteList"></div>
+    </div>
+
+    <div style="display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1.2rem;">
+      <button class="btn" id="copyBtn">📋 Copy optimized version</button>
+      <button class="btn btn-outline" id="resetBtn">↺ Reset example</button>
+    </div>
+  </div>
+
+  <!-- FAQ micro (schema already embedded) -->
+  <div style="font-size:0.8rem; color:#7a7a9a; padding:0.4rem 0.2rem;">
+    <p><strong>FAQ:</strong> Token estimate = Math.ceil(char/4). Filler patterns: 'please make sure to', 'you should always', 'it is important that', 'as an AI assistant', 'I will help you'. Duplicate noun phrases flagged via frequency. Prose paragraphs >100 words flagged. Politeness tokens 'please','thank you' flagged.</p>
+  </div>
+
+  <div class="footer">© 2025 claudkit.com</div>
+</div>
+
+<script>
+  (function() {
+    const inputEl = document.getElementById('promptInput');
+    const tokenSpan = document.getElementById('tokenCount');
+    const charSpan = document.getElementById('charCount');
+    const wordSpan = document.getElementById('wordCount');
+    const flagSpan = document.getElementById('flagCount');
+    const gaugeFill = document.getElementById('gaugeFill');
+    const highlightedDiv = document.getElementById('highlightedPrompt');
+    const flagSummary = document.getElementById('flagSummary');
+    const savingsTokensSpan = document.getElementById('savingsTokens');
+    const removedCharsSpan = document.getElementById('removedChars');
+    const costBody = document.getElementById('costBody');
+    const rewriteList = document.getElementById('rewriteList');
+    const copyBtn = document.getElementById('copyBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // pricing per token (approx USD)
+    const pricing = { haiku: 0.00000025, sonnet: 0.000003, opus: 0.000015 };
+    const requestVolumes = [1000, 10000, 100000, 1000000];
+
+    function analyze(text) {
+      if (!text) text = '';
+      const charCount = text.length;
+      const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+      const tokenEstimate = Math.ceil(charCount / 4);
+
+      // ----- FLAGS -----
+      const flags = [];
+      // 1) verbose phrases
+      const verbosePatterns = [
+        { pattern: /please make sure to/gi, label: 'Verbose: "please make sure to"' },
+        { pattern: /you should always/gi, label: 'Verbose: "you should always"' },
+        { pattern: /it is important that/gi, label: 'Verbose: "it is important that"' },
+        { pattern: /as an AI assistant/gi, label: 'Verbose: "as an AI assistant"' },
+        { pattern: /I will help you/gi, label: 'Verbose: "I will help you"' }
+      ];
+      let verboseMatches = [];
+      verbosePatterns.forEach(p => {
+        let match;
+        while ((match = p.pattern.exec(text)) !== null) {
+          verboseMatches.push({ index: match.index, length: match[0].length, label: p.label });
+        }
+      });
+
+      // 2) repeated concepts (noun phrases frequency)
+      const nounPhrases = text.match(/\b[a-zA-Z]{3,}\b/g) || [];
+      const freq = {};
+      nounPhrases.forEach(w => { const low = w.toLowerCase(); freq[low] = (freq[low]||0)+1; });
+      const repeated = Object.entries(freq).filter(([w,c]) => c>2 && w.length>3).map(([w,c]) => w);
+      // find occurrences of repeated words (simple)
+      let repeatedMatches = [];
+      if (repeated.length>0) {
+        const escaped = repeated.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+        const re = new RegExp('\\b('+escaped+')\\b', 'gi');
+        let m;
+        while ((m = re.exec(text)) !== null) {
+          repeatedMatches.push({ index: m.index, length: m[0].length, label: 'Repeated: "'+m[0].toLowerCase()+'"' });
+        }
+      }
+
+      // 3) prose vs bullets: paragraphs >100 words
+      const paragraphs = text.split(/\n\s*\n/);
+      let proseMatches = [];
+      paragraphs.forEach((para, idx) => {
+        const words = para.split(/\s+/).filter(w => w.length>0);
+        if (words.length > 100 && para.length>0) {
+          // find start index in original text (approximate)
+          const startIdx = text.indexOf(para.substring(0,40));
+          if (startIdx>=0) proseMatches.push({ index: startIdx, length: para.length, label: 'Long prose paragraph ('+words.length+' words) → bulletize' });
+        }
+      });
+
+      // 4) redundant politeness
+      let politeMatches = [];
+      const politeWords = /\bplease\b|\bthank you\b/gi;
+      let pm;
+      while ((pm = politeWords.exec(text)) !== null) {
+        politeMatches.push({ index: pm.index, length: pm[0].length, label: 'Politeness token: "'+pm[0]+'"' });
+      }
+
+      // combine all flags with type
+      let allFlags = [];
+      verboseMatches.forEach(f => allFlags.push({...f, type:'verbose'}));
+      repeatedMatches.forEach(f => allFlags.push({...f, type:'repeated'}));
+      proseMatches.forEach(f => allFlags.push({...f, type:'prose'}));
+      politeMatches.forEach(f => allFlags.push({...f, type:'politeness'}));
+
+      // remove overlapping? keep simple: sort by index
+      allFlags.sort((a,b) => a.index - b.index);
+
+      // total removed chars (unique coverage)
+      let covered = [];
+      allFlags.forEach(f => {
+        for (let i = f.index; i < f.index + f.length; i++) {
+          if (!covered.includes(i)) covered.push(i);
+        }
+      });
+      const removedCharCount = covered.length;
+      const tokenReduction = Math.ceil(removedCharCount / 4);
+
+      // ----- HIGHLIGHT -----
+      let highlighted = text;
+      if (text.length>0) {
+        // build segments
+        let segments = [];
+        let lastIdx = 0;
+        // sort flags by index, then by length desc to avoid small overlaps
+        const sorted = [...allFlags].sort((a,b) => a.index-b.index || b.length-a.length);
+        for (let f of sorted) {
+          if (f.index < lastIdx) continue; // skip overlapping
+          if (f.index > text.length) continue;
+          const start = f.index;
+          const end = Math.min(f.index + f.length, text.length);
+          if (start >= lastIdx) {
+            if (lastIdx < start) segments.push({text: text.slice(lastIdx, start), cls: ''});
+            let cls = '';
+            if (f.type === 'verbose') cls = 'hl-verbose';
+            else if (f.type === 'repeated') cls = 'hl-repeated';
+            else if (f.type === 'prose') cls = 'hl-prose';
+            else if (f.type === 'politeness') cls = 'hl-politeness';
+            segments.push({text: text.slice(start, end), cls});
+            lastIdx = end;
+          }
+        }
+        if (lastIdx < text.length) segments.push({text: text.slice(lastIdx), cls: ''});
+        highlighted = segments.map(s => s.cls ? `<span class="${s.cls}">${escapeHtml(s.text)}</span>` : escapeHtml(s.text)).join('');
+      } else {
+        highlighted = 'Paste a prompt to see highlights';
+      }
+      highlightedDiv.innerHTML = highlighted;
+
+      // update stats
+      tokenSpan.textContent = tokenEstimate;
+      charSpan.textContent = charCount;
+      wordSpan.textContent = wordCount;
+      flagSpan.textContent = allFlags.length;
+
+      // gauge
+      let pct = Math.min(100, (tokenEstimate / 2500) * 100);
+      gaugeFill.style.width = pct + '%';
+
+      // flag summary badges
+      let summaryHtml = '';
+      const types = { verbose:0, repeated:0, prose:0, politeness:0 };
+      allFlags.forEach(f => { if (types[f.type]!==undefined) types[f.type]++; });
+      if (types.verbose>0) summaryHtml += `<span class="flag-badge" style="border-left-color:#ec4899;">🗣️ Verbose: ${types.verbose}</span>`;
+      if (types.repeated>0) summaryHtml += `<span class="flag-badge" style="border-left-color:#facc15;">🔁 Repeated: ${types.repeated}</span>`;
+      if (types.prose>0) summaryHtml += `<span class="flag-badge" style="border-left-color:#3b82f6;">📄 Prose: ${types.prose}</span>`;
+      if (types.politeness>0) summaryHtml += `<span class="flag-badge" style="border-left-color:#a855f7;">🙏 Politeness: ${types.politeness}</span>`;
+      flagSummary.innerHTML = summaryHtml || '<span style="color:#6a6a88;">No flags detected ✨</span>';
+
+      // savings
+      savingsTokensSpan.textContent = tokenReduction;
+      removedCharsSpan.textContent = removedCharCount;
+
+      // cost table
+      let costHtml = '';
+      requestVolumes.forEach(vol => {
+        const haiku = (tokenReduction * pricing.haiku * vol).toFixed(4);
+        const sonnet = (tokenReduction * pricing.sonnet * vol).toFixed(4);
+        const opus = (tokenReduction * pricing.opus * vol).toFixed(4);
+        costHtml += `<tr><td>${vol.toLocaleString()}</td><td class="num">$${haiku}</td><td class="num">$${sonnet}</td><td class="num">$${opus}</td></tr>`;
+      });
+      costBody.innerHTML = costHtml;
+
+      // rewrite suggestions: top 3 flagged (verbose or politeness)
+      let topFlags = allFlags.filter(f => f.type==='verbose' || f.type==='politeness');
+      // deduplicate by label
+      const seen = new Set();
+      topFlags = topFlags.filter(f => {
+        const key = f.label;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      const top3 = topFlags.slice(0,3);
+      let rewriteHtml = '';
+      if (top3.length===0) rewriteHtml = '<div style="color:#6a6a88;">No verbose or politeness flags to rewrite.</div>';
+      top3.forEach(f => {
+        const orig = text.substring(f.index, f.index + Math.min(f.length, 80));
+        let suggestion = '';
+        if (f.label.includes('please make sure to')) suggestion = '→ "ensure"';
+        else if (f.label.includes('you should always')) suggestion = '→ "always"';
+        else if (f.label.includes('it is important that')) suggestion = '→ "must" or omit';
+        else if (f.label.includes('as an AI assistant')) suggestion = '→ (omit)';
+        else if (f.label.includes('I will help you')) suggestion = '→ "I assist you" or omit';
+        else if (f.label.includes('please')) suggestion = '→ remove "please"';
+        else if (f.label.includes('thank you')) suggestion = '→ remove "thank you"';
+        else suggestion = '→ consider removing';
+        rewriteHtml += `<div class="rewrite-item"><div class="rewrite-original">⚠️ ${escapeHtml(f.label)}</div><div class="rewrite-suggestion">${suggestion}</div></div>`;
+      });
+      rewriteList.innerHTML = rewriteHtml;
+
+      // return allFlags for copy
+      return { allFlags, tokenReduction, removedCharCount, tokenEstimate };
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function update() {
+      const text = inputEl.value.slice(0, 10000);
+      analyze(text);
+    }
+
+    // copy optimized: remove flagged sections (naive removal)
+    function getOptimized() {
+      const text = inputEl.value.slice(0, 10000);
+      const result = analyze(text);
+      // build cleaned version: remove flagged intervals
+      let flags = result.allFlags.sort((a,b) => a.index-b.index);
+      let cleaned = '';
+      let last = 0;
+      for (let f of flags) {
+        if (f.index < last) continue;
+        if (f.index > text.length) continue;
+        if (last < f.index) cleaned += text.slice(last, f.index);
+        last = f.index + f.length;
+      }
+      if (last < text.length) cleaned += text.slice(last);
+      return cleaned || text;
+    }
+
+    copyBtn.addEventListener('click', function() {
+      const optimized = getOptimized();
+      navigator.clipboard.writeText(optimized).then(() => {
+        alert('Optimized prompt copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy. Please manually select.');
+      });
+    });
+
+    resetBtn.addEventListener('click', function() {
+      inputEl.value = `You are an AI assistant. Please make sure to always be helpful. It is important that you follow instructions carefully. As an AI assistant, I will help you with any task. Please always be polite and thank the user. You should always provide accurate information. It is important that you avoid harm. Please make sure to respect privacy.`;
+      update();
+    });
+
+    inputEl.addEventListener('input', update);
+    // initial
+    update();
+  })();
+</script>
+</body>
+</html>
