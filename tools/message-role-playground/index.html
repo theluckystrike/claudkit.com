@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Experiment with Claude message role patterns. Build few-shot examples, chain-of-thought, and role-play conversations.">
+    <meta name="og:title" content="Claude Message Role Playground">
+    <meta name="og:description" content="Experiment with Claude message role patterns. Build few-shot examples, chain-of-thought, and role-play conversations.">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://claudkit.com/tools/message-role-playground">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Message Role Playground">
+    <meta name="twitter:description" content="Experiment with Claude message role patterns. Build few-shot examples, chain-of-thought, and role-play conversations.">
+    <link rel="canonical" href="https://claudkit.com/tools/message-role-playground">
+    <title>Message Role Playground</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Claude Message Role Playground",
+        "description": "Build and test Claude message role patterns with drag-and-drop editor",
+        "url": "https://claudkit.com/tools/message-role-playground",
+        "applicationCategory": "Utility",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: 1px solid #d97706;
+            border-radius: 6px;
+            background: #d97706;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        button:hover {
+            background: #b65a00;
+            border-color: #b65a00;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        button.secondary {
+            background: transparent;
+            color: #d97706;
+            border: 1px solid #d97706;
+        }
+
+        button.secondary:hover {
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+        .pattern-template {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pattern-template:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: #d97706;
+        }
+
+        .pattern-template h4 {
+            color: #d97706;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        .pattern-template p {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .message-block {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .message-block.system {
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .message-block.user {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .message-block.assistant {
+            border-left: 3px solid #10b981;
+        }
+
+        .message-role {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .role-badge.system {
+            background: rgba(139, 92, 246, 0.2);
+            color: #d8b4fe;
+        }
+
+        .role-badge.user {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+
+        .role-badge.assistant {
+            background: rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+        }
+
+        .message-content {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .message-actions button {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            flex: 1;
+        }
+
+        .message-actions button.delete {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .message-actions button.delete:hover {
+            background: #dc2626;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            resize: vertical;
+            transition: all 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #d97706;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        .editor-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            position: relative;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .code-block pre {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #d97706;
+            margin: 0;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .token-counter {
+            background: rgba(217, 119, 6, 0.1);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        .token-counter .counter-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .token-counter .total {
+            border-top: 1px solid rgba(217, 119, 6, 0.2);
+            padding-top: 8px;
+            margin-top: 8px;
+            font-weight: 600;
+            color: #d97706;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(217, 119, 6, 0.1);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .button-group {
+                flex-wrap: wrap;
+            }
+
+            button {
+                flex: 1;
+                min-width: 80px;
+            }
+        }
+    </style>
+<meta property="og:title" content="Message Role Playground">
+<meta property="og:description" content="Experiment with Claude message role patterns. Build few-shot examples, chain-of-thought, and role-play conversations.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/message-role-playground">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2241192243363112" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Message Role Playground</h1>
+            <p class="subtitle">Build and experiment with Claude message patterns</p>
+        </header>
+
+        <div class="layout">
+            <div class="card">
+                <h2>Message Builder</h2>
+
+                <h3 style="color: #cbd5e1; margin-bottom: 12px; font-size: 0.95rem;">Quick Templates</h3>
+                <div class="pattern-template" onclick="loadPattern('fewshot')">
+                    <h4>Few-Shot Learning</h4>
+                    <p>Add 2 example Q&A pairs for in-context learning</p>
+                </div>
+                <div class="pattern-template" onclick="loadPattern('cot')">
+                    <h4>Chain-of-Thought</h4>
+                    <p>Add step-by-step reasoning examples</p>
+                </div>
+                <div class="pattern-template" onclick="loadPattern('roleplay')">
+                    <h4>Role-Play Setup</h4>
+                    <p>Create a character/expert role conversation</p>
+                </div>
+
+                <h3 style="color: #cbd5e1; margin: 24px 0 12px 0; font-size: 0.95rem;">Add Message</h3>
+
+                <div class="editor-group">
+                    <select id="messageRole">
+                        <option value="system">System</option>
+                        <option value="user">User</option>
+                        <option value="assistant">Assistant</option>
+                    </select>
+                    <button onclick="addMessage()" style="flex: 0 0 auto;">Add</button>
+                </div>
+
+                <textarea id="messageText" rows="4" placeholder="Enter message content..."></textarea>
+
+                <div class="button-group" style="margin-top: 16px;">
+                    <button onclick="clearAll()" class="secondary">Clear All</button>
+                    <button onclick="generateJSON()">Generate JSON</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Conversation Preview</h2>
+
+                <div class="messages-container" id="messagesList"></div>
+
+                <div class="token-counter">
+                    <div class="counter-item">
+                        <span>System Tokens:</span>
+                        <strong id="tokenSystem">0</strong>
+                    </div>
+                    <div class="counter-item">
+                        <span>User Tokens:</span>
+                        <strong id="tokenUser">0</strong>
+                    </div>
+                    <div class="counter-item">
+                        <span>Assistant Tokens:</span>
+                        <strong id="tokenAssistant">0</strong>
+                    </div>
+                    <div class="counter-item total">
+                        <span>Total Tokens:</span>
+                        <strong id="tokenTotal">0</strong>
+                    </div>
+                </div>
+
+                <div id="jsonOutput" style="display: none; margin-top: 20px;">
+                    <h3 style="color: #d97706; margin-bottom: 12px; font-size: 1rem;">API Request</h3>
+                    <div class="code-block">
+                        <button class="copy-button" onclick="copyJSON()">Copy</button>
+                        <pre id="jsonCode"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 claudkit.com — Claude & Anthropic API Tools
+        </footer>
+<div style="margin:20px auto;max-width:728px;text-align:center">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2241192243363112" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+    </div>
+
+    <script>
+        let messages = [];
+
+        function addMessage() {
+            const role = document.getElementById('messageRole').value;
+            const content = document.getElementById('messageText').value.trim();
+
+            if (!content) {
+                alert('Message content cannot be empty');
+                return;
+            }
+
+            messages.push({
+                id: Date.now(),
+                role: role,
+                content: content
+            });
+
+            document.getElementById('messageText').value = '';
+            renderMessages();
+            updateTokens();
+        }
+
+        function removeMessage(id) {
+            messages = messages.filter(m => m.id !== id);
+            renderMessages();
+            updateTokens();
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesList');
+            if (messages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 20px;">No messages yet</div>';
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div class="message-block ${msg.role}">
+                    <div class="message-role">
+                        <span class="role-badge ${msg.role}">${msg.role.toUpperCase()}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                    <div class="message-actions">
+                        <button class="delete" onclick="removeMessage(${msg.id})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function estimateTokens(text) {
+            return Math.ceil(text.length / 4);
+        }
+
+        function updateTokens() {
+            const systemTokens = messages
+                .filter(m => m.role === 'system')
+                .reduce((sum, m) => sum + estimateTokens(m.content), 0);
+            const userTokens = messages
+                .filter(m => m.role === 'user')
+                .reduce((sum, m) => sum + estimateTokens(m.content), 0);
+            const assistantTokens = messages
+                .filter(m => m.role === 'assistant')
+                .reduce((sum, m) => sum + estimateTokens(m.content), 0);
+            const totalTokens = systemTokens + userTokens + assistantTokens;
+
+            document.getElementById('tokenSystem').textContent = systemTokens;
+            document.getElementById('tokenUser').textContent = userTokens;
+            document.getElementById('tokenAssistant').textContent = assistantTokens;
+            document.getElementById('tokenTotal').textContent = totalTokens;
+        }
+
+        function generateJSON() {
+            if (messages.length === 0) {
+                alert('Add at least one message');
+                return;
+            }
+
+            const apiRequest = {
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: 1024,
+                messages: messages.map(m => ({
+                    role: m.role,
+                    content: m.content
+                }))
+            };
+
+            document.getElementById('jsonCode').textContent = JSON.stringify(apiRequest, null, 2);
+            document.getElementById('jsonOutput').style.display = 'block';
+        }
+
+        function copyJSON() {
+            const code = document.getElementById('jsonCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function clearAll() {
+            if (confirm('Clear all messages?')) {
+                messages = [];
+                document.getElementById('jsonOutput').style.display = 'none';
+                renderMessages();
+                updateTokens();
+            }
+        }
+
+        function loadPattern(pattern) {
+            messages = [];
+            document.getElementById('jsonOutput').style.display = 'none';
+
+            if (pattern === 'fewshot') {
+                messages = [
+                    { id: 1, role: 'system', content: 'You are a helpful assistant that extracts information.' },
+                    { id: 2, role: 'user', content: 'Extract the sentiment from: "I love this product!"' },
+                    { id: 3, role: 'assistant', content: 'Sentiment: Positive. The user expresses satisfaction and enthusiasm.' },
+                    { id: 4, role: 'user', content: 'Extract the sentiment from: "This is terrible and broken."' },
+                    { id: 5, role: 'assistant', content: 'Sentiment: Negative. The user expresses dissatisfaction and frustration.' }
+                ];
+            } else if (pattern === 'cot') {
+                messages = [
+                    { id: 1, role: 'system', content: 'Think through the problem step by step.' },
+                    { id: 2, role: 'user', content: 'If John has 10 apples and gives away 3, how many does he have left?' },
+                    { id: 3, role: 'assistant', content: 'Step 1: John starts with 10 apples.\nStep 2: He gives away 3 apples.\nStep 3: 10 - 3 = 7\nAnswer: John has 7 apples left.' }
+                ];
+            } else if (pattern === 'roleplay') {
+                messages = [
+                    { id: 1, role: 'system', content: 'You are a knowledgeable programming mentor. Answer questions clearly and patiently.' },
+                    { id: 2, role: 'user', content: 'I want to learn Python. Where should I start?' }
+                ];
+            }
+
+            renderMessages();
+            updateTokens();
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        renderMessages();
+    </script>
+</body>
+</html>

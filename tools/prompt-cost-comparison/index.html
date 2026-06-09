@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Compare prompt costs across Claude models. Calculate input/output costs and monthly projections instantly.">
+    <meta name="og:title" content="Claude Prompt Cost Comparison">
+    <meta name="og:description" content="Compare prompt costs across Claude models. Calculate input/output costs and monthly projections instantly.">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://claudkit.com/tools/prompt-cost-comparison">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Prompt Cost Comparison">
+    <meta name="twitter:description" content="Compare prompt costs across Claude models. Calculate input/output costs and monthly projections instantly.">
+    <link rel="canonical" href="https://claudkit.com/tools/prompt-cost-comparison">
+    <title>Claude Prompt Cost Comparison</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Claude Prompt Cost Comparison",
+        "description": "Compare costs across Claude models with custom prompt and monthly projections",
+        "url": "https://claudkit.com/tools/prompt-cost-comparison",
+        "applicationCategory": "Utility",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        textarea, input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: #d97706;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #d97706;
+            border-radius: 6px;
+            background: #d97706;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #b65a00;
+            border-color: #b65a00;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 5px;
+            padding: 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #d97706 0%, #d97706 var(--value), rgba(148, 163, 184, 0.2) var(--value), rgba(148, 163, 184, 0.2) 100%);
+            border: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #d97706;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #d97706;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            color: #d97706;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .token-info {
+            background: rgba(217, 119, 6, 0.1);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 18px;
+            font-size: 0.9rem;
+        }
+
+        .token-info .label {
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .token-info .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #d97706;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+        }
+
+        .comparison-table th {
+            background: rgba(217, 119, 6, 0.1);
+            color: #d97706;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-table td {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .model-name {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .cost-cell {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(217, 119, 6, 0.05);
+        }
+
+        .comparison-row {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .model-title {
+            color: #d97706;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .model-badge {
+            background: rgba(217, 119, 6, 0.2);
+            color: #d97706;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .cost-item {
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 2px solid #d97706;
+        }
+
+        .cost-item .label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .cost-item .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #d97706;
+        }
+
+        .recommendation {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #93c5fd;
+            text-align: center;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #64748b;
+            padding: 40px 20px;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(217, 119, 6, 0.1);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .comparison-table {
+                font-size: 0.8rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+<meta property="og:title" content="Claude Prompt Cost Comparison">
+<meta property="og:description" content="Compare prompt costs across Claude models. Calculate input/output costs and monthly projections instantly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/prompt-cost-comparison">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2241192243363112" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Prompt Cost Comparison</h1>
+            <p class="subtitle">Compare costs across Claude models with real pricing</p>
+        </header>
+
+        <div class="layout">
+            <div class="card">
+                <h2>Prompt Input</h2>
+
+                <div class="form-group">
+                    <label for="promptText">Paste your prompt</label>
+                    <textarea id="promptText" rows="8" placeholder="Enter your prompt text here to calculate token count and costs...">Analyze this customer feedback and provide 3 key insights.</textarea>
+                </div>
+
+                <div class="token-info">
+                    <div class="label">Estimated Input Tokens</div>
+                    <div class="value" id="inputTokens">10</div>
+                </div>
+
+                <h2 style="margin-top: 32px; margin-bottom: 20px;">Projection Settings</h2>
+
+                <div class="form-group">
+                    <label for="outputTokens">Avg Output Tokens per Request</label>
+                    <div class="slider-container">
+                        <input type="range" id="outputTokens" min="10" max="2000" value="300" style="--value: 15%;">
+                        <span class="slider-value" id="outputValue">300</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="requestsPerDay">Requests per Day</label>
+                    <div class="slider-container">
+                        <input type="range" id="requestsPerDay" min="1" max="10000" value="100" style="--value: 1%;">
+                        <span class="slider-value" id="requestsValue">100</span>
+                    </div>
+                </div>
+
+                <button onclick="calculateCosts()">Calculate</button>
+            </div>
+
+            <div class="card">
+                <h2>Cost Comparison</h2>
+
+                <div id="resultsContainer" class="no-data">
+                    <p>Configure prompt and settings to see cost comparison</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 claudkit.com — Claude & Anthropic API Tools
+        </footer>
+<div style="margin:20px auto;max-width:728px;text-align:center">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2241192243363112" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+    </div>
+
+    <script>
+        const modelPricing = {
+            'haiku': {
+                name: 'Claude 3.5 Haiku',
+                inputCost: 0.80 / 1_000_000,
+                outputCost: 4.00 / 1_000_000,
+                color: '#3b82f6',
+                useCase: 'Fast, simple tasks'
+            },
+            'sonnet': {
+                name: 'Claude 3.5 Sonnet',
+                inputCost: 3.00 / 1_000_000,
+                outputCost: 15.00 / 1_000_000,
+                color: '#10b981',
+                useCase: 'General purpose, balanced'
+            },
+            'opus': {
+                name: 'Claude 3 Opus',
+                inputCost: 15.00 / 1_000_000,
+                outputCost: 75.00 / 1_000_000,
+                color: '#f59e0b',
+                useCase: 'Complex reasoning'
+            }
+        };
+
+        function estimateTokens(text) {
+            return Math.ceil(text.length / 4);
+        }
+
+        function updateTokenCount() {
+            const prompt = document.getElementById('promptText').value;
+            const tokens = estimateTokens(prompt);
+            document.getElementById('inputTokens').textContent = tokens.toLocaleString();
+        }
+
+        document.getElementById('promptText').addEventListener('input', updateTokenCount);
+
+        document.getElementById('outputTokens').addEventListener('input', function() {
+            document.getElementById('outputValue').textContent = this.value;
+            const progress = (this.value / this.max) * 100;
+            this.style.setProperty('--value', progress + '%');
+        });
+
+        document.getElementById('requestsPerDay').addEventListener('input', function() {
+            document.getElementById('requestsValue').textContent = this.value.toLocaleString();
+            const progress = (Math.log(this.value) / Math.log(this.max)) * 100;
+            this.style.setProperty('--value', progress + '%');
+        });
+
+        function calculateCosts() {
+            const promptText = document.getElementById('promptText').value;
+            const inputTokens = estimateTokens(promptText);
+            const outputTokens = parseInt(document.getElementById('outputTokens').value);
+            const requestsPerDay = parseInt(document.getElementById('requestsPerDay').value);
+
+            if (inputTokens === 0 || requestsPerDay === 0) {
+                alert('Please provide valid input');
+                return;
+            }
+
+            let html = '';
+
+            for (const [key, model] of Object.entries(modelPricing)) {
+                const inputCost = inputTokens * model.inputCost;
+                const outputCost = outputTokens * model.outputCost;
+                const costPerRequest = inputCost + outputCost;
+                const dailyCost = costPerRequest * requestsPerDay;
+                const monthlyCost = dailyCost * 30;
+                const yearlyCost = dailyCost * 365;
+
+                html += `
+                    <div class="comparison-row">
+                        <div class="model-header">
+                            <span class="model-title">${model.name}</span>
+                            <span class="model-badge">${model.useCase}</span>
+                        </div>
+                        <div class="cost-grid">
+                            <div class="cost-item">
+                                <div class="label">Per Request</div>
+                                <div class="value">$${costPerRequest.toFixed(6)}</div>
+                            </div>
+                            <div class="cost-item">
+                                <div class="label">Daily (${requestsPerDay} req)</div>
+                                <div class="value">$${dailyCost.toFixed(2)}</div>
+                            </div>
+                            <div class="cost-item">
+                                <div class="label">Monthly</div>
+                                <div class="value">$${monthlyCost.toFixed(0)}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px;">
+                            Annual: <strong>$${yearlyCost.toFixed(0)}</strong>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const cheapest = Object.entries(modelPricing).reduce((min, [k, m]) => {
+                const inputCost = inputTokens * m.inputCost;
+                const outputCost = outputTokens * m.outputCost;
+                const cost = inputCost + outputCost;
+                return cost < min.cost ? { key: k, cost: cost } : min;
+            }, { key: 'sonnet', cost: Infinity });
+
+            html += `
+                <div class="recommendation">
+                    <strong>${modelPricing[cheapest.key].name}</strong> is the most cost-effective for this workload
+                </div>
+            `;
+
+            document.getElementById('resultsContainer').innerHTML = html;
+        }
+
+        updateTokenCount();
+    </script>
+</body>
+</html>

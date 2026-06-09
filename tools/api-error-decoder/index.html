@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Decode Claude API errors instantly. Get error type, HTTP status, causes, and fix suggestions.">
+    <meta name="og:title" content="Claude API Error Decoder">
+    <meta name="og:description" content="Decode Claude API errors instantly. Get error type, HTTP status, causes, and fix suggestions.">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://claudkit.com/tools/api-error-decoder">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude API Error Decoder">
+    <meta name="twitter:description" content="Decode Claude API errors instantly. Get error type, HTTP status, causes, and fix suggestions.">
+    <link rel="canonical" href="https://claudkit.com/tools/api-error-decoder">
+    <title>Claude API Error Decoder</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Claude API Error Decoder",
+        "description": "Decode and troubleshoot Claude API error codes and error JSON responses",
+        "url": "https://claudkit.com/tools/api-error-decoder",
+        "applicationCategory": "Utility",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: all 0.2s;
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #d97706;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #d97706;
+            border-radius: 6px;
+            background: #d97706;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: #b65a00;
+            border-color: #b65a00;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .error-section {
+            display: none;
+        }
+
+        .error-section.show {
+            display: block;
+        }
+
+        .error-header {
+            background: rgba(217, 119, 6, 0.1);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .error-code {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #d97706;
+            margin-bottom: 8px;
+        }
+
+        .error-type {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .error-http {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .info-section {
+            margin-bottom: 16px;
+        }
+
+        .info-section h3 {
+            color: #d97706;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-content {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 2px solid #d97706;
+            padding: 12px;
+            border-radius: 4px;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .cause-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .cause-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        .cause-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #d97706;
+        }
+
+        .fix-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .fix-list li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 2px solid #3b82f6;
+            border-radius: 4px;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .quick-ref {
+            margin-top: 20px;
+        }
+
+        .quick-ref h3 {
+            color: #d97706;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .error-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .error-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .error-item:hover {
+            background: rgba(15, 23, 42, 0.8);
+            border-color: #d97706;
+        }
+
+        .error-item .code {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .error-item .desc {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(217, 119, 6, 0.1);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .error-code {
+                font-size: 1.4rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
+        }
+    </style>
+<meta property="og:title" content="Claude API Error Decoder">
+<meta property="og:description" content="Decode Claude API errors instantly. Get error type, HTTP status, causes, and fix suggestions.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/api-error-decoder">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2241192243363112" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>API Error Decoder</h1>
+            <p class="subtitle">Decode Claude API errors and find solutions</p>
+        </header>
+
+        <div class="layout">
+            <div class="card">
+                <h2>Error Input</h2>
+
+                <div class="form-group">
+                    <label for="errorCode">Error Code (e.g., 429, 401)</label>
+                    <input type="text" id="errorCode" placeholder="400, 401, 403, 429, 500, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="errorJSON">Or paste error JSON</label>
+                    <textarea id="errorJSON" rows="6" placeholder='{"type": "error", "error": {"type": "rate_limit_error", "message": "..."}}'></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="decodeError()">Decode Error</button>
+                    <button onclick="clearInput()" style="background: transparent; color: #d97706; border: 1px solid #d97706;">Clear</button>
+                </div>
+
+                <div class="quick-ref">
+                    <h3>Common Error Codes</h3>
+                    <div class="error-grid">
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='400'; decodeError();">
+                            <div class="code">400</div>
+                            <div class="desc">Bad Request</div>
+                        </div>
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='401'; decodeError();">
+                            <div class="code">401</div>
+                            <div class="desc">Unauthorized</div>
+                        </div>
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='403'; decodeError();">
+                            <div class="code">403</div>
+                            <div class="desc">Forbidden</div>
+                        </div>
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='429'; decodeError();">
+                            <div class="code">429</div>
+                            <div class="desc">Rate Limited</div>
+                        </div>
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='500'; decodeError();">
+                            <div class="code">500</div>
+                            <div class="desc">Server Error</div>
+                        </div>
+                        <div class="error-item" onclick="document.getElementById('errorCode').value='529'; decodeError();">
+                            <div class="code">529</div>
+                            <div class="desc">Overloaded</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div id="errorOutput" class="error-section">
+                    <div class="error-header">
+                        <div class="error-code" id="outputCode"></div>
+                        <div class="error-type" id="outputType"></div>
+                        <div class="error-http" id="outputHTTP"></div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Description</h3>
+                        <div class="info-content" id="outputDesc"></div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Common Causes</h3>
+                        <ul class="cause-list" id="outputCauses"></ul>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Solutions</h3>
+                        <ul class="fix-list" id="outputFixes"></ul>
+                    </div>
+                </div>
+
+                <div id="emptyState" style="text-align: center; padding: 60px 20px; color: #64748b;">
+                    <p>Enter an error code or paste error JSON</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 claudkit.com — Claude & Anthropic API Tools
+        </footer>
+<div style="margin:20px auto;max-width:728px;text-align:center">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2241192243363112" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+    </div>
+
+    <script>
+        const errorDatabase = {
+            '400': {
+                type: 'Bad Request',
+                http: 'HTTP 400',
+                description: 'The request was malformed or invalid. The API could not parse or understand the request parameters.',
+                causes: [
+                    'Missing required parameters',
+                    'Invalid parameter types or values',
+                    'Malformed JSON in request body',
+                    'Invalid model name or missing model parameter',
+                    'Content too long (exceeds max_tokens)',
+                    'Invalid system prompt or message format'
+                ],
+                fixes: [
+                    'Verify all required parameters are present (model, messages, etc.)',
+                    'Check parameter types match API specification (strings, numbers, arrays)',
+                    'Validate JSON syntax in request body',
+                    'Ensure model name is spelled correctly (claude-3-5-sonnet-20241022, etc.)',
+                    'Check max_tokens is within limits (Haiku: 4K, Sonnet: 4K, Opus: 4K)',
+                    'Verify message format: {role, content}'
+                ]
+            },
+            '401': {
+                type: 'Unauthorized',
+                http: 'HTTP 401',
+                description: 'Authentication failed. Your API key is missing, invalid, or expired.',
+                causes: [
+                    'Missing API key in headers',
+                    'Invalid or expired API key',
+                    'API key not in correct format',
+                    'Wrong API key format (should be in Authorization header)',
+                    'API key revoked or deleted'
+                ],
+                fixes: [
+                    'Include Authorization header: Authorization: Bearer YOUR_API_KEY',
+                    'Verify API key is correct and not expired',
+                    'Generate a new API key from https://console.anthropic.com',
+                    'Check API key is not accidentally modified or truncated',
+                    'Ensure no typos in Authorization header name',
+                    'Use x-api-key header for some SDKs: x-api-key: YOUR_API_KEY'
+                ]
+            },
+            '403': {
+                type: 'Forbidden',
+                http: 'HTTP 403',
+                description: 'Your API key is valid but does not have permission to access this resource or model.',
+                causes: [
+                    'API key lacks required permissions for model',
+                    'Account not provisioned for Claude 3.5 or Opus',
+                    'Exceeded usage limits on API key',
+                    'Organization/workspace restrictions',
+                    'IP allowlist blocking request'
+                ],
+                fixes: [
+                    'Check API key permissions in console settings',
+                    'Verify account has access to requested model version',
+                    'Review usage limits and billing status',
+                    'Contact Anthropic support if you need access to specific models',
+                    'Check organization IP allowlist settings',
+                    'Use a different API key with appropriate permissions'
+                ]
+            },
+            '404': {
+                type: 'Not Found',
+                http: 'HTTP 404',
+                description: 'The requested endpoint or resource does not exist.',
+                causes: [
+                    'Incorrect API endpoint URL',
+                    'Typo in endpoint path',
+                    'Using deprecated API version',
+                    'Invalid model name'
+                ],
+                fixes: [
+                    'Verify endpoint: https://api.anthropic.com/v1/messages',
+                    'Check URL path spelling carefully',
+                    'Use current API version (v1)',
+                    'Confirm model name exists and is available'
+                ]
+            },
+            '429': {
+                type: 'Rate Limit Exceeded',
+                http: 'HTTP 429',
+                description: 'You have made too many requests in a short time period. Implement exponential backoff and retry logic.',
+                causes: [
+                    'Too many requests per second/minute',
+                    'Batch processing too fast without delays',
+                    'Concurrent requests exceeding limits',
+                    'No retry backoff implementation',
+                    'Hitting token-per-minute limits'
+                ],
+                fixes: [
+                    'Implement exponential backoff (start 1s, double each retry, max 30s)',
+                    'Add delays between requests (100-500ms minimum)',
+                    'Reduce concurrent request count',
+                    'Batch requests more efficiently',
+                    'Check rate_limit_reset_* headers for retry timing',
+                    'Monitor token usage and pace requests accordingly',
+                    'Consider Batch API for high-volume requests'
+                ]
+            },
+            '500': {
+                type: 'Internal Server Error',
+                http: 'HTTP 500',
+                description: 'An unexpected error occurred on the API server side. These are typically temporary and should be retried.',
+                causes: [
+                    'Temporary service outage',
+                    'Server-side processing error',
+                    'Database connection failure',
+                    'Unhandled exception in service'
+                ],
+                fixes: [
+                    'Retry with exponential backoff (wait 1-2 seconds)',
+                    'Check Anthropic status page for known issues',
+                    'Wait a few moments and retry',
+                    'Contact Anthropic support if error persists',
+                    'Implement circuit breaker pattern for resilience'
+                ]
+            },
+            '529': {
+                type: 'Service Overloaded',
+                http: 'HTTP 529',
+                description: 'The API service is temporarily overloaded. Back off and retry after a delay.',
+                causes: [
+                    'High traffic spike on the service',
+                    'Scheduled maintenance',
+                    'Insufficient capacity',
+                    'Service experiencing heavy load'
+                ],
+                fixes: [
+                    'Implement exponential backoff with jitter',
+                    'Wait 30+ seconds before retrying',
+                    'Check status page for incident information',
+                    'Spread requests over time rather than in bursts',
+                    'Use Batch API for non-urgent requests'
+                ]
+            },
+            'rate_limit_error': {
+                type: 'Rate Limit Error',
+                http: 'HTTP 429',
+                description: 'You have exceeded rate limits for your API key or account.',
+                causes: [
+                    'Requests per second exceeded',
+                    'Tokens per minute exceeded',
+                    'Daily quota exceeded'
+                ],
+                fixes: [
+                    'Implement exponential backoff retry strategy',
+                    'Add delays between requests',
+                    'Consider upgrading account tier',
+                    'Use Batch API for bulk processing'
+                ]
+            },
+            'invalid_request_error': {
+                type: 'Invalid Request Error',
+                http: 'HTTP 400',
+                description: 'The request was rejected due to invalid parameters or format.',
+                causes: [
+                    'Invalid parameter values',
+                    'Missing required fields',
+                    'Wrong data types',
+                    'Out of range values'
+                ],
+                fixes: [
+                    'Review API documentation for correct parameters',
+                    'Validate all required fields are present',
+                    'Check parameter types and values',
+                    'Use JSON schema validation'
+                ]
+            }
+        };
+
+        function decodeError() {
+            const errorCode = document.getElementById('errorCode').value.trim();
+            const errorJSON = document.getElementById('errorJSON').value.trim();
+
+            let errorKey = errorCode;
+
+            if (errorJSON) {
+                try {
+                    const parsed = JSON.parse(errorJSON);
+                    if (parsed.error && parsed.error.type) {
+                        errorKey = parsed.error.type;
+                    }
+                } catch (e) {
+                    alert('Invalid JSON format');
+                    return;
+                }
+            }
+
+            if (!errorCode && !errorJSON) {
+                alert('Enter an error code or JSON');
+                return;
+            }
+
+            const errorInfo = errorDatabase[errorKey] || errorDatabase[errorCode];
+
+            if (!errorInfo) {
+                alert('Error code not found in database. Check error code and try again.');
+                return;
+            }
+
+            document.getElementById('outputCode').textContent = errorKey;
+            document.getElementById('outputType').textContent = errorInfo.type;
+            document.getElementById('outputHTTP').textContent = errorInfo.http;
+            document.getElementById('outputDesc').textContent = errorInfo.description;
+
+            document.getElementById('outputCauses').innerHTML = errorInfo.causes
+                .map(cause => `<li>${cause}</li>`)
+                .join('');
+
+            document.getElementById('outputFixes').innerHTML = errorInfo.fixes
+                .map(fix => `<li>${fix}</li>`)
+                .join('');
+
+            document.getElementById('errorOutput').classList.add('show');
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function clearInput() {
+            document.getElementById('errorCode').value = '';
+            document.getElementById('errorJSON').value = '';
+            document.getElementById('errorOutput').classList.remove('show');
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        document.getElementById('errorCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') decodeError();
+        });
+    </script>
+</body>
+</html>

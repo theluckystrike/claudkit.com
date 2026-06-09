@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculate Claude Vision API costs instantly. Estimate image token usage and monthly expenses for vision models.">
+    <meta name="og:title" content="Claude Vision Cost Calculator">
+    <meta name="og:description" content="Calculate Claude Vision API costs instantly. Estimate image token usage and monthly expenses for vision models.">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://claudkit.com/tools/vision-cost-calculator">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Vision Cost Calculator">
+    <meta name="twitter:description" content="Calculate Claude Vision API costs instantly. Estimate image token usage and monthly expenses for vision models.">
+    <link rel="canonical" href="https://claudkit.com/tools/vision-cost-calculator">
+    <title>Claude Vision Cost Calculator</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Claude Vision Cost Calculator",
+        "description": "Calculate Claude Vision API costs for image processing with Claude models",
+        "url": "https://claudkit.com/tools/vision-cost-calculator",
+        "applicationCategory": "Utility",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d97706;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 5px;
+            padding: 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #d97706 0%, #d97706 var(--value), rgba(148, 163, 184, 0.2) var(--value), rgba(148, 163, 184, 0.2) 100%);
+            border: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #d97706;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #d97706;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            color: #d97706;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #d97706;
+            word-break: break-all;
+        }
+
+        .result-unit {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .pricing-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .pricing-table th,
+        .pricing-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+        }
+
+        .pricing-table th {
+            color: #d97706;
+            font-weight: 600;
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+        .pricing-table td {
+            color: #cbd5e1;
+        }
+
+        .pricing-table tr:hover {
+            background: rgba(217, 119, 6, 0.05);
+        }
+
+        .model-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(217, 119, 6, 0.1);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pricing-table {
+                font-size: 0.8rem;
+            }
+
+            .pricing-table th,
+            .pricing-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+<meta property="og:title" content="Claude Vision Cost Calculator">
+<meta property="og:description" content="Calculate Claude Vision API costs instantly. Estimate image token usage and monthly expenses for vision models.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/vision-cost-calculator">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2241192243363112" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vision Cost Calculator</h1>
+            <p class="subtitle">Calculate Claude Vision API costs for image processing</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Image Configuration</h2>
+
+                <div class="form-group">
+                    <label for="imageCount">Number of Images</label>
+                    <input type="number" id="imageCount" min="1" max="1000" value="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="resolution">Image Resolution</label>
+                    <select id="resolution">
+                        <option value="low">Low (512x512)</option>
+                        <option value="medium" selected>Medium (1024x1024)</option>
+                        <option value="high">High (2048x2048)</option>
+                        <option value="4k">4K (4096x4096)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="promptTokens">Text Prompt Tokens</label>
+                    <div class="slider-container">
+                        <input type="range" id="promptTokens" min="10" max="1000" value="100">
+                        <span class="slider-value" id="promptValue">100</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Claude Model</label>
+                    <select id="model">
+                        <option value="haiku">Claude 3.5 Haiku</option>
+                        <option value="sonnet" selected>Claude 3.5 Sonnet</option>
+                        <option value="opus">Claude 3 Opus</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Cost Estimates</h2>
+
+                <div class="results-grid">
+                    <div class="result-box">
+                        <div class="result-label">Image Tokens</div>
+                        <div class="result-value" id="imageTokens">7,260</div>
+                        <div class="result-unit">per image</div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">Total Input Tokens</div>
+                        <div class="result-value" id="totalInputTokens">79,860</div>
+                        <div class="result-unit">per request</div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">Cost Per Request</div>
+                        <div class="result-value" id="costPerRequest">$0.40</div>
+                        <div class="result-unit">average</div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">Daily Cost (100 req)</div>
+                        <div class="result-value" id="costDaily">$40.00</div>
+                        <div class="result-unit">estimated</div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">Monthly Cost</div>
+                        <div class="result-value" id="costMonthly">$1,200</div>
+                        <div class="result-unit">estimated</div>
+                    </div>
+
+                    <div class="result-box">
+                        <div class="result-label">Annual Cost</div>
+                        <div class="result-value" id="costAnnual">$14,400</div>
+                        <div class="result-unit">estimated</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card results-section">
+                <h2>Claude Model Pricing Reference</h2>
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Image Tokens</th>
+                            <th>Input Cost</th>
+                            <th>Output Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="model-name">Claude 3.5 Haiku</td>
+                            <td>~170 per image</td>
+                            <td>$0.80 / 1M</td>
+                            <td>$4.00 / 1M</td>
+                        </tr>
+                        <tr>
+                            <td class="model-name">Claude 3.5 Sonnet</td>
+                            <td>~1,100-7,260 per image</td>
+                            <td>$3.00 / 1M</td>
+                            <td>$15.00 / 1M</td>
+                        </tr>
+                        <tr>
+                            <td class="model-name">Claude 3 Opus</td>
+                            <td>~1,100-7,260 per image</td>
+                            <td>$15.00 / 1M</td>
+                            <td>$75.00 / 1M</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 claudkit.com — Claude & Anthropic API Tools
+        </footer>
+<div style="margin:20px auto;max-width:728px;text-align:center">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2241192243363112" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+    </div>
+
+    <script>
+        const imageTokens = {
+            low: 170,
+            medium: 1_100,
+            high: 2_358,
+            '4k': 7_260
+        };
+
+        const inputCosts = {
+            haiku: 0.80,
+            sonnet: 3.00,
+            opus: 15.00
+        };
+
+        const outputCosts = {
+            haiku: 4.00,
+            sonnet: 15.00,
+            opus: 75.00
+        };
+
+        function updateCalculations() {
+            const imageCount = parseInt(document.getElementById('imageCount').value) || 1;
+            const resolution = document.getElementById('resolution').value;
+            const promptTokens = parseInt(document.getElementById('promptTokens').value) || 0;
+            const model = document.getElementById('model').value;
+
+            const imgTokens = imageTokens[resolution];
+            const totalImgTokens = imgTokens * imageCount;
+            const totalInputTokens = totalImgTokens + promptTokens;
+
+            const inputCostPerMillion = inputCosts[model];
+            const inputCost = (totalInputTokens / 1_000_000) * inputCostPerMillion;
+
+            const outputTokensEst = 300;
+            const outputCostPerMillion = outputCosts[model];
+            const outputCost = (outputTokensEst / 1_000_000) * outputCostPerMillion;
+
+            const costPerRequest = inputCost + outputCost;
+            const costDaily = costPerRequest * 100;
+            const costMonthly = costDaily * 30;
+            const costAnnual = costDaily * 365;
+
+            document.getElementById('imageTokens').textContent = imgTokens.toLocaleString();
+            document.getElementById('totalInputTokens').textContent = totalInputTokens.toLocaleString();
+            document.getElementById('costPerRequest').textContent = '$' + costPerRequest.toFixed(3);
+            document.getElementById('costDaily').textContent = '$' + costDaily.toFixed(2);
+            document.getElementById('costMonthly').textContent = '$' + costMonthly.toFixed(0);
+            document.getElementById('costAnnual').textContent = '$' + costAnnual.toFixed(0);
+        }
+
+        document.getElementById('promptTokens').addEventListener('input', function() {
+            document.getElementById('promptValue').textContent = this.value;
+            updateCalculations();
+        });
+
+        document.getElementById('imageCount').addEventListener('input', updateCalculations);
+        document.getElementById('resolution').addEventListener('change', updateCalculations);
+        document.getElementById('model').addEventListener('change', updateCalculations);
+
+        updateCalculations();
+    </script>
+</body>
+</html>

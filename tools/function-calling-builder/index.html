@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Build Claude tool_use schemas visually with interactive parameters. Validate and export JSON schemas instantly.">
+    <meta name="og:title" content="Claude Function Calling Builder">
+    <meta name="og:description" content="Build Claude tool_use schemas visually with interactive parameters. Validate and export JSON schemas instantly.">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://claudkit.com/tools/function-calling-builder">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Claude Function Calling Builder">
+    <meta name="twitter:description" content="Build Claude tool_use schemas visually with interactive parameters. Validate and export JSON schemas instantly.">
+    <link rel="canonical" href="https://claudkit.com/tools/function-calling-builder">
+    <title>Function Calling Builder</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Claude Function Calling Builder",
+        "description": "Build and validate Claude tool_use function schemas with interactive visual builder",
+        "url": "https://claudkit.com/tools/function-calling-builder",
+        "applicationCategory": "Utility",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #d97706;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #d97706;
+            border-radius: 6px;
+            background: #d97706;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background: #b65a00;
+            border-color: #b65a00;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+
+        button.secondary {
+            background: transparent;
+            color: #d97706;
+            border: 1px solid #d97706;
+        }
+
+        button.secondary:hover {
+            background: rgba(217, 119, 6, 0.1);
+        }
+
+        button.danger {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .parameter-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .parameter-item h4 {
+            color: #d97706;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .parameter-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .parameter-fields input {
+            padding: 6px 8px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .code-block {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block pre {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #d97706;
+            margin: 0;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .validation-message {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .validation-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            display: block;
+        }
+
+        .validation-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .empty-state p {
+            margin-bottom: 16px;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 60px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(217, 119, 6, 0.1);
+            padding-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .parameter-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .button-group {
+                flex-wrap: wrap;
+            }
+
+            button {
+                flex: 1;
+                min-width: 100px;
+            }
+        }
+    </style>
+<meta property="og:title" content="Function Calling Builder">
+<meta property="og:description" content="Build Claude tool_use schemas visually with interactive parameters. Validate and export JSON schemas instantly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://claudkit.com/tools/function-calling-builder">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2241192243363112" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Function Calling Builder</h1>
+            <p class="subtitle">Build and validate Claude tool_use schemas visually</p>
+        </header>
+
+        <div class="layout">
+            <div class="card">
+                <h2>Function Configuration</h2>
+
+                <div class="form-group">
+                    <label for="funcName">Function Name</label>
+                    <input type="text" id="funcName" placeholder="e.g., get_weather" value="my_tool">
+                </div>
+
+                <div class="form-group">
+                    <label for="funcDesc">Function Description</label>
+                    <textarea id="funcDesc" rows="3" placeholder="Describe what this function does...">A useful tool that does something</textarea>
+                </div>
+
+                <h3 style="color: #cbd5e1; margin-top: 24px; margin-bottom: 16px; font-size: 1.1rem;">Parameters</h3>
+
+                <div id="parametersList"></div>
+
+                <div class="button-group">
+                    <button onclick="addParameter()">+ Add Parameter</button>
+                    <button class="secondary" onclick="clearParameters()">Clear All</button>
+                </div>
+
+                <div class="button-group" style="margin-top: 24px;">
+                    <button onclick="generateSchema()">Generate Schema</button>
+                    <button class="secondary" onclick="loadExample()">Load Example</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Schema Preview</h2>
+
+                <div id="schemaOutput" class="empty-state">
+                    <p>Configure function and parameters to generate schema</p>
+                </div>
+
+                <div id="validationMessage" class="validation-message"></div>
+
+                <div id="codeContainer" style="display: none;">
+                    <div class="code-block" style="margin-top: 16px;">
+                        <button class="copy-button" onclick="copySchema()">Copy</button>
+                        <pre id="schemaCode"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 claudkit.com — Claude & Anthropic API Tools
+        </footer>
+<div style="margin:20px auto;max-width:728px;text-align:center">
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2241192243363112" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+    </div>
+
+    <script>
+        let parameters = [];
+
+        function addParameter() {
+            const paramId = Date.now();
+            parameters.push({
+                id: paramId,
+                name: '',
+                type: 'string',
+                description: '',
+                required: false
+            });
+            renderParameters();
+        }
+
+        function removeParameter(id) {
+            parameters = parameters.filter(p => p.id !== id);
+            renderParameters();
+        }
+
+        function updateParameter(id, field, value) {
+            const param = parameters.find(p => p.id === id);
+            if (param) {
+                param[field] = value;
+            }
+        }
+
+        function renderParameters() {
+            const container = document.getElementById('parametersList');
+            if (parameters.length === 0) {
+                container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 20px;">No parameters added yet</p>';
+                return;
+            }
+
+            container.innerHTML = parameters.map(param => `
+                <div class="parameter-item">
+                    <h4>Parameter ${parameters.indexOf(param) + 1}</h4>
+                    <div class="parameter-fields">
+                        <input type="text" placeholder="Parameter name" value="${param.name}" onchange="updateParameter(${param.id}, 'name', this.value)">
+                        <select onchange="updateParameter(${param.id}, 'type', this.value)">
+                            <option value="string" ${param.type === 'string' ? 'selected' : ''}>string</option>
+                            <option value="number" ${param.type === 'number' ? 'selected' : ''}>number</option>
+                            <option value="boolean" ${param.type === 'boolean' ? 'selected' : ''}>boolean</option>
+                            <option value="array" ${param.type === 'array' ? 'selected' : ''}>array</option>
+                            <option value="object" ${param.type === 'object' ? 'selected' : ''}>object</option>
+                        </select>
+                        <input type="text" placeholder="Description" style="grid-column: 1 / -1;" value="${param.description}" onchange="updateParameter(${param.id}, 'description', this.value)">
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="req${param.id}" ${param.required ? 'checked' : ''} onchange="updateParameter(${param.id}, 'required', this.checked)">
+                        <label for="req${param.id}" style="margin: 0;">Required</label>
+                    </div>
+                    <button class="danger" style="width: 100%; margin-top: 8px;" onclick="removeParameter(${param.id})">Remove Parameter</button>
+                </div>
+            `).join('');
+        }
+
+        function clearParameters() {
+            if (confirm('Clear all parameters?')) {
+                parameters = [];
+                renderParameters();
+            }
+        }
+
+        function generateSchema() {
+            const name = document.getElementById('funcName').value.trim();
+            const desc = document.getElementById('funcDesc').value.trim();
+
+            if (!name) {
+                showValidation('Function name is required', 'error');
+                return;
+            }
+
+            const requiredParams = parameters.filter(p => p.required && p.name).map(p => p.name);
+            const propertyDefs = {};
+
+            parameters.forEach(param => {
+                if (param.name) {
+                    propertyDefs[param.name] = {
+                        type: param.type,
+                        description: param.description || param.name
+                    };
+                }
+            });
+
+            const schema = {
+                type: 'object',
+                properties: propertyDefs
+            };
+
+            if (requiredParams.length > 0) {
+                schema.required = requiredParams;
+            }
+
+            const fullOutput = {
+                name: name,
+                description: desc,
+                input_schema: schema
+            };
+
+            document.getElementById('schemaCode').textContent = JSON.stringify(fullOutput, null, 2);
+            document.getElementById('codeContainer').style.display = 'block';
+            document.getElementById('schemaOutput').style.display = 'none';
+
+            showValidation('Schema validated successfully', 'success');
+        }
+
+        function showValidation(message, type) {
+            const msg = document.getElementById('validationMessage');
+            msg.textContent = message;
+            msg.className = `validation-message ${type}`;
+        }
+
+        function copySchema() {
+            const code = document.getElementById('schemaCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function loadExample() {
+            document.getElementById('funcName').value = 'get_weather';
+            document.getElementById('funcDesc').value = 'Get the current weather for a location';
+            parameters = [
+                { id: 1, name: 'location', type: 'string', description: 'City name', required: true },
+                { id: 2, name: 'unit', type: 'string', description: 'Temperature unit (C or F)', required: false }
+            ];
+            renderParameters();
+        }
+
+        renderParameters();
+    </script>
+</body>
+</html>
