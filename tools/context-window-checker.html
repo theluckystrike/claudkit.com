@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Context Window Checker</title>
+<meta name="description" content="Check whether your prompt or document fits Claude's 200K context window and how much room is left. Paste text for an instant token estimate.">
+<link rel="canonical" href="https://claudkit.com/tools/context-window-checker">
+<meta property="og:title" content="Claude Context Window Checker">
+<meta property="og:description" content="Check whether your prompt or document fits Claude's 200K context window and how much room is left. Paste text for an instant token estimate.">
+<meta property="og:url" content="https://claudkit.com/tools/context-window-checker">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Claude Context Window Checker",
+      "url": "https://claudkit.com/tools/context-window-checker",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"}
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com/"},
+        {"@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools/"},
+        {"@type": "ListItem", "position": 3, "name": "Claude Context Window Checker", "item": "https://claudkit.com/tools/context-window-checker"}
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c232d;--ink:#e6edf3;--muted:#9aa7b4;--accent:#d97757;--accent2:#5aa9e6;--ok:#3fb950;--warn:#d29922;--bad:#f85149;--line:#2a323c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.6}
+nav{display:flex;gap:18px;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+nav a{color:var(--accent2);text-decoration:none;font-weight:600;font-size:.95rem}
+nav a:hover{text-decoration:underline}
+main{max-width:860px;margin:0 auto;padding:26px 20px 60px}
+h1{font-size:1.85rem;line-height:1.25;margin:.4em 0 .3em}
+.intro{color:var(--muted);font-size:1.05rem;margin-bottom:1.4em}
+section{margin:30px 0}
+#tool{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+label{display:block;font-weight:600;margin:14px 0 6px;font-size:.92rem}
+textarea{width:100%;min-height:170px;resize:vertical;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem}
+select,input[type=number]{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:.92rem}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.row>div{flex:1;min-width:180px}
+.out{margin-top:20px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:18px}
+.bignum{font-size:2.1rem;font-weight:800;letter-spacing:-.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:14px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:1.3rem}
+.stat span{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.5px}
+.bar{height:18px;border-radius:9px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin:16px 0 6px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--accent2));transition:width .15s,background .15s}
+.verdict{font-weight:700;margin-top:6px}
+.note{color:var(--muted);font-size:.85rem;margin-top:10px}
+.prose p{margin:.7em 0}
+.prose h2{font-size:1.3rem;margin-top:1.4em}
+code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.85em}
+.related a{display:inline-block;margin:6px 12px 6px 0;color:var(--accent);font-weight:600;text-decoration:none}
+.related a:hover{text-decoration:underline}
+footer{border-top:1px solid var(--line);padding:24px 20px;color:var(--muted);text-align:center;font-size:.9rem}
+footer a{color:var(--accent2);text-decoration:none;margin:0 8px}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">claudkit.com</a>
+  <a href="/tools/">All Tools</a>
+</nav>
+<main>
+<h1>Will your prompt fit in Claude's context window?</h1>
+<p class="intro">Paste a prompt, document, or transcript to estimate its token count and see how much of the context window it uses — with headroom left for Claude's reply.</p>
+
+<section id="tool">
+  <label for="text">Your prompt or document text</label>
+  <textarea id="text" placeholder="Paste text here...">Paste your prompt or document here to estimate its token usage against Claude's context window. The checker counts characters and words, blends them into a token estimate, and shows how much of the window is left for the model's response.</textarea>
+
+  <div class="row">
+    <div>
+      <label for="model">Context window (model)</label>
+      <select id="model">
+        <option value="200000">200K — Claude Haiku 4.5</option>
+        <option value="1000000">1M — Claude Opus 4.8 / Sonnet 4.6</option>
+        <option value="1000000b">1M — Claude Opus 4.7 / 4.6</option>
+        <option value="custom">Custom...</option>
+      </select>
+    </div>
+    <div>
+      <label for="reserve">Reserve for response (tokens)</label>
+      <input type="number" id="reserve" value="16000" min="0" step="1000">
+    </div>
+    <div>
+      <label for="customwin">Custom window (tokens)</label>
+      <input type="number" id="customwin" value="200000" min="1000" step="1000" disabled>
+    </div>
+  </div>
+
+  <div class="out">
+    <div class="bignum" id="tokens">0 tokens</div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="verdict" id="verdict">—</div>
+    <div class="grid">
+      <div class="stat"><b id="chars">0</b><span>Characters</span></div>
+      <div class="stat"><b id="words">0</b><span>Words</span></div>
+      <div class="stat"><b id="usable">0</b><span>Usable budget</span></div>
+      <div class="stat"><b id="left">0</b><span>Tokens left</span></div>
+    </div>
+    <p class="note" id="note"></p>
+  </div>
+</section>
+
+<section class="prose">
+  <h2>How the estimate works</h2>
+  <p>Large language models don't read characters or words — they read <strong>tokens</strong>, sub-word chunks produced by a tokenizer. Claude's context window is the hard ceiling on tokens in a single request: it counts everything you send (system prompt, conversation history, documents, tool definitions) <em>plus</em> the tokens Claude generates in reply. If the total exceeds the window, the request is rejected, so you have to leave room for the answer.</p>
+  <p>This checker estimates tokens with a blended heuristic instead of a single fixed ratio. For English prose roughly one token spans about four characters, while denser inputs (code, JSON, non-English text) pack more tokens per character. The tool computes two independent estimates and takes the larger so it errs toward caution:</p>
+  <p><code>estimate = max( characters / 3.8 , words / 0.75 )</code></p>
+  <p>The character term (÷3.8) captures dense, punctuation-heavy text; the word term (words ÷ 0.75, i.e. ×1.33) reflects that an average English word is a little over one token. Whichever yields more tokens wins, then the value is rounded up. <strong>Usable budget</strong> is the selected window minus the tokens you reserve for Claude's response, and the bar fills against that usable budget — not the raw window — so "100%" means you've run out of room for both prompt and reply.</p>
+  <p>This is an approximation, typically within 10–15% of reality. For an exact, billable count, use Anthropic's <code>count_tokens</code> endpoint, which runs the real tokenizer for the specific model you're calling. Note that token counts differ slightly between model families: a 1M-token window on Opus 4.8 is far more forgiving than a 200K window on Haiku 4.5, and the same text can tokenize differently across versions. Use the model selector above to check against the window you'll actually deploy on.</p>
+</section>
+
+<section>
+  <h2>Related Tools</h2>
+  <p class="related">
+    <a href="/tools/claude-token-counter">Claude Token Counter</a>
+    <a href="/tools/token-budget-planner">Token Budget Planner</a>
+    <a href="/tools/prompt-cost-comparison">Prompt Cost Comparison</a>
+  </p>
+</section>
+</main>
+
+<footer>
+  <a href="/">Home</a>
+  <a href="/tools/">All Tools</a>
+  <div>© 2026 claudkit.com — token estimates are approximate; verify with count_tokens for billing.</div>
+</footer>
+
+<script>
+(function(){
+  var text=document.getElementById('text'),
+      model=document.getElementById('model'),
+      reserve=document.getElementById('reserve'),
+      customwin=document.getElementById('customwin'),
+      out={tokens:document.getElementById('tokens'),fill:document.getElementById('fill'),
+           verdict:document.getElementById('verdict'),chars:document.getElementById('chars'),
+           words:document.getElementById('words'),usable:document.getElementById('usable'),
+           left:document.getElementById('left'),note:document.getElementById('note')};
+
+  function fmt(n){return n.toLocaleString('en-US');}
+
+  function estimateTokens(s){
+    if(!s)return 0;
+    var chars=s.length;
+    var words=(s.trim().match(/\S+/g)||[]).length;
+    var byChar=chars/3.8;
+    var byWord=words/0.75;
+    return Math.ceil(Math.max(byChar,byWord));
+  }
+
+  function windowSize(){
+    var v=model.value;
+    if(v==='custom')return Math.max(1000,parseInt(customwin.value,10)||0);
+    return parseInt(v,10);
+  }
+
+  function update(){
+    var s=text.value;
+    var chars=s.length;
+    var words=(s.trim().match(/\S+/g)||[]).length;
+    var tokens=estimateTokens(s);
+    var win=windowSize();
+    var res=Math.max(0,parseInt(reserve.value,10)||0);
+    var usable=Math.max(0,win-res);
+    var left=usable-tokens;
+    var pct=usable>0?(tokens/usable*100):100;
+
+    out.tokens.textContent=fmt(tokens)+' tokens (est.)';
+    out.chars.textContent=fmt(chars);
+    out.words.textContent=fmt(words);
+    out.usable.textContent=fmt(usable);
+    out.left.textContent=fmt(left);
+
+    var shown=Math.min(100,Math.max(0,pct));
+    out.fill.style.width=shown.toFixed(1)+'%';
+
+    var color,verdict;
+    if(tokens>win){
+      color='var(--bad)';verdict='Exceeds the '+fmt(win)+'-token window — the request would be rejected.';
+    }else if(left<0){
+      color='var(--bad)';verdict='Fits the window, but no room left for a '+fmt(res)+'-token response. Trim or raise the window.';
+    }else if(pct>=80){
+      color='var(--warn)';verdict='Tight — using '+pct.toFixed(0)+'% of the usable budget.';
+    }else{
+      color='var(--ok)';verdict='Comfortable — using '+pct.toFixed(0)+'% of the usable budget.';
+    }
+    out.fill.style.background=color;
+    out.verdict.style.color=color;
+    out.verdict.textContent=verdict;
+
+    out.note.textContent='Window '+fmt(win)+' tokens − '+fmt(res)+' reserved for the reply = '+fmt(usable)+
+      ' usable. Estimate via max(chars/3.8, words/0.75); confirm exact counts with count_tokens.';
+  }
+
+  model.addEventListener('change',function(){
+    customwin.disabled=(model.value!=='custom');
+    update();
+  });
+  text.addEventListener('input',update);
+  reserve.addEventListener('input',update);
+  customwin.addEventListener('input',update);
+  update();
+})();
+</script>
+</body>
+</html>

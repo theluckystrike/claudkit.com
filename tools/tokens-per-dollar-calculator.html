@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Tokens Per Dollar Calculator</title>
+<meta name="description" content="See how many input and output tokens one dollar buys on each Claude model. Compare Opus, Sonnet, and Haiku token value instantly in your browser.">
+<link rel="canonical" href="https://claudkit.com/tools/tokens-per-dollar-calculator">
+<meta property="og:title" content="Claude Tokens Per Dollar Calculator">
+<meta property="og:description" content="See how many input and output tokens one dollar buys on each Claude model. Compare Opus, Sonnet, and Haiku token value instantly in your browser.">
+<meta property="og:url" content="https://claudkit.com/tools/tokens-per-dollar-calculator">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Claude Tokens Per Dollar Calculator",
+      "url": "https://claudkit.com/tools/tokens-per-dollar-calculator",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "description": "See how many input and output tokens one dollar buys on each Claude model. Compare Opus, Sonnet, and Haiku token value instantly in your browser.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Michael Lip",
+        "url": "https://zovo.one"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com/"},
+        {"@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools/"},
+        {"@type": "ListItem", "position": 3, "name": "Claude Tokens Per Dollar Calculator", "item": "https://claudkit.com/tools/tokens-per-dollar-calculator"}
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--border:#2a3340;
+  --text:#e6edf3;--muted:#9aa7b4;--accent:#f0a868;--accent2:#7ab8ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+nav{
+  display:flex;gap:1.2rem;align-items:center;
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  background:var(--panel);flex-wrap:wrap;
+}
+nav a{color:var(--accent);text-decoration:none;font-weight:600;font-size:.95rem}
+nav a:hover{text-decoration:underline}
+.wrap{max-width:920px;margin:0 auto;padding:1.75rem 1.25rem 3rem}
+h1{font-size:1.7rem;line-height:1.25;margin-bottom:.6rem}
+.lead{color:var(--muted);font-size:1.02rem;margin-bottom:1.75rem}
+section{margin-bottom:2rem}
+#tool{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:14px;padding:1.5rem;
+}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-bottom:1.5rem}
+@media (max-width:560px){.controls{grid-template-columns:1fr}}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.4rem;font-weight:600}
+input[type=number],select{
+  width:100%;padding:.7rem .8rem;border-radius:9px;
+  border:1px solid var(--border);background:var(--panel2);color:var(--text);
+  font-size:1rem;font-family:inherit;
+}
+input[type=number]:focus,select:focus{outline:none;border-color:var(--accent)}
+.rangewrap{display:flex;align-items:center;gap:.75rem}
+input[type=range]{flex:1;accent-color:var(--accent)}
+.rangeval{min-width:3.4rem;text-align:right;font-variant-numeric:tabular-nums;color:var(--accent2);font-weight:700}
+.hint{font-size:.78rem;color:var(--muted);margin-top:.35rem}
+table{width:100%;border-collapse:collapse;margin-top:.25rem;font-size:.92rem}
+th,td{padding:.65rem .55rem;text-align:right;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em}
+th:first-child,td:first-child{text-align:left}
+tbody tr:hover{background:var(--panel2)}
+.model{font-weight:700}
+.ctx{color:var(--muted);font-size:.78rem;font-weight:400}
+.big{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+.tableScroll{overflow-x:auto}
+.best td{background:rgba(240,168,104,.08)}
+.note{font-size:.8rem;color:var(--muted);margin-top:1rem}
+.prose p{margin-bottom:1rem;color:#cdd6e0}
+.prose h2{font-size:1.3rem;margin:1.5rem 0 .7rem}
+.prose h3{font-size:1.05rem;margin:1.2rem 0 .5rem;color:var(--accent2)}
+.prose code{background:var(--panel2);padding:.12rem .4rem;border-radius:5px;font-size:.88rem}
+.prose ul{margin:0 0 1rem 1.3rem;color:#cdd6e0}
+.related a{
+  display:inline-block;margin:.3rem .5rem .3rem 0;padding:.55rem .9rem;
+  background:var(--panel2);border:1px solid var(--border);border-radius:9px;
+  color:var(--accent2);text-decoration:none;font-weight:600;font-size:.92rem;
+}
+.related a:hover{border-color:var(--accent2)}
+footer{
+  border-top:1px solid var(--border);padding:1.5rem 1.25rem;
+  text-align:center;color:var(--muted);font-size:.88rem;
+}
+footer a{color:var(--accent);text-decoration:none;margin:0 .5rem}
+footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">claudkit.com</a>
+  <a href="/tools/">All Tools</a>
+</nav>
+
+<div class="wrap">
+<h1>How Many Claude Tokens Does One Dollar Buy?</h1>
+<p class="lead">Token value differs by up to 10x across the Claude lineup. Enter a budget and an input/output split to see exactly how many tokens each model returns per dollar.</p>
+
+<section id="tool">
+  <div class="controls">
+    <div>
+      <label for="budget">Budget (USD)</label>
+      <input type="number" id="budget" value="1" min="0" step="0.01" inputmode="decimal">
+      <p class="hint">Total dollars you want to spend.</p>
+    </div>
+    <div>
+      <label for="split">Output share of tokens: <span id="splitLabel">25%</span></label>
+      <div class="rangewrap">
+        <input type="range" id="split" min="0" max="100" value="25" step="5">
+        <span class="rangeval" id="splitVal">25%</span>
+      </div>
+      <p class="hint">Rest of the tokens are billed as cheaper input.</p>
+    </div>
+  </div>
+
+  <div class="tableScroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Input $/1M</th>
+          <th>Output $/1M</th>
+          <th>Tokens / $ budget</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="note" id="note"></p>
+</section>
+
+<section class="prose">
+  <h2>What this calculator does</h2>
+  <p>Anthropic prices the Claude API in two streams: <code>input</code> tokens (everything you send — system prompt, conversation history, documents) and <code>output</code> tokens (what the model generates). Output is always pricier, so the real value of a dollar depends on how much of your traffic is generation versus context.</p>
+
+  <h3>The formula</h3>
+  <p>This tool treats your <code>output share</code> slider as the fraction <code>s</code> of every token that is output, and <code>1 − s</code> as input. The blended price of one token in dollars is:</p>
+  <p><code>price_per_token = (s &times; out_price + (1 − s) &times; in_price) / 1,000,000</code></p>
+  <p>Then the tokens your budget buys is simply <code>budget / price_per_token</code>. Because both per-million rates are constant, the result scales linearly: double the budget, double the tokens. At a 0% output share you see the pure input-token ceiling; at 100% you see the floor, where each token costs the full output rate.</p>
+
+  <h3>Why the split matters more than the model</h3>
+  <p>A chat workload that replays long histories can be 90%+ input, so a dollar stretches close to the input-only number. A short-prompt, long-answer workload (drafting, code generation) skews toward output and burns the budget far faster. Slide the control to your real ratio before comparing models — a model that looks expensive on output can win on an input-heavy job. The row with the most tokens for your current split is highlighted automatically.</p>
+
+  <h3>Current per-million rates used</h3>
+  <p>The figures below are the standard-tier list prices baked into this page: Opus 4.8 and 4.7 at <code>$5 / $25</code>, Sonnet 4.6 at <code>$3 / $15</code>, Haiku 4.5 at <code>$1 / $5</code>, and Fable 5 at <code>$10 / $50</code> per million input/output tokens. Prompt caching, batch discounts (50% off), and long-context premiums are not applied — this is the headline rate so you can reason about raw token value. For caching and batch math, use the related estimators below.</p>
+</section>
+
+<section class="related">
+  <h2 class="prose" style="font-size:1.3rem;margin-bottom:.8rem">Related Tools</h2>
+  <a href="/tools/prompt-cost-comparison">Prompt Cost Comparison</a>
+  <a href="/tools/batch-api-cost-estimator">Batch API Cost Estimator</a>
+  <a href="/tools/token-budget-planner">Token Budget Planner</a>
+</section>
+</div>
+
+<footer>
+  <a href="/">Home</a> &middot;
+  <a href="/tools/">All Tools</a>
+  <div style="margin-top:.6rem">&copy; 2026 claudkit.com</div>
+</footer>
+
+<script>
+(function(){
+  // Standard-tier list prices, USD per 1,000,000 tokens.
+  var MODELS = [
+    {name:"Claude Haiku 4.5",  ctx:"200K", inp:1,  out:5},
+    {name:"Claude Sonnet 4.6", ctx:"1M",   inp:3,  out:15},
+    {name:"Claude Opus 4.8",   ctx:"1M",   inp:5,  out:25},
+    {name:"Claude Opus 4.7",   ctx:"1M",   inp:5,  out:25},
+    {name:"Claude Fable 5",    ctx:"1M",   inp:10, out:50}
+  ];
+
+  var budgetEl = document.getElementById("budget");
+  var splitEl  = document.getElementById("split");
+  var splitVal = document.getElementById("splitVal");
+  var splitLbl = document.getElementById("splitLabel");
+  var rowsEl   = document.getElementById("rows");
+  var noteEl   = document.getElementById("note");
+
+  function fmt(n){
+    if(!isFinite(n)) return "—";
+    return Math.round(n).toLocaleString("en-US");
+  }
+
+  function compute(){
+    var budget = parseFloat(budgetEl.value);
+    if(isNaN(budget) || budget < 0) budget = 0;
+    var s = parseInt(splitEl.value, 10) / 100;   // output share
+    splitVal.textContent = splitEl.value + "%";
+    splitLbl.textContent = splitEl.value + "%";
+
+    var best = -1, bestIdx = -1;
+    var results = MODELS.map(function(m){
+      var pricePerToken = (s * m.out + (1 - s) * m.inp) / 1e6;
+      var tokens = pricePerToken > 0 ? budget / pricePerToken : 0;
+      return {m:m, tokens:tokens};
+    });
+    results.forEach(function(r, i){
+      if(r.tokens > best){ best = r.tokens; bestIdx = i; }
+    });
+
+    rowsEl.innerHTML = results.map(function(r, i){
+      var cls = (i === bestIdx && best > 0) ? ' class="best"' : '';
+      return "<tr"+cls+">"+
+        "<td><span class='model'>"+r.m.name+"</span><br><span class='ctx'>"+r.m.ctx+" context</span></td>"+
+        "<td>$"+r.m.inp.toFixed(2)+"</td>"+
+        "<td>$"+r.m.out.toFixed(2)+"</td>"+
+        "<td class='big'>"+fmt(r.tokens)+"</td>"+
+      "</tr>";
+    }).join("");
+
+    var split = splitEl.value;
+    noteEl.textContent = "At a " + split + "% output / " + (100 - split) +
+      "% input mix, $" + budget.toLocaleString("en-US") +
+      " buys the most tokens on " + MODELS[bestIdx].name + ".";
+  }
+
+  budgetEl.addEventListener("input", compute);
+  splitEl.addEventListener("input", compute);
+  compute();
+})();
+</script>
+</body>
+</html>

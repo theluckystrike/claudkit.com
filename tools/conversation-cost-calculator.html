@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Conversation Cost Calculator</title>
+<meta name="description" content="Estimate the real cost of a multi-turn Claude chat as context grows each turn. Set tokens and turn count to see total input and output spend.">
+<link rel="canonical" href="https://claudkit.com/tools/conversation-cost-calculator">
+<meta property="og:title" content="Claude Conversation Cost Calculator">
+<meta property="og:description" content="Estimate the real cost of a multi-turn Claude chat as context grows each turn. Set tokens and turn count to see total input and output spend.">
+<meta property="og:url" content="https://claudkit.com/tools/conversation-cost-calculator">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Claude Conversation Cost Calculator",
+      "url": "https://claudkit.com/tools/conversation-cost-calculator",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "description": "Estimate the real cost of a multi-turn Claude chat as context grows each turn. Set tokens and turn count to see total input and output spend.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools/" },
+        { "@type": "ListItem", "position": 3, "name": "Claude Conversation Cost Calculator", "item": "https://claudkit.com/tools/conversation-cost-calculator" }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#171b22; --panel2:#1f2530; --line:#2b3240;
+    --ink:#e9edf3; --muted:#9aa6b6; --accent:#d98c4a; --accent2:#5aa9e6;
+    --good:#54c08a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  nav{
+    display:flex; gap:18px; align-items:center; flex-wrap:wrap;
+    padding:16px 20px; border-bottom:1px solid var(--line); background:#0b0e13;
+  }
+  nav a{font-weight:600;color:var(--ink)}
+  nav a:first-child{color:var(--accent)}
+  .wrap{max-width:920px; margin:0 auto; padding:26px 20px 60px}
+  h1{font-size:1.7rem; line-height:1.25; margin:.3em 0 .35em}
+  .lede{color:var(--muted); margin:0 0 22px; font-size:1.02rem}
+  section{margin:30px 0}
+  h2{font-size:1.25rem; margin:0 0 14px; border-left:3px solid var(--accent); padding-left:10px}
+  h3{font-size:1.02rem; margin:18px 0 6px}
+  #tool{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:22px; display:grid; gap:22px;
+  }
+  @media(min-width:760px){#tool{grid-template-columns:1fr 1fr}}
+  .controls{display:grid; gap:16px}
+  .field label{display:block; font-weight:600; margin-bottom:5px; font-size:.92rem}
+  .field .hint{display:block; color:var(--muted); font-weight:400; font-size:.78rem; margin-top:3px}
+  input[type=number],select{
+    width:100%; padding:10px 12px; background:var(--panel2); color:var(--ink);
+    border:1px solid var(--line); border-radius:9px; font-size:1rem; font-family:inherit;
+  }
+  input[type=range]{width:100%; accent-color:var(--accent)}
+  input:focus,select:focus{outline:2px solid var(--accent2); outline-offset:1px}
+  .rangeRow{display:flex; align-items:center; gap:12px}
+  .rangeRow output{min-width:48px; text-align:right; font-variant-numeric:tabular-nums; font-weight:700}
+  .out{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:18px;
+    align-self:start;
+  }
+  .total{
+    font-size:2.1rem; font-weight:800; color:var(--good); line-height:1.1;
+    font-variant-numeric:tabular-nums;
+  }
+  .total small{display:block; font-size:.8rem; color:var(--muted); font-weight:600; margin-top:4px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:10px 12px}
+  .stat .k{color:var(--muted); font-size:.74rem; text-transform:uppercase; letter-spacing:.04em}
+  .stat .v{font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px}
+  table{width:100%; border-collapse:collapse; margin-top:14px; font-size:.86rem}
+  th,td{text-align:right; padding:7px 9px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted); font-weight:600; font-size:.78rem}
+  .note{color:var(--muted); font-size:.82rem; margin-top:12px}
+  .rel a{display:inline-block; margin-right:14px; font-weight:600}
+  footer{border-top:1px solid var(--line); padding:24px 20px; color:var(--muted); font-size:.88rem}
+  footer a{margin-right:16px}
+  code{background:var(--panel2); padding:1px 5px; border-radius:5px; font-size:.86em}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">claudkit.com</a>
+  <a href="/tools/">All Tools</a>
+</nav>
+<div class="wrap">
+  <h1>Work Out the Real Cost of a Multi-Turn Claude Chat</h1>
+  <p class="lede">Claude's API is stateless, so every turn re-sends the whole conversation. This calculator models that compounding context and shows what a back-and-forth chat actually costs in input and output tokens.</p>
+
+  <section id="tool">
+    <div class="controls">
+      <div class="field">
+        <label for="model">Model &amp; pricing</label>
+        <select id="model">
+          <option value="5,25" selected>Claude Opus 4.8 — $5 / $25 per 1M</option>
+          <option value="5,25">Claude Opus 4.7 — $5 / $25 per 1M</option>
+          <option value="5,25">Claude Opus 4.6 — $5 / $25 per 1M</option>
+          <option value="3,15">Claude Sonnet 4.6 — $3 / $15 per 1M</option>
+          <option value="1,5">Claude Haiku 4.5 — $1 / $5 per 1M</option>
+          <option value="10,50">Claude Fable 5 — $10 / $50 per 1M</option>
+          <option value="custom">Custom pricing…</option>
+        </select>
+        <span class="hint">Prices are input / output per 1,000,000 tokens.</span>
+      </div>
+
+      <div class="field" id="customWrap" style="display:none">
+        <label for="inPrice">Custom input $ / 1M</label>
+        <input type="number" id="inPrice" min="0" step="0.01" value="5">
+        <label for="outPrice" style="margin-top:8px">Custom output $ / 1M</label>
+        <input type="number" id="outPrice" min="0" step="0.01" value="25">
+      </div>
+
+      <div class="field">
+        <label for="system">System prompt tokens (sent every turn)</label>
+        <input type="number" id="system" min="0" step="50" value="1200">
+        <span class="hint">Instructions, tools, persona — resent on each request.</span>
+      </div>
+
+      <div class="field">
+        <label for="userTok">Tokens per user message</label>
+        <input type="number" id="userTok" min="0" step="10" value="150">
+      </div>
+
+      <div class="field">
+        <label for="asstTok">Tokens per assistant reply</label>
+        <input type="number" id="asstTok" min="0" step="10" value="400">
+      </div>
+
+      <div class="field">
+        <label for="turns">Number of turns (exchanges)</label>
+        <div class="rangeRow">
+          <input type="range" id="turns" min="1" max="60" step="1" value="20">
+          <output id="turnsOut">20</output>
+        </div>
+        <span class="hint">One turn = one user message plus one assistant reply.</span>
+      </div>
+    </div>
+
+    <div class="out" aria-live="polite">
+      <div class="total" id="totalCost">$0.00<small>Total conversation cost</small></div>
+      <div class="grid2">
+        <div class="stat"><div class="k">Input cost</div><div class="v" id="inCost">$0.00</div></div>
+        <div class="stat"><div class="k">Output cost</div><div class="v" id="outCost">$0.00</div></div>
+        <div class="stat"><div class="k">Total input tokens</div><div class="v" id="inTok">0</div></div>
+        <div class="stat"><div class="k">Total output tokens</div><div class="v" id="outTok">0</div></div>
+        <div class="stat"><div class="k">Last turn input</div><div class="v" id="lastInput">0</div></div>
+        <div class="stat"><div class="k">Avg cost / turn</div><div class="v" id="perTurn">$0.00</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Turn</th><th>Input tok</th><th>Cum. cost</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <p class="note" id="note"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How the calculation works</h2>
+    <p>Because the Messages API holds no server-side memory, your application must resend the full transcript on every request. That means the prompt grows each turn and you pay for the same earlier tokens again and again. The cost is not linear in the number of turns — it is <strong>quadratic</strong>.</p>
+    <p>Let <code>S</code> be the system-prompt tokens, <code>U</code> the tokens in each user message, <code>O</code> the tokens in each assistant reply, and <code>N</code> the number of turns. At turn <em>k</em> the request carries the system prompt, every prior exchange, and the new user message:</p>
+    <p><code>input(k) = S + (k − 1)(U + O) + U</code></p>
+    <p>Summing turn 1 through <code>N</code> gives the closed form this tool evaluates:</p>
+    <p><code>total input = N·S + N·U + (U + O)·N(N − 1)/2</code><br>
+    <code>total output = N·O</code></p>
+    <p>Each total is divided by 1,000,000 and multiplied by the model's per-million input and output rates, then summed. The <code>N(N − 1)/2</code> term is the compounding history — it is why a 40-turn chat can cost four times a 20-turn chat rather than twice. The per-turn table makes that curve visible: watch the input column climb every row even though your message size never changes.</p>
+    <p>Two levers shrink the quadratic term. <strong>Prompt caching</strong> charges the repeated prefix at roughly one-tenth the input rate after the first write, which mostly cancels the growth on the stable system prompt and early history. <strong>Context trimming or compaction</strong> caps how much history rides along, flattening the curve once the conversation passes a threshold. This calculator shows the uncached baseline so you can size that gap before deciding whether caching is worth wiring in.</p>
+  </section>
+
+  <section>
+    <h2>Related Tools</h2>
+    <p class="rel">
+      <a href="/tools/prompt-caching-calculator">Prompt Caching Calculator</a>
+      <a href="/tools/token-budget-planner">Token Budget Planner</a>
+      <a href="/tools/prompt-cost-comparison">Prompt Cost Comparison</a>
+    </p>
+  </section>
+</div>
+
+<footer>
+  <a href="/">Home</a>
+  <a href="/tools/">All Tools</a>
+  <span>© 2026 claudkit.com</span>
+</footer>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var els={
+    model:$('model'), customWrap:$('customWrap'), inPrice:$('inPrice'), outPrice:$('outPrice'),
+    system:$('system'), userTok:$('userTok'), asstTok:$('asstTok'),
+    turns:$('turns'), turnsOut:$('turnsOut'),
+    totalCost:$('totalCost'), inCost:$('inCost'), outCost:$('outCost'),
+    inTok:$('inTok'), outTok:$('outTok'), lastInput:$('lastInput'), perTurn:$('perTurn'),
+    tbody:$('tbody'), note:$('note')
+  };
+
+  function num(el){ var v=parseFloat(el.value); return isFinite(v)&&v>=0 ? v : 0; }
+  function fmtInt(n){ return Math.round(n).toLocaleString('en-US'); }
+  function fmtUSD(n){
+    if(n>=1) return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if(n>=0.01) return '$'+n.toFixed(3);
+    return '$'+n.toFixed(5);
+  }
+
+  function prices(){
+    var v=els.model.value;
+    if(v==='custom'){ return [num(els.inPrice), num(els.outPrice)]; }
+    var p=v.split(',');
+    return [parseFloat(p[0]), parseFloat(p[1])];
+  }
+
+  function compute(){
+    els.customWrap.style.display = els.model.value==='custom' ? 'block' : 'none';
+
+    var pr=prices(), inRate=pr[0], outRate=pr[1];
+    var S=num(els.system), U=num(els.userTok), O=num(els.asstTok);
+    var N=Math.max(1, Math.round(num(els.turns)));
+    els.turnsOut.textContent=N;
+
+    // Closed-form totals.
+    var totalInput = N*S + N*U + (U+O)*(N*(N-1)/2);
+    var totalOutput = N*O;
+    var inCost = totalInput/1e6 * inRate;
+    var outCost = totalOutput/1e6 * outRate;
+    var total = inCost + outCost;
+    var lastInput = S + (N-1)*(U+O) + U;
+
+    els.totalCost.innerHTML = fmtUSD(total)+'<small>Total conversation cost</small>';
+    els.inCost.textContent = fmtUSD(inCost);
+    els.outCost.textContent = fmtUSD(outCost);
+    els.inTok.textContent = fmtInt(totalInput);
+    els.outTok.textContent = fmtInt(totalOutput);
+    els.lastInput.textContent = fmtInt(lastInput);
+    els.perTurn.textContent = fmtUSD(total/N);
+
+    // Per-turn table: show up to ~8 representative rows so it stays readable.
+    var rows=[], cum=0, k;
+    var maxRows=8;
+    var picks={};
+    if(N<=maxRows){ for(k=1;k<=N;k++) picks[k]=true; }
+    else {
+      picks[1]=true; picks[N]=true;
+      var step=(N-1)/(maxRows-1);
+      for(var i=1;i<maxRows-1;i++){ picks[Math.round(1+i*step)]=true; }
+    }
+    for(k=1;k<=N;k++){
+      var inK = S + (k-1)*(U+O) + U;
+      cum += inK/1e6*inRate + O/1e6*outRate;
+      if(picks[k]){ rows.push('<tr><td>'+k+'</td><td>'+fmtInt(inK)+'</td><td>'+fmtUSD(cum)+'</td></tr>'); }
+    }
+    els.tbody.innerHTML=rows.join('');
+
+    var growth = totalInput / (N*(S+U)) ;
+    els.note.textContent = 'The final turn carries '+fmtInt(lastInput)+' input tokens — '+
+      (S+U>0 ? (lastInput/(S+U)).toFixed(1) : '0')+
+      '× the size of your first request. Compounding history is '+
+      Math.round(((U+O)*(N*(N-1)/2)/totalInput)*100)+'% of all input tokens.';
+  }
+
+  ['change','input'].forEach(function(ev){
+    [els.model,els.inPrice,els.outPrice,els.system,els.userTok,els.asstTok,els.turns]
+      .forEach(function(el){ el.addEventListener(ev, compute); });
+  });
+
+  compute();
+})();
+</script>
+</body>
+</html>

@@ -91,4 +91,9 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+<url><loc>https://claudkit.com/tools/claude-token-counter</loc><lastmod>2026-06-30</lastmod></url>
+<url><loc>https://claudkit.com/tools/context-window-checker</loc><lastmod>2026-06-30</lastmod></url>
+<url><loc>https://claudkit.com/tools/conversation-cost-calculator</loc><lastmod>2026-06-30</lastmod></url>
+<url><loc>https://claudkit.com/tools/monthly-cost-calculator</loc><lastmod>2026-06-30</lastmod></url>
+<url><loc>https://claudkit.com/tools/tokens-per-dollar-calculator</loc><lastmod>2026-06-30</lastmod></url>
 </urlset>

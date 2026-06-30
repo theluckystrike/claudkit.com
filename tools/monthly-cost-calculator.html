@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude API Monthly Cost Calculator</title>
+<meta name="description" content="Project your monthly Claude API bill from daily request volume and average token sizes across Opus, Sonnet, and Haiku before you scale.">
+<link rel="canonical" href="https://claudkit.com/tools/monthly-cost-calculator">
+<meta property="og:title" content="Claude API Monthly Cost Calculator">
+<meta property="og:description" content="Project your monthly Claude API bill from daily request volume and average token sizes across Opus, Sonnet, and Haiku before you scale.">
+<meta property="og:url" content="https://claudkit.com/tools/monthly-cost-calculator">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Claude API Monthly Cost Calculator",
+      "url": "https://claudkit.com/tools/monthly-cost-calculator",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Michael Lip",
+        "url": "https://zovo.one"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://claudkit.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Tools",
+          "item": "https://claudkit.com/tools/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Claude API Monthly Cost Calculator",
+          "item": "https://claudkit.com/tools/monthly-cost-calculator"
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c232d;
+    --border: #2a323d;
+    --text: #e6edf3;
+    --muted: #9aa7b4;
+    --accent: #d97757;
+    --accent-soft: #e8a08a;
+    --good: #6ee7a8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  nav {
+    display: flex;
+    gap: 20px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+  nav a { color: var(--accent-soft); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+  nav a:hover { color: var(--accent); }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 18px 0 10px; }
+  h2 { font-size: 1.3rem; margin: 34px 0 12px; }
+  .intro { color: var(--muted); font-size: 1.05rem; max-width: 70ch; }
+  #tool {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin: 26px 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  input, select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+  .hint { font-size: 0.74rem; color: #6f7b88; }
+  .out {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .card .k { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .card .v { font-size: 1.45rem; font-weight: 700; margin-top: 4px; color: var(--good); }
+  .card .v.big { font-size: 1.7rem; color: var(--accent-soft); }
+  table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 0.92rem; }
+  th, td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  tbody tr.active { background: rgba(217, 119, 87, 0.12); }
+  .prose { color: #c4cfda; max-width: 74ch; }
+  .prose code {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 0.88em;
+  }
+  .related a {
+    display: inline-block;
+    margin: 6px 10px 6px 0;
+    color: var(--accent-soft);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 0.9rem;
+  }
+  .related a:hover { border-color: var(--accent); color: var(--accent); }
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  footer a { color: var(--accent-soft); text-decoration: none; margin: 0 10px; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">claudkit.com</a>
+  <a href="/tools/">All Tools</a>
+</nav>
+<main>
+  <h1>Estimate Your Monthly Claude API Spend Before You Scale</h1>
+  <p class="intro">Plug in your daily request volume and the typical input and output token sizes per call, and this calculator projects your monthly Claude API bill across Opus 4.8, Sonnet 4.6, and Haiku 4.5 using current published rates.</p>
+
+  <section id="tool">
+    <div class="grid">
+      <div class="field">
+        <label for="model">Model</label>
+        <select id="model">
+          <option value="opus">Claude Opus 4.8 — $5 / $25 per 1M</option>
+          <option value="sonnet" selected>Claude Sonnet 4.6 — $3 / $15 per 1M</option>
+          <option value="haiku">Claude Haiku 4.5 — $1 / $5 per 1M</option>
+        </select>
+        <span class="hint">Pricing is per million tokens (input / output).</span>
+      </div>
+      <div class="field">
+        <label for="reqs">Requests per day</label>
+        <input id="reqs" type="number" min="0" step="1" value="2000">
+        <span class="hint">Total API calls across your app each day.</span>
+      </div>
+      <div class="field">
+        <label for="inTok">Avg input tokens per request</label>
+        <input id="inTok" type="number" min="0" step="1" value="1800">
+        <span class="hint">Prompt + system + history sent each call.</span>
+      </div>
+      <div class="field">
+        <label for="outTok">Avg output tokens per request</label>
+        <input id="outTok" type="number" min="0" step="1" value="450">
+        <span class="hint">Tokens the model generates back.</span>
+      </div>
+      <div class="field">
+        <label for="cacheHit">Cached input share (%)</label>
+        <input id="cacheHit" type="number" min="0" max="100" step="1" value="0">
+        <span class="hint">Portion of input read from prompt cache (~0.1x cost).</span>
+      </div>
+      <div class="field">
+        <label for="days">Billing days per month</label>
+        <input id="days" type="number" min="1" max="31" step="1" value="30">
+        <span class="hint">Use 30 for a standard month.</span>
+      </div>
+    </div>
+
+    <div class="out">
+      <div class="card">
+        <div class="k">Daily cost</div>
+        <div class="v" id="rDay">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="k">Monthly cost</div>
+        <div class="v big" id="rMonth">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="k">Cost per request</div>
+        <div class="v" id="rReq">$0.00</div>
+      </div>
+      <div class="card">
+        <div class="k">Monthly tokens</div>
+        <div class="v" id="rTokens">0</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Model comparison</th>
+          <th>Per request</th>
+          <th>Monthly</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </section>
+
+  <h2>How the monthly estimate is calculated</h2>
+  <div class="prose">
+    <p>Claude's API bills separately for the tokens you send (input) and the tokens the model generates (output), each metered per million tokens. This tool turns a single per-request profile into a full monthly projection so you can size a budget before you flip on production traffic.</p>
+    <p>The core formula runs per request, then scales out. For one call the cost is:</p>
+    <p><code>perRequest = (inputTokens / 1,000,000 × inputRate) + (outputTokens / 1,000,000 × outputRate)</code></p>
+    <p>Daily cost multiplies that by your request volume, and the monthly figure multiplies daily by your billing days: <code>monthly = perRequest × requestsPerDay × days</code>. The token counter reports total throughput as <code>(inputTokens + outputTokens) × requestsPerDay × days</code>, which is handy when you are checking projected usage against a rate-limit tier.</p>
+    <p>The <strong>cached input share</strong> field models prompt caching, which most cost tools ignore. When a stable prefix (a long system prompt, retrieved documents, a fixed tool list) is served from cache, those input tokens bill at roughly one tenth of the base input rate. The calculator splits your input tokens into a cached slice and a full-price slice: <code>effectiveInput = uncachedShare × inputRate + cachedShare × inputRate × 0.1</code>. Output tokens are never cached, so they always bill at full rate. Pushing the cached share from 0% to 80% on a retrieval-heavy workload visibly drops the bill — that is the single biggest lever most teams have, and the reason it sits in the input form rather than buried in fine print.</p>
+    <p>The comparison table re-runs the same per-request math against all three models at once, so you can see the Opus-to-Haiku spread for an identical workload. A classification or routing call that is fine on Haiku does not need Opus pricing, and the table makes that tradeoff concrete in dollars rather than abstract per-token rates. Rates reflect Opus 4.8 at $5/$25, Sonnet 4.6 at $3/$15, and Haiku 4.5 at $1/$5 per million input/output tokens.</p>
+  </div>
+
+  <h2>Related Tools</h2>
+  <div class="related">
+    <a href="/tools/prompt-cost-comparison">Prompt Cost Comparison</a>
+    <a href="/tools/batch-api-cost-estimator">Batch API Cost Estimator</a>
+    <a href="/tools/prompt-caching-calculator">Prompt Caching Calculator</a>
+  </div>
+</main>
+<footer>
+  <a href="/">Home</a>
+  <a href="/tools/">All Tools</a>
+  <div style="margin-top:10px;">&copy; 2026 claudkit.com</div>
+</footer>
+
+<script>
+  var MODELS = {
+    opus:   { name: "Opus 4.8",   in: 5, out: 25 },
+    sonnet: { name: "Sonnet 4.6", in: 3, out: 15 },
+    haiku:  { name: "Haiku 4.5",  in: 1, out: 5 }
+  };
+
+  var els = {
+    model: document.getElementById('model'),
+    reqs: document.getElementById('reqs'),
+    inTok: document.getElementById('inTok'),
+    outTok: document.getElementById('outTok'),
+    cacheHit: document.getElementById('cacheHit'),
+    days: document.getElementById('days'),
+    rDay: document.getElementById('rDay'),
+    rMonth: document.getElementById('rMonth'),
+    rReq: document.getElementById('rReq'),
+    rTokens: document.getElementById('rTokens'),
+    compareBody: document.getElementById('compareBody')
+  };
+
+  function num(el, min, max) {
+    var v = parseFloat(el.value);
+    if (isNaN(v) || v < 0) v = 0;
+    if (min !== undefined && v < min) v = min;
+    if (max !== undefined && v > max) v = max;
+    return v;
+  }
+
+  function money(n) {
+    if (n < 0.01 && n > 0) return "$" + n.toFixed(4);
+    return "$" + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function perRequestCost(model, inTok, outTok, cachedShare) {
+    var cached = inTok * cachedShare;
+    var uncached = inTok - cached;
+    var inputCost = (uncached / 1e6) * model.in + (cached / 1e6) * model.in * 0.1;
+    var outputCost = (outTok / 1e6) * model.out;
+    return inputCost + outputCost;
+  }
+
+  function compute() {
+    var reqs = num(els.reqs, 0);
+    var inTok = num(els.inTok, 0);
+    var outTok = num(els.outTok, 0);
+    var cachedShare = num(els.cacheHit, 0, 100) / 100;
+    var days = num(els.days, 1, 31);
+    var key = els.model.value;
+    var model = MODELS[key];
+
+    var perReq = perRequestCost(model, inTok, outTok, cachedShare);
+    var daily = perReq * reqs;
+    var monthly = daily * days;
+    var tokens = (inTok + outTok) * reqs * days;
+
+    els.rReq.textContent = money(perReq);
+    els.rDay.textContent = money(daily);
+    els.rMonth.textContent = money(monthly);
+    els.rTokens.textContent = Math.round(tokens).toLocaleString('en-US');
+
+    var rows = "";
+    for (var k in MODELS) {
+      if (!MODELS.hasOwnProperty(k)) continue;
+      var m = MODELS[k];
+      var pr = perRequestCost(m, inTok, outTok, cachedShare);
+      var mo = pr * reqs * days;
+      rows += '<tr class="' + (k === key ? 'active' : '') + '">' +
+        '<td>Claude ' + m.name + '</td>' +
+        '<td>' + money(pr) + '</td>' +
+        '<td>' + money(mo) + '</td>' +
+      '</tr>';
+    }
+    els.compareBody.innerHTML = rows;
+  }
+
+  ['model', 'reqs', 'inTok', 'outTok', 'cacheHit', 'days'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.addEventListener('input', compute);
+    el.addEventListener('change', compute);
+  });
+
+  compute();
+</script>
+</body>
+</html>

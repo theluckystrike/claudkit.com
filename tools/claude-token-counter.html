@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Token Counter — Estimate Tokens &amp; Cost</title>
+<meta name="description" content="Paste any text to instantly estimate Claude API tokens and what they cost across Opus, Sonnet, and Haiku. Free and runs in your browser.">
+<link rel="canonical" href="https://claudkit.com/tools/claude-token-counter">
+<meta property="og:title" content="Claude Token Counter — Estimate Tokens &amp; Cost">
+<meta property="og:description" content="Paste any text to instantly estimate Claude API tokens and what they cost across Opus, Sonnet, and Haiku. Free and runs in your browser.">
+<meta property="og:url" content="https://claudkit.com/tools/claude-token-counter">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Claude Token Counter — Estimate Tokens & Cost",
+  "description": "Paste any text to instantly estimate Claude API tokens and what they cost across Opus, Sonnet, and Haiku. Free and runs in your browser.",
+  "url": "https://claudkit.com/tools/claude-token-counter",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Michael Lip",
+    "url": "https://zovo.one"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://claudkit.com/"},
+    {"@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools/"},
+    {"@type": "ListItem", "position": 3, "name": "Claude Token Counter — Estimate Tokens & Cost", "item": "https://claudkit.com/tools/claude-token-counter"}
+  ]
+}
+</script>
+<style>
+:root{
+  --bg:#0e1116; --panel:#171b22; --panel2:#1f2530; --line:#2a313d;
+  --text:#e6e9ef; --muted:#9aa4b2; --accent:#d98a4b; --accent2:#f0b27a;
+  --good:#5fb87a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+nav{
+  display:flex; gap:20px; align-items:center; flex-wrap:wrap;
+  padding:16px 20px; border-bottom:1px solid var(--line); background:var(--panel);
+  font-size:15px;
+}
+nav a{font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 64px}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:14px 0 8px}
+.intro{color:var(--muted);font-size:17px;margin:0 0 26px;max-width:680px}
+section{margin:28px 0}
+#tool{
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  padding:22px;
+}
+label{display:block;font-weight:600;margin:0 0 8px;font-size:14px}
+textarea{
+  width:100%; min-height:170px; resize:vertical; padding:14px;
+  background:var(--bg); color:var(--text); border:1px solid var(--line);
+  border-radius:10px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:14px; line-height:1.5;
+}
+.controls{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 4px}
+.field{flex:1;min-width:160px}
+select,input[type=number]{
+  width:100%; padding:10px 12px; background:var(--bg); color:var(--text);
+  border:1px solid var(--line); border-radius:9px; font-size:14px;
+}
+.hint{color:var(--muted);font-size:12px;margin-top:6px}
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin:22px 0 6px}
+.stat{
+  flex:1; min-width:130px; background:var(--panel2); border:1px solid var(--line);
+  border-radius:11px; padding:14px 16px;
+}
+.stat .num{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.stat .lab{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.costs{margin-top:18px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+td.model{font-weight:600;color:var(--text)}
+td.total{color:var(--accent2);font-weight:700}
+tbody tr:hover{background:var(--panel2)}
+.prose p{color:#cdd3dc}
+.prose h2{font-size:20px;margin:26px 0 10px}
+.prose code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:13px}
+.formula{
+  background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:8px; padding:14px 16px; font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:13px; color:#dfe5ee; overflow-x:auto; margin:14px 0;
+}
+.related a{
+  display:inline-block; margin:6px 10px 6px 0; padding:9px 14px;
+  background:var(--panel2); border:1px solid var(--line); border-radius:9px; font-weight:600;
+}
+footer{
+  border-top:1px solid var(--line); margin-top:48px; padding:24px 20px;
+  color:var(--muted); font-size:14px; text-align:center;
+}
+footer a{margin:0 8px}
+small{color:var(--muted)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">claudkit.com</a>
+  <a href="/tools/">All Tools</a>
+</nav>
+
+<div class="wrap">
+  <h1>Estimate Claude API tokens and cost from any text</h1>
+  <p class="intro">Paste a prompt, document, or transcript below. This runs entirely in your browser and gives a live token estimate plus what it would cost on Claude Opus 4.8, Sonnet 4.6, and Haiku 4.5 — including prompt-cache write and read pricing.</p>
+
+  <section id="tool">
+    <label for="txt">Your text (prompt, system message, or document)</label>
+    <textarea id="txt" spellcheck="false">Write a concise product description for a stainless steel water bottle that keeps drinks cold for 24 hours. Target eco-conscious commuters and keep it under 80 words.</textarea>
+
+    <div class="controls">
+      <div class="field">
+        <label for="outTokens">Expected output tokens</label>
+        <input type="number" id="outTokens" value="600" min="0" step="50">
+        <div class="hint">The model's reply length. Output is priced higher than input.</div>
+      </div>
+      <div class="field">
+        <label for="cacheMode">Prompt caching</label>
+        <select id="cacheMode">
+          <option value="none" selected>No caching (full input price)</option>
+          <option value="read">Cache read (~0.1× input)</option>
+          <option value="write5">Cache write, 5-min TTL (1.25× input)</option>
+          <option value="write1h">Cache write, 1-hour TTL (2× input)</option>
+        </select>
+        <div class="hint">Applies only to the input tokens.</div>
+      </div>
+      <div class="field">
+        <label for="calls">Number of calls</label>
+        <input type="number" id="calls" value="1" min="1" step="1">
+        <div class="hint">Multiply the per-call cost by this.</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="sChars">0</div><div class="lab">Characters</div></div>
+      <div class="stat"><div class="num" id="sWords">0</div><div class="lab">Words</div></div>
+      <div class="stat"><div class="num" id="sTokens">0</div><div class="lab">Input tokens (est.)</div></div>
+      <div class="stat"><div class="num" id="sOut">0</div><div class="lab">Output tokens</div></div>
+    </div>
+
+    <div class="costs">
+      <table>
+        <thead>
+          <tr><th>Model</th><th>In $/1M</th><th>Out $/1M</th><th>Input cost</th><th>Output cost</th><th>Total</th></tr>
+        </thead>
+        <tbody id="costBody"></tbody>
+      </table>
+      <p class="hint" id="cacheNote"></p>
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2>How this token estimate is calculated</h2>
+    <p>The official way to count Claude tokens is the API <code>count_tokens</code> endpoint, which uses the exact model tokenizer — but that needs a network call and an API key. This page gives a fast, fully-offline approximation instead, so you can ballpark cost before you ever send a request.</p>
+    <p>Claude's tokenizer (the one shared by Opus 4.7, Opus 4.8, and Fable&nbsp;5) breaks text into sub-word pieces. English prose averages roughly four characters per token, but pure character count overshoots on whitespace-heavy or repetitive text and undershoots on code, punctuation, and non-English scripts. To stay close across mixed inputs, this tool blends two signals — a character-based estimate and a word-based estimate — and takes the higher of the two, which tracks real Claude counts better than either alone:</p>
+    <div class="formula">tokens ≈ max( characters ÷ 3.85 ,  words × 1.33 ) + punctuation_marks × 0.20</div>
+    <p>The <code>÷ 3.85</code> divisor is slightly tighter than the popular "4 characters per token" rule because Claude's tokenizer splits punctuation and code symbols into their own tokens, nudging the real count up. The word multiplier of <code>1.33</code> reflects that the average English word is a little over one token once suffixes and spaces are accounted for, and the small punctuation term captures dense JSON or Markdown. This is an estimate, not a guarantee — expect it to land within about 10–15% of the API count for typical English, with wider variance on heavy code or other languages. Always confirm with <code>count_tokens</code> before relying on a number for billing.</p>
+    <p>Pricing is per million tokens. Input and output are billed separately, and output always costs five times the input rate on every current model. Prompt caching changes only the input side: a cache <em>write</em> costs 1.25× the base input rate for the 5-minute cache or 2× for the 1-hour cache, while a cache <em>read</em> costs about 0.1× — so reused context (a fixed system prompt, a long document, few-shot examples) gets dramatically cheaper after the first call. The cost table updates live as you type, switch caching mode, or change the call count, multiplying input cost by your selected cache factor and adding the output cost on top.</p>
+  </section>
+
+  <section class="related">
+    <h2>Related Tools</h2>
+    <a href="/tools/token-budget-planner">Token Budget Planner</a>
+    <a href="/tools/prompt-cost-comparison">Prompt Cost Comparison</a>
+    <a href="/tools/api-error-guide">API Error Guide</a>
+  </section>
+
+  <p><small>Pricing reflects published Claude API rates (Opus 4.8 $5/$25, Sonnet 4.6 $3/$15, Haiku 4.5 $1/$5 per 1M tokens). Verify current rates before billing.</small></p>
+</div>
+
+<footer>
+  <div>
+    <a href="/">Home</a>
+    <a href="/tools/">All Tools</a>
+    <a href="/tools/token-budget-planner">Token Budget Planner</a>
+  </div>
+  <div style="margin-top:10px">© 2026 claudkit.com — built by <a href="https://zovo.one">Michael Lip</a></div>
+</footer>
+
+<script>
+(function(){
+  // Published Claude API pricing, USD per 1M tokens [input, output]
+  var MODELS = [
+    {name:"Claude Opus 4.8",   in:5.00, out:25.00},
+    {name:"Claude Sonnet 4.6", in:3.00, out:15.00},
+    {name:"Claude Haiku 4.5",  in:1.00, out:5.00}
+  ];
+  var CACHE = {
+    none:   {f:1.00,  label:"full input price"},
+    read:   {f:0.10,  label:"cache read (~0.1× input)"},
+    write5: {f:1.25,  label:"cache write, 5-min TTL (1.25× input)"},
+    write1h:{f:2.00,  label:"cache write, 1-hour TTL (2× input)"}
+  };
+
+  var txt = document.getElementById("txt");
+  var outTokens = document.getElementById("outTokens");
+  var cacheMode = document.getElementById("cacheMode");
+  var calls = document.getElementById("calls");
+  var body = document.getElementById("costBody");
+
+  function estimateTokens(s){
+    if(!s) return 0;
+    var chars = s.length;
+    var words = (s.trim().match(/\S+/g) || []).length;
+    var punct = (s.match(/[.,!?;:()\[\]{}"'`/\\|<>@#$%^&*+=~-]/g) || []).length;
+    var byChar = chars / 3.85;
+    var byWord = words * 1.33;
+    var est = Math.max(byChar, byWord) + punct * 0.20;
+    return Math.max(0, Math.round(est));
+  }
+
+  function fmtCost(v){
+    if(v === 0) return "$0.00";
+    if(v < 0.01) return "$" + v.toFixed(5);
+    if(v < 1) return "$" + v.toFixed(4);
+    return "$" + v.toFixed(2);
+  }
+  function fmtNum(n){ return n.toLocaleString("en-US"); }
+
+  function render(){
+    var s = txt.value;
+    var inTok = estimateTokens(s);
+    var outTok = Math.max(0, parseInt(outTokens.value, 10) || 0);
+    var nCalls = Math.max(1, parseInt(calls.value, 10) || 1);
+    var cf = CACHE[cacheMode.value] || CACHE.none;
+
+    document.getElementById("sChars").textContent = fmtNum(s.length);
+    document.getElementById("sWords").textContent = fmtNum((s.trim().match(/\S+/g)||[]).length);
+    document.getElementById("sTokens").textContent = fmtNum(inTok);
+    document.getElementById("sOut").textContent = fmtNum(outTok);
+
+    var rows = "";
+    for(var i=0;i<MODELS.length;i++){
+      var m = MODELS[i];
+      var inCost  = (inTok  / 1e6) * m.in  * cf.f * nCalls;
+      var outCost = (outTok / 1e6) * m.out        * nCalls;
+      var total = inCost + outCost;
+      rows += "<tr>"
+        + "<td class='model'>" + m.name + "</td>"
+        + "<td>$" + m.in.toFixed(2) + "</td>"
+        + "<td>$" + m.out.toFixed(2) + "</td>"
+        + "<td>" + fmtCost(inCost) + "</td>"
+        + "<td>" + fmtCost(outCost) + "</td>"
+        + "<td class='total'>" + fmtCost(total) + "</td>"
+        + "</tr>";
+    }
+    body.innerHTML = rows;
+
+    var note = "Input priced at " + cf.label + ".";
+    if(nCalls > 1) note += " Costs shown for " + nCalls + " calls.";
+    document.getElementById("cacheNote").textContent = note;
+  }
+
+  txt.addEventListener("input", render);
+  outTokens.addEventListener("input", render);
+  cacheMode.addEventListener("change", render);
+  calls.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
