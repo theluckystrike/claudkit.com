@@ -26,16 +26,35 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Vision API Playground — Image Analysis",
-  "description": "Interactive tool to test Claude Vision API image analysis. Upload images via drag-and-drop, write analysis prompts, see simulated responses for different image types, and generate production code in Python, Node.js, and curl.",
+  "description": "Upload an image or paste a URL, write an analysis prompt, and see a simulated Claude Vision response.",
   "url": "https://claudkit.com/tools/vision-api-playground.html",
   "datePublished": "2026-05-28",
   "dateModified": "2026-05-28",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Web",
-  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
-  "author": {"@type": "Person", "name": "Michael Lip", "url": "https://zovo.one"},
-  "publisher": {"@type": "Organization", "name": "ClaudKit", "url": "https://claudkit.com"},
-  "keywords": ["claude vision api", "claude image analysis", "anthropic vision", "claude multimodal", "image analysis tool", "claude vision playground"]
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Michael Lip",
+    "url": "https://zovo.one"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "ClaudKit",
+    "url": "https://claudkit.com"
+  },
+  "keywords": [
+    "claude vision api",
+    "claude image analysis",
+    "anthropic vision",
+    "claude multimodal",
+    "image analysis tool",
+    "claude vision playground"
+  ]
 }
 </script>
 
@@ -49,7 +68,7 @@
       "name": "How do I send images to the Claude API?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "You can send images to the Claude API in two ways: as a base64-encoded string with the media type, or as a URL. For base64, include a content block with type 'image', source type 'base64', the media_type (e.g. 'image/jpeg'), and the base64-encoded data string. For URLs, use source type 'url' and provide the image URL directly. Both formats are included in the messages array alongside text content blocks."
+        "text": "Include a content block with type: \"image\" , source.type: \"base64\" , the media_type , and the base64-encoded image data. Alternatively, use source.type: \"url\" with a direct image URL. Both approaches are shown in the code snippets above."
       }
     },
     {
@@ -57,7 +76,7 @@
       "name": "What image formats does Claude Vision support?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Claude Vision supports JPEG, PNG, GIF, and WebP image formats. The maximum image size is 5MB per image. Images can be sent as base64-encoded data or via URL. Claude can process multiple images in a single request — include multiple image content blocks in the messages array. The model performs best with images that are clear and well-lit. Very small text in images (under 8pt equivalent) may not be reliably extracted."
+        "text": "Claude Vision supports JPEG, PNG, GIF, and WebP. Maximum 5MB per image. Up to 20 images per request. Images are resized internally to fit within a 1568x1568 bounding box for processing."
       }
     },
     {
@@ -65,7 +84,7 @@
       "name": "What can Claude Vision analyze in images?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Claude Vision can analyze a wide range of image content: read and transcribe text (OCR), describe scene content and objects, interpret charts and graphs (extract values, trends, labels), analyze documents and forms, describe user interfaces and screenshots, identify products and landmarks, describe medical or scientific imagery, and answer specific questions about image content. Performance is highest for clear, well-lit images with sufficient resolution."
+        "text": "Claude Vision can read and transcribe text (OCR), describe scenes and objects, extract data from charts and graphs, analyze documents and forms, describe UI screenshots, identify products, and answer specific questions about any visible content in the image."
       }
     },
     {
@@ -73,7 +92,7 @@
       "name": "How much does Claude Vision cost?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Images are counted as tokens for billing purposes. A 1024x1024 image costs approximately 1,600 input tokens with Claude Sonnet. Smaller images use fewer tokens. The exact token count depends on image dimensions: Claude resizes images to fit within a 1568x1568 pixel bounding box and bills based on the resulting size. For high-volume image processing, calculate costs using the token formula: (width * height) / 750 for images within the size limits."
+        "text": "Images are billed as input tokens. A 1024x1024 image costs approximately 1,600 input tokens with Claude Sonnet. Smaller images use fewer tokens. Calculate cost as approximately (width * height) / 750 tokens for images within size limits."
       }
     },
     {
@@ -81,7 +100,7 @@
       "name": "Can Claude Vision extract data from charts?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Claude Vision can extract data from bar charts, line charts, pie charts, scatter plots, and other visualizations. Provide a specific prompt asking for the data values, axis labels, and legend. For best results, ask Claude to produce the extracted data as a structured format like JSON or a table. Accuracy is high for clearly labeled charts with legible text. Very small axis labels or dense data points may reduce extraction accuracy."
+        "text": "Yes. Claude Vision extracts axis labels, data series, legend entries, and numeric values from bar charts, line charts, pie charts, and scatter plots. For best results, prompt Claude to return extracted data as JSON. Accuracy is highest for charts with legible text and clear color differentiation."
       }
     }
   ]
@@ -196,6 +215,11 @@
     <p>Upload an image or paste a URL, write an analysis prompt, and see a simulated Claude Vision response. Explore examples for charts, documents, screenshots, and photos. Generate ready-to-use Python, Node.js, and curl code.</p>
     <p style="font-size:0.85rem;color:var(--text-muted);">By <a href="/about.html" style="color:var(--accent);text-decoration:none;">Michael Lip</a> &middot; May 28, 2026</p>
   </div>
+
+<section class="answer-block" style="max-width:820px;margin:1.5rem auto;padding:1rem 1.25rem;border-left:3px solid #d97757;background:rgba(217,119,87,0.08);border-radius:8px;line-height:1.6;">
+  <p style="margin:0 0 0.5rem;">ClaudKit's Vision API Playground shows how to send an image to Claude. Upload a file or paste an image URL, write an analysis prompt, and see a simulated response. Copy the generated Python, Node.js, or curl code into your own project.</p>
+  <p style="margin:0;font-size:0.85rem;opacity:0.8;"><time datetime="2026-10-28">Updated 2026-10-28</time></p>
+</section>
 
   <div class="tool-wrap">
 
