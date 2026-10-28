@@ -9,50 +9,74 @@
   <link rel="canonical" href="https://claudkit.com/tools/anthropic-rate-limit-calculator">
   <!-- JSON-LD: WebApplication + FAQPage + BreadcrumbList -->
   <script type="application/ld+json">
-    [{
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Anthropic Rate Limit Calculator",
-      "url": "https://claudkit.com/tools/anthropic-rate-limit-calculator",
-      "description": "Interactive rate limit planning tool for Anthropic API tiers (2025).",
-      "applicationCategory": "Developer Tool",
-      "operatingSystem": "All",
-      "browserRequirements": "JavaScript"
-    }, {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [{
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Anthropic Rate Limit Calculator",
+    "url": "https://claudkit.com/tools/anthropic-rate-limit-calculator",
+    "description": "Plan your API usage · 2025 tier limits",
+    "applicationCategory": "Developer Tool",
+    "operatingSystem": "All",
+    "browserRequirements": "JavaScript",
+    "dateModified": "2026-10-28"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
         "@type": "Question",
         "name": "How is TPM usage calculated?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "TPM = requests per minute × average tokens per request (input+output). Headroom is (tier limit − usage) / tier limit × 100%."
+          "text": "TPM = RPM × avg tokens. Headroom = (limit − usage)/limit × 100%."
         }
-      }, {
+      },
+      {
         "@type": "Question",
         "name": "What does burst tokens mean?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Burst tokens = (tier TPM limit / 60) × burst duration in seconds. This shows how many tokens you can send in a short burst without exceeding the per‑minute ceiling."
+          "text": "(tier TPM/60) × burst seconds — max tokens in a short burst."
         }
-      }, {
+      },
+      {
         "@type": "Question",
-        "name": "How is queue drain time estimated?",
+        "name": "Queue drain time?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Given a queue of N requests and average tokens per request, drain time = (N × avg tokens) / (tier TPM / 60) seconds, assuming full utilization."
+          "text": "(N × avg tokens) / (tier TPM/60) seconds, assuming full throughput."
         }
-      }]
-    }, {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "claudkit.com", "item": "https://claudkit.com" },
-        { "@type": "ListItem", "position": 2, "name": "Tools", "item": "https://claudkit.com/tools" },
-        { "@type": "ListItem", "position": 3, "name": "Anthropic Rate Limit Calculator", "item": "https://claudkit.com/tools/anthropic-rate-limit-calculator" }
-      ]
-    }]
-  </script>
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "claudkit.com",
+        "item": "https://claudkit.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Tools",
+        "item": "https://claudkit.com/tools"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Anthropic Rate Limit Calculator",
+        "item": "https://claudkit.com/tools/anthropic-rate-limit-calculator"
+      }
+    ]
+  }
+]
+</script>
   <style>
     * {
       margin: 0;
@@ -282,6 +306,11 @@
     <h1>⚡ Anthropic Rate Limit Calculator</h1>
     <p>Plan your API usage · 2025 tier limits · claudkit.com</p>
   </header>
+
+<section class="answer-block" style="max-width:820px;margin:1.5rem auto;padding:1rem 1.25rem;border-left:3px solid #d97757;background:rgba(217,119,87,0.08);border-radius:8px;line-height:1.6;">
+  <p style="margin:0 0 0.5rem;">Anthropic rate limits count requests and tokens per minute. Choose your tier, then enter the RPM you need, the average tokens per request, and the burst seconds. The calculator shows RPM and TPM headroom, burst tokens, and queue drain time.</p>
+  <p style="margin:0;font-size:0.85rem;opacity:0.8;"><time datetime="2026-10-28">Updated 2026-10-28</time></p>
+</section>
 
   <!-- Inputs -->
   <div class="card">

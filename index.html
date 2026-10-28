@@ -23,112 +23,125 @@
   <link rel="alternate" type="application/atom+xml" title="ClaudKit — Claude API Playground Blog Feed" href="/blog/feed.xml">
   <link rel="stylesheet" href="assets/style.css">
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "ClaudKit",
-    "url": "https://claudkit.com/",
-    "sameAs": ["https://github.com/theluckystrike/claudkit.com"],
-    "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" }
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ClaudKit",
+  "url": "https://claudkit.com/",
+  "sameAs": [
+    "https://github.com/theluckystrike/claudkit.com"
+  ],
+  "author": {
+    "@type": "Person",
+    "name": "Michael Lip",
+    "url": "https://zovo.one",
+    "@id": "https://claudkit.com/#author"
   }
-  </script>
+}
+</script>
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "ClaudKit API Playground",
-    "url": "https://claudkit.com",
-    "description": "Interactive API request builder for Claude with syntax-highlighted code output in curl, Python, and JavaScript.",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Web",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "author": { "@type": "Person", "name": "Michael Lip", "url": "https://zovo.one" },
-    "datePublished": "2026-05-25",
-    "dateModified": "2026-05-25",
-    "featureList": [
-      "Visual API request builder for Claude",
-      "Syntax-highlighted code output in curl, Python, and JavaScript",
-      "Built-in API pricing estimator with monthly projections",
-      "Live API testing with your own key",
-      "Preset request templates for common use cases",
-      "Model selection: Haiku, Sonnet, Opus",
-      "Temperature and max_tokens controls",
-      "No sign-up required, 100% browser-based"
-    ]
-  }
-  </script>
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "ClaudKit API Playground",
+  "url": "https://claudkit.com",
+  "description": "Build requests visually. Get code in curl, Python, and JavaScript.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@id": "https://claudkit.com/#author"
+  },
+  "datePublished": "2026-05-25",
+  "dateModified": "2026-05-25",
+  "featureList": [
+    "Visual API request builder for Claude",
+    "Syntax-highlighted code output in curl, Python, and JavaScript",
+    "Built-in API pricing estimator with monthly projections",
+    "Live API testing with your own key",
+    "Preset request templates for common use cases",
+    "Model selection: Haiku, Sonnet, Opus",
+    "Temperature and max_tokens controls",
+    "No sign-up required, 100% browser-based"
+  ]
+}
+</script>
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "How to use the Claude API?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates code in curl, Python, and JavaScript."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the Anthropic API?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with x-api-key header."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How much does the Claude API cost?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Claude API pricing per 1M tokens: Haiku $0.25 input/$1.25 output, Sonnet $3.00/$15.00, Opus $15.00/$75.00. Use our built-in pricing estimator to calculate costs for your specific requests."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What models are available in the Claude API?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced), and Claude Opus (most capable). Each model supports the same API format with different speed/quality/cost tradeoffs."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I get a Claude API key?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with 'sk-ant-api03-'. Store it securely and never expose it in client-side code."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is ClaudKit free to use?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs. You only pay Anthropic for actual API usage when testing with your own key."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Does ClaudKit store my API key?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No. Your API key is only held in browser memory during your session and is sent directly to the Anthropic API endpoint. It is never stored on any server, in cookies, or in localStorage. The source code is open on GitHub for verification."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Can I use ClaudKit to test streaming responses?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "ClaudKit currently supports standard (non-streaming) API requests through the built-in tester. The generated code includes both streaming and non-streaming variants that you can copy and run in your own environment."
-        }
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How to use the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use the Anthropic Messages API by sending a POST request to api.anthropic.com/v1/messages with your API key, model name, and messages array. ClaudKit lets you build requests visually and generates ready-to-use code in curl, Python, and JavaScript."
       }
-    ]
-  }
-  </script>
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Anthropic API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Anthropic API provides programmatic access to Claude AI models. It uses a messages-based format with system prompts, user messages, and assistant responses. Authentication is via API key with the x-api-key header."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does the Claude API cost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Claude API pricing per 1M tokens: Haiku costs $0.25 input / $1.25 output, Sonnet costs $3.00 / $15.00, and Opus costs $15.00 / $75.00. Use our built-in pricing estimator to calculate costs for your specific use case and see monthly projections."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What models are available in the Claude API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Anthropic offers Claude Haiku (fastest, cheapest), Claude Sonnet (balanced performance), and Claude Opus (most capable). All share the same API format with different speed, quality, and cost tradeoffs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I get a Claude API key?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sign up at console.anthropic.com, navigate to API Keys, and create a new key. Keys start with \"sk-ant-api03-\". Store it securely and never expose it in client-side code."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is ClaudKit free to use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, ClaudKit is completely free. Build API requests visually, copy generated code, and estimate costs without signing up. You only pay Anthropic for actual API usage when you test with your own key."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does ClaudKit store my API key?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Your API key is only held in browser memory during your session and is sent directly to the Anthropic API endpoint. It is never stored on any server, in cookies, or in localStorage. The source code is open on GitHub for verification."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use ClaudKit to test streaming responses?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ClaudKit currently supports standard (non-streaming) API requests through the built-in tester. The generated code includes both streaming and non-streaming variants that you can copy and run in your own environment."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
   <nav>
@@ -151,6 +164,11 @@
     <h1>Claude API Playground</h1>
     <p>Build requests visually. Get code in curl, Python, and JavaScript.</p>
   </section>
+
+<section class="answer-block" style="max-width:820px;margin:1.5rem auto;padding:1rem 1.25rem;border-left:3px solid #d97757;background:rgba(217,119,87,0.08);border-radius:8px;line-height:1.6;">
+  <p style="margin:0 0 0.5rem;">ClaudKit is a free playground for the Anthropic Claude API. You configure a request in a visual form, copy the same request as curl, Python, or JavaScript, and test it with your own API key. It runs in your browser and needs no sign-up.</p>
+  <p style="margin:0;font-size:0.85rem;opacity:0.8;"><time datetime="2026-10-28">Updated 2026-10-28</time></p>
+</section>
 
   <div class="playground">
     <!-- Left Panel: Request Builder -->
